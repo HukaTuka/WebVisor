@@ -22,3 +22,72 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Database credentials 
+src/main/resources/config.properties
+
+# Maven build output
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IntelliJ IDEA 
+.idea/
+*.iml
+*.iws
+*.ipr
+*.ids
+out/
+.idea_modules/
+
+# Eclipse (if anyone switches) 
+.project
+.classpath
+.settings/
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# OS generated files 
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# Logs 
+*.log
+logs/
+
+# Temporary files 
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# JavaFX / Swing native libs 
+*.dll
+*.so
+*.dylib
+
+# Test output
+surefire-reports/
+test-output/
