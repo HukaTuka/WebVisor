@@ -1,0 +1,97 @@
+package dk.sea.webvisor.GUI.Controllers;
+
+// Project Imports
+import dk.sea.webvisor.BE.User;
+import dk.sea.webvisor.BE.UserRole;
+import dk.sea.webvisor.BLL.UserService;
+
+// Java Imports
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import java.io.IOException;
+import java.sql.SQLException;
+
+public class LoginController
+{
+    @FXML
+    private TextField txtUsername;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private Label lblStatus;
+
+    private final UserService userService;
+
+    public LoginController()
+    {
+        try
+        {
+            this.userService = new UserService();
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException("Could not initialize login service.", e);
+        }
+    }
+
+    @FXML
+    private void onLogin()
+    {
+        try
+        {
+            User user = userService.login(txtUsername.getText(), txtPassword.getText());
+            if (user.getRole() == UserRole.UserAdmin)
+            {
+                openMainPage();
+            }
+            else
+            {
+                showStatus("Login successful.", "status-success");
+            }
+        }
+        catch (IllegalArgumentException e)
+        {
+            showStatus(e.getMessage(), "status-error");
+        }
+        catch (SQLException e)
+        {
+            showStatus("Could not connect to the user database.", "status-error");
+        }
+    }
+
+    private void showStatus(String message, String styleClass)
+    {
+        lblStatus.getStyleClass().removeAll("status-success", "status-error");
+        lblStatus.getStyleClass().add(styleClass);
+        lblStatus.setText(message);
+    }
+
+    private void openMainPage()
+    {
+        try
+        {
+            Parent mainPageRoot = FXMLLoader.load(getClass().getResource("/Views/MainPageView.fxml"));
+            Scene currentScene = txtUsername.getScene();
+            if (currentScene == null)
+            {
+                showStatus("Could not open main page.", "status-error");
+                return;
+            }
+
+            currentScene.setRoot(mainPageRoot);
+            Stage stage = (Stage) currentScene.getWindow();
+            stage.setTitle("WebVisor - Main Page");
+            stage.sizeToScene();
+        }
+        catch (IOException e)
+        {
+            showStatus("Could not open main page.", "status-error");
+        }
+    }
+}

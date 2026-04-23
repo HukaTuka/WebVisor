@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="dk.sea.webvisor.GUI.Controllers.AdminUsersController"
+            prefHeight="650.0" prefWidth="900.0"
+            styleClass="root-pane">
+    <children>
+        <VBox spacing="14.0" styleClass="admin-screen"
+              AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0"
+              AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+            <padding>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+            </padding>
+
+            <children>
+                <Label text="Admin - User Management" styleClass="title-label"/>
+
+                <TableView fx:id="tblUsers" onMouseClicked="#onTableClicked" styleClass="users-table" prefHeight="300.0">
+                    <columns>
+                        <TableColumn fx:id="colFirstName" text="First Name" prefWidth="180.0"/>
+                        <TableColumn fx:id="colLastName" text="Last Name" prefWidth="180.0"/>
+                        <TableColumn fx:id="colUsername" text="Username" prefWidth="220.0"/>
+                        <TableColumn fx:id="colRole" text="Role" prefWidth="180.0"/>
+                    </columns>
+                </TableView>
+
+                <GridPane hgap="12.0" vgap="12.0" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120.0"/>
+                        <ColumnConstraints minWidth="260.0"/>
+                        <ColumnConstraints minWidth="120.0"/>
+                        <ColumnConstraints minWidth="260.0"/>
+                    </columnConstraints>
+
+                    <children>
+                        <Label text="First Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="txtFirstName" promptText="First name" styleClass="input-field"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <Label text="Last Name:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                        <TextField fx:id="txtLastName" promptText="Last name" styleClass="input-field"
+                                   GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+                        <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <Label text="Password:" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field"
+                                       GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+
+                        <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <ComboBox fx:id="cmbRole" styleClass="combo-box-default"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    </children>
+                </GridPane>
+
+                <HBox spacing="10.0">
+                    <children>
+                        <Button text="Create User" onAction="#onCreateUser" styleClass="primary-button"/>
+                        <Button text="Update User" onAction="#onUpdateUser" styleClass="secondary-button"/>
+                        <Button text="Delete User" onAction="#onDeleteUser" styleClass="danger-button"/>
+                    </children>
+                </HBox>
+
+                <Label fx:id="lblStatus" styleClass="status-label"/>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

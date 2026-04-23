@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="dk.sea.webvisor.GUI.Controllers.LoginController"
+            prefHeight="700.0" prefWidth="1100.0"
+            styleClass="root-pane">
+   <children>
+      <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <VBox prefWidth="220.0" styleClass="sidebar" />
+            <StackPane HBox.hgrow="ALWAYS">
+               <children>
+                  <VBox alignment="CENTER" fillWidth="false" spacing="12.0" styleClass="login-card">
+                     <children>
+                        <Label text="Log in to WebVisor" styleClass="title-label" />
+                        <GridPane alignment="CENTER" hgap="10.0" vgap="10.0">
+                           <children>
+                              <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                              <TextField fx:id="txtUsername" promptText="Enter username" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                              <PasswordField fx:id="txtPassword" promptText="Enter password" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                           </children>
+                           <columnConstraints>
+                              <ColumnConstraints minWidth="90.0" />
+                              <ColumnConstraints minWidth="240.0" />
+                           </columnConstraints>
+                        </GridPane>
+                        <Button mnemonicParsing="false" onAction="#onLogin" prefWidth="120.0" text="Log in" styleClass="primary-button" />
+                        <Label fx:id="lblStatus" text="" styleClass="status-label" />
+                     </children>
+                     <padding>
+                        <Insets top="24.0" right="24.0" bottom="24.0" left="24.0" />
+                     </padding>
+                  </VBox>
+               </children>
+            </StackPane>
+         </children>
+      </HBox>
+   </children>
+
+</AnchorPane>

@@ -1,0 +1,151 @@
+/* Root */
+.root-pane {
+    -fx-background-color: #f4f6fb;
+}
+
+/* Sidebar */
+.sidebar {
+    -fx-background-color: #24C79F;
+    -fx-padding: 20px 12px 12px 12px;
+}
+
+/* Sidebar title */
+.sidebar-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* Sidebar buttons */
+.sidebar .button,
+.sidebar-nav-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+    -fx-text-fill: white;
+    -fx-alignment: CENTER_LEFT;
+    -fx-pref-width: 196px;
+    -fx-padding: 10px 12px 10px 12px;
+    -fx-cursor: hand;
+    -fx-effect: null;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.sidebar .button:hover,
+.sidebar-nav-button:hover {
+    -fx-background-color: transparent;
+    -fx-underline: true;
+}
+
+.sidebar .button:focused,
+.sidebar .button:armed {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+}
+
+/* Main content */
+.content-area {
+    -fx-padding: 16px;
+}
+
+/* Login card */
+.login-card {
+    -fx-background-color: white;
+    -fx-padding: 8px 0 8px 0;
+}
+
+/* Admin area */
+.admin-screen {
+    -fx-background-color: white;
+}
+
+/* Title */
+.title-label {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b6f5a;
+}
+
+/* Inputs */
+.input-field {
+    -fx-pref-height: 32px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-border-color: #8ddfcb;
+}
+
+/* Primary button */
+.primary-button {
+    -fx-background-color: #24C79F;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #1ea884;
+}
+
+/* Secondary button */
+.secondary-button {
+    -fx-background-color: #2f8f7a;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #256f5f;
+}
+
+/* Danger button */
+.danger-button {
+    -fx-background-color: #d73a49;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+}
+
+.danger-button:hover {
+    -fx-background-color: #b22d3a;
+}
+
+/* ComboBox */
+.combo-box-default {
+    -fx-pref-height: 32px;
+}
+
+/* Users table */
+.users-table {
+    -fx-border-color: #8ddfcb;
+    -fx-border-radius: 6px;
+}
+
+/* Form grid */
+.form-grid {
+    -fx-padding: 8px 0 8px 0;
+}
+
+/* Status text */
+.status-label {
+    -fx-font-size: 13px;
+}
+
+/* Success */
+.status-success {
+    -fx-text-fill: #1ea884;
+}
+
+/* Info */
+.status-info {
+    -fx-text-fill: #24C79F;
+}
+
+/* Error */
+.status-error {
+    -fx-text-fill: #cc0000;
+}
