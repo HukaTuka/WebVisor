@@ -80,4 +80,4 @@ Thumbs.db
 desktop.ini
 
 ### Config ###
-Tickets_app/config/config.settings
+config/config.settings
