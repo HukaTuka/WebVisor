@@ -24,7 +24,7 @@ hs_err_pid*
 replay_pid*
 
 # Database credentials 
-src/main/config/config.settings
+config/config.settings
 
 # Maven build output
 target/
