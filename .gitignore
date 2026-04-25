@@ -23,71 +23,61 @@
 hs_err_pid*
 replay_pid*
 
-# Database credentials 
-config/config.settings
-
-# Maven build output
 target/
-*.class
-*.jar
-*.war
-*.ear
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# IntelliJ IDEA 
-.idea/
-*.iml
+### IntelliJ IDEA ###
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
 *.iws
+*.iml
 *.ipr
-*.ids
-out/
-.idea_modules/
+.idea/shelf/
+.idea/workspace.xml
+.idea/copilot*
 
-# Eclipse (if anyone switches) 
-.project
+
+### Eclipse ###
+.apt_generated
 .classpath
-.settings/
-bin/
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
 
-# NetBeans
+### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# OS generated files 
-# macOS
+### VS Code ###
+.vscode/
+
+### Mac OS ###
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
 
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
-*~
-
-# Logs 
+### Logs ###
 *.log
 logs/
 
-# Temporary files 
+### Temp files ###
 *.tmp
-*.temp
 *.swp
 *.swo
 
-# JavaFX / Swing native libs 
-*.dll
-*.so
-*.dylib
+### Windows ###
+Thumbs.db
+desktop.ini
 
-# Test output
-surefire-reports/
-test-output/
+### Config ###
+Tickets_app/config/config.settings
