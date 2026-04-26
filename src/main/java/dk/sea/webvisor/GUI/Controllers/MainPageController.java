@@ -5,11 +5,15 @@ import dk.sea.webvisor.BE.User;
 import dk.sea.webvisor.BE.UserRole;
 
 // Java Imports
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 
@@ -88,5 +92,24 @@ public class MainPageController
     {
         node.setVisible(v);
         node.setManaged(v);
+    }
+
+    @FXML
+    private void onLogout(ActionEvent actionEvent)
+    {
+        try
+        {
+            Parent loginRoot = FXMLLoader.load(getClass().getResource("/Views/LoginView.fxml"));
+            Scene scene = ((Node) actionEvent.getSource()).getScene();
+            scene.setRoot(loginRoot);
+
+            Stage stage = (Stage) scene.getWindow();
+            stage.setTitle("WebVisor Login");
+            stage.sizeToScene();
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException("Could not open login view.", e);
+        }
     }
 }
