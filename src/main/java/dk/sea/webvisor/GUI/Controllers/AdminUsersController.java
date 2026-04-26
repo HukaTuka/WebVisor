@@ -18,6 +18,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class AdminUsersController
@@ -102,7 +103,9 @@ public class AdminUsersController
                     txtLastName.getText(),
                     txtUsername.getText(),
                     txtPassword.getText(),
-                    getSelectedRole()
+                    getSelectedRole(),
+                    getLastLogin()
+
             );
 
             refreshUsers();
@@ -137,7 +140,8 @@ public class AdminUsersController
                     txtLastName.getText(),
                     txtUsername.getText(),
                     txtPassword.getText(),
-                    getSelectedRole()
+                    getSelectedRole(),
+                            getLastLogin()
                     );
 
             refreshUsers();
@@ -188,6 +192,11 @@ public class AdminUsersController
             return UserRole.UserAdmin;
         }
         return UserRole.UserScanner;
+    }
+
+    private LocalDateTime getLastLogin()
+    {
+        return LocalDateTime.now();
     }
 
     private void refreshUsers()

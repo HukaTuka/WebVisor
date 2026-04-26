@@ -10,10 +10,8 @@ import dk.sea.webvisor.DAL.Interface.UsersInterface;
 
 // Java Imports
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +27,7 @@ public class UsersDAO implements UsersInterface
     public Optional<User> getUserByUsername(String username) throws SQLException
     {
         String sql = """
-                SELECT TOP 1 ID, FirstName, LastName, Username, Password, Role
+                SELECT TOP 1 ID, FirstName, LastName, Username, Password, Role, Timestamp 
                 FROM dbo.Users
                 WHERE Username = ?
                 """;
@@ -52,10 +50,13 @@ public class UsersDAO implements UsersInterface
                 String dbUsername = rs.getString("Username");
                 String password = rs.getString("Password");
                 UserRole role = mapRole(rs.getString("Role"));
+                LocalDateTime Timestamp = rs.getTimestamp("Timestamp") != null
+                        ? rs.getTimestamp("Timestamp").toLocalDateTime()
+                        : null;
 
                 User user = role == UserRole.UserAdmin
-                        ? new UserAdmin(id, firstName, lastName, dbUsername, password, role)
-                        : new UserScanner(id, firstName, lastName, dbUsername, password, role);
+                        ? new UserAdmin(id, firstName, lastName, dbUsername, password, role, Timestamp)
+                        : new UserScanner(id, firstName, lastName, dbUsername, password, role, Timestamp);
 
                 return Optional.of(user);
             }
@@ -66,7 +67,7 @@ public class UsersDAO implements UsersInterface
     public List<User> getAllUsers() throws SQLException
     {
         String sql = """
-                SELECT ID, FirstName, LastName, Username, Password, Role
+                SELECT ID, FirstName, LastName, Username, Password, Role, Timestamp
                 FROM dbo.Users
                 ORDER BY Username
                 """;
@@ -106,7 +107,13 @@ public class UsersDAO implements UsersInterface
             statement.setString(4, user.getUsername());
             statement.setString(5, user.getPassword());
             statement.setString(6, toDatabaseRole(user.getRole()));
-            statement.setInt(7, nowTimestamp);
+
+            LocalDateTime timestamp = user.getLastLogin() != null
+                    ? user.getLastLogin()
+                    : LocalDateTime.now();
+            user.setLastLogin(timestamp);
+            statement.setTimestamp(7, Timestamp.valueOf(timestamp));
+
             statement.executeUpdate();
         }
 
@@ -116,7 +123,8 @@ public class UsersDAO implements UsersInterface
                 user.getLastName(),
                 user.getUsername(),
                 user.getPassword(),
-                user.getRole()
+                user.getRole(),
+                user.getLastLogin()
         );
     }
 
@@ -129,8 +137,6 @@ public class UsersDAO implements UsersInterface
                 WHERE ID = ?
                 """;
 
-        int nowTimestamp = (int) (System.currentTimeMillis() / 1000L);
-
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
         {
@@ -139,7 +145,12 @@ public class UsersDAO implements UsersInterface
             statement.setString(3, user.getUsername());
             statement.setString(4, user.getPassword());
             statement.setString(5, toDatabaseRole(user.getRole()));
-            statement.setInt(6, nowTimestamp);
+
+            LocalDateTime timestamp = user.getLastLogin() != null
+                    ? user.getLastLogin()
+                    : LocalDateTime.now();
+            statement.setTimestamp(6, Timestamp.valueOf(timestamp));
+
             statement.setInt(7, user.getId());
             statement.executeUpdate();
         }
@@ -183,17 +194,20 @@ public class UsersDAO implements UsersInterface
         String username = rs.getString("Username");
         String password = rs.getString("Password");
         UserRole role = mapRole(rs.getString("Role"));
+        LocalDateTime Timestamp = rs.getTimestamp("Timestamp") != null
+                ? rs.getTimestamp("Timestamp").toLocalDateTime()
+                : null;
 
-        return createUserObject(id, firstName, lastName, username, password, role);
+        return createUserObject(id, firstName, lastName, username, password, role, Timestamp);
     }
 
-    private User createUserObject(int id, String firstName, String lastName, String username, String password, UserRole role)
+    private User createUserObject(int id, String firstName, String lastName, String username, String password, UserRole role, LocalDateTime Timestamp)
     {
         if (role == UserRole.UserAdmin)
         {
-            return new UserAdmin(id, firstName, lastName, username, password, role);
+            return new UserAdmin(id, firstName, lastName, username, password, role, Timestamp);
         }
-        return new UserScanner(id, firstName, lastName, username, password, role);
+        return new UserScanner(id, firstName, lastName, username, password, role, Timestamp);
     }
 
     private String toDatabaseRole(UserRole role)

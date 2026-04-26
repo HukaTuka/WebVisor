@@ -12,6 +12,7 @@ import dk.sea.webvisor.DAL.Interface.UsersInterface;
 // Java Imports
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +45,10 @@ public class UserService
             throw new IllegalArgumentException("Wrong username or password.");
         }
 
+        // Update last login timestamp
+        user.setLastLogin(LocalDateTime.now());
+        usersDAO.updateUser(user);
+
         return user;
     }
 
@@ -52,16 +57,16 @@ public class UserService
         return usersDAO.getAllUsers();
     }
 
-    public User createUser(String firstName, String lastName, String username, String plainPassword, UserRole role) throws SQLException
+    public User createUser(String firstName, String lastName, String username, String plainPassword, UserRole role, LocalDateTime lastLogin) throws SQLException
     {
         validateUserInput(firstName, lastName, username, plainPassword, role);
 
         String hashedPassword = PasswordHasher.hashPassword(plainPassword.trim());
-        User user = createUserObject(0, firstName, lastName, username, hashedPassword, role);
+        User user = createUserObject(0, firstName, lastName, username, hashedPassword, role, lastLogin);
         return usersDAO.createUser(user);
     }
 
-    public void updateUser(int userId, String firstName, String lastName, String username, String plainPassword, UserRole role) throws SQLException
+    public void updateUser(int userId, String firstName, String lastName, String username, String plainPassword, UserRole role, LocalDateTime lastLogin) throws SQLException
     {
         if (userId <= 0)
         {
@@ -71,7 +76,7 @@ public class UserService
         validateUserInput(firstName, lastName, username, plainPassword, role);
 
         String hashedPassword = PasswordHasher.hashPassword(plainPassword.trim());
-        User user = createUserObject(userId, firstName, lastName, username, hashedPassword, role);
+        User user = createUserObject(userId, firstName, lastName, username, hashedPassword, role, lastLogin);
         usersDAO.updateUser(user);
     }
 
@@ -113,12 +118,12 @@ public class UserService
         }
     }
 
-    private User createUserObject(int id, String firstName, String lastName, String username, String password, UserRole role)
+    private User createUserObject(int id, String firstName, String lastName, String username, String password, UserRole role, LocalDateTime lastLogin)
     {
         if (role == UserRole.UserAdmin)
         {
-            return new UserAdmin(id, firstName.trim(), lastName.trim(), username.trim(), password, role);
+            return new UserAdmin(id, firstName.trim(), lastName.trim(), username.trim(), password, role, lastLogin);
         }
-        return new UserScanner(id, firstName.trim(), lastName.trim(), username.trim(), password, role);
+        return new UserScanner(id, firstName.trim(), lastName.trim(), username.trim(), password, role, lastLogin);
     }
 }
