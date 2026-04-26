@@ -22,7 +22,7 @@ public class MainPageController
     @FXML
     private void onOpenAdminUsers()
     {
-        openAdminUsersView();
+        openView("/Views/AdminUsersView.fxml");
     }
 
     @FXML
@@ -31,16 +31,22 @@ public class MainPageController
         showHome();
     }
 
-    private void openAdminUsersView()
+    @FXML
+    private void onOpenScanning()
+    {
+        openView("/Views/ScanningView.fxml");
+    }
+
+    private void openView(String fxmlPath)
     {
         try
         {
-            Parent adminUsersRoot = FXMLLoader.load(getClass().getResource("/Views/AdminUsersView.fxml"));
-            contentArea.getChildren().setAll(adminUsersRoot);
+            Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+            contentArea.getChildren().setAll(root);
         }
         catch (IOException e)
         {
-            throw new IllegalStateException("Could not open Admin Users view.", e);
+            throw new IllegalStateException("Could not open view: " + fxmlPath, e);
         }
     }
 

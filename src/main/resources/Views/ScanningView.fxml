@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="650.0" prefWidth="880.0" styleClass="root-pane" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dk.sea.webvisor.GUI.Controllers.ScanningController">
+
+    <children>
+        <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="scanning-toolbar">
+                <padding>
+                    <Insets bottom="10.0" left="16.0" right="16.0" top="10.0" />
+                </padding>
+                <children>
+                    <Label styleClass="title-label" text="Scanning Session" />
+
+                    <HBox HBox.hgrow="ALWAYS" />
+
+                    <Button fx:id="btnStart" onAction="#onStartScanning" styleClass="primary-button" text="▶  Start Scanning" />
+                    <Button fx:id="btnStop" disable="true" onAction="#onStopScanning" styleClass="danger-button" text="■  Stop" />
+
+
+                    <Label styleClass="separator-label" text="|" />
+
+
+                    <Button fx:id="btnRotateLeft" disable="true" onAction="#onRotateLeft" styleClass="secondary-button" text="↺ Left" />
+                    <Button fx:id="btnRotateRight" disable="true" onAction="#onRotateRight" styleClass="secondary-button" text="↻ Right" />
+
+
+                    <Label styleClass="separator-label" text="|" />
+
+
+                    <Button fx:id="btnPrev" disable="true" onAction="#onPrev" styleClass="secondary-button" text="◀" />
+                    <Label fx:id="lblPageInfo" minWidth="90.0" styleClass="page-info-label" text="Page 0 / 0" />
+                    <Button fx:id="btnNext" disable="true" onAction="#onNext" styleClass="secondary-button" text="▶" />
+                </children>
+            </HBox>
+
+            <HBox spacing="0.0" VBox.vgrow="ALWAYS">
+                <children>
+                    <VBox prefWidth="200.0" styleClass="page-list-panel">
+                        <padding>
+                            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                        </padding>
+                        <children>
+                            <Label styleClass="panel-header-label" text="Pages" />
+                            <ListView fx:id="lstPages" styleClass="pages-list" VBox.vgrow="ALWAYS" />
+                        </children>
+                    </VBox>
+                    <StackPane styleClass="image-viewer-panel" HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="empty-state-label" text="No pages scanned yet. Press ▶ Start Scanning to begin." wrapText="true" />
+                            <ImageView fx:id="imgPage" fitHeight="560.0" fitWidth="620.0" preserveRatio="true" smooth="true" />
+                        </children>
+                    </StackPane>
+
+                </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" styleClass="status-bar">
+                <padding>
+                    <Insets bottom="6.0" left="16.0" right="16.0" top="6.0" />
+                </padding>
+                <children>
+                    <Label fx:id="lblStatus" styleClass="status-label" text="" />
+                </children>
+            </HBox>
+
+        </VBox>
+    </children>
+</AnchorPane>

@@ -1,9 +1,9 @@
-/* Root */
+/* ROOT */
 .root-pane {
     -fx-background-color: #f4f6fb;
 }
 
-/* Sidebar */
+/* SIDEBAR */
 .sidebar {
     -fx-background-color: #24C79F;
     -fx-padding: 20px 12px 12px 12px;
@@ -47,7 +47,7 @@
     -fx-text-fill: white;
 }
 
-/* Main content */
+/* CONTENT AREA */
 .content-area {
     -fx-padding: 16px;
 }
@@ -58,7 +58,7 @@
     -fx-padding: 8px 0 8px 0;
 }
 
-/* Admin area */
+/* Admin screen */
 .admin-screen {
     -fx-background-color: white;
 }
@@ -70,7 +70,7 @@
     -fx-text-fill: #1b6f5a;
 }
 
-/* Inputs */
+/* INPUTS AND FORMS */
 .input-field {
     -fx-pref-height: 32px;
     -fx-background-radius: 6px;
@@ -78,7 +78,15 @@
     -fx-border-color: #8ddfcb;
 }
 
-/* Primary button */
+.combo-box-default {
+    -fx-pref-height: 32px;
+}
+
+.form-grid {
+    -fx-padding: 8px 0 8px 0;
+}
+
+/* Buttons */
 .primary-button {
     -fx-background-color: #24C79F;
     -fx-text-fill: white;
@@ -90,7 +98,6 @@
     -fx-background-color: #1ea884;
 }
 
-/* Secondary button */
 .secondary-button {
     -fx-background-color: #2f8f7a;
     -fx-text-fill: white;
@@ -102,7 +109,6 @@
     -fx-background-color: #256f5f;
 }
 
-/* Danger button */
 .danger-button {
     -fx-background-color: #d73a49;
     -fx-text-fill: white;
@@ -114,38 +120,89 @@
     -fx-background-color: #b22d3a;
 }
 
-/* ComboBox */
-.combo-box-default {
-    -fx-pref-height: 32px;
-}
-
-/* Users table */
+/*TABLES */
 .users-table {
     -fx-border-color: #8ddfcb;
     -fx-border-radius: 6px;
 }
 
-/* Form grid */
-.form-grid {
-    -fx-padding: 8px 0 8px 0;
-}
-
-/* Status text */
+/* STATUS LABELS */
 .status-label {
     -fx-font-size: 13px;
 }
 
-/* Success */
 .status-success {
     -fx-text-fill: #1ea884;
 }
 
-/* Info */
 .status-info {
     -fx-text-fill: #24C79F;
 }
 
-/* Error */
 .status-error {
     -fx-text-fill: #cc0000;
+}
+
+/* SCANNING SCREEN */
+
+/* Top toolbar */
+.scanning-toolbar {
+    -fx-background-color: white;
+    -fx-border-color: #dde4ef;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Separator labels in toolbar */
+.separator-label {
+    -fx-text-fill: #c0c8d8;
+    -fx-padding: 0 4 0 4;
+}
+
+/* Page counter */
+.page-info-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b6f5a;
+    -fx-alignment: CENTER;
+}
+
+/* Left page list panel */
+.page-list-panel {
+    -fx-background-color: #f4f6fb;
+    -fx-border-color: #dde4ef;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Panel header */
+.panel-header-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b6f5a;
+    -fx-padding: 0 0 6 0;
+}
+
+/* Page list */
+.pages-list {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+}
+
+/* Image viewer */
+.image-viewer-panel {
+    -fx-background-color: #eaecf0;
+}
+
+/* Empty state */
+.empty-state-label {
+    -fx-text-fill: #9aa4b8;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+}
+
+/* Bottom status bar */
+.status-bar {
+    -fx-background-color: #f4f6fb;
+    -fx-border-color: #dde4ef;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 32px;
 }

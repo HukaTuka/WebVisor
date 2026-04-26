@@ -19,11 +19,13 @@
                 <VBox spacing="8.0" prefWidth="220.0" styleClass="sidebar">
                     <children>
                         <Label text="WebVisor" styleClass="sidebar-title"/>
-                        <Button text="Home" onAction="#onOpenHome" styleClass="sidebar-nav-button"/>
-                        <Button text="Manage users" onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button"/>
+                        <Button text="Home"         onAction="#onOpenHome"      styleClass="sidebar-nav-button"/>
+                        <Button text="Scanning"     onAction="#onOpenScanning"  styleClass="sidebar-nav-button"/>
+                        <Button text="Manage Users" onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button"/>
                     </children>
                 </VBox>
 
+                <!-- Main content area -->
                 <StackPane fx:id="contentArea" styleClass="content-area" HBox.hgrow="ALWAYS"/>
             </children>
         </HBox>
