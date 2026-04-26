@@ -19,9 +19,17 @@
                 <VBox spacing="8.0" prefWidth="220.0" styleClass="sidebar">
                     <children>
                         <Label text="WebVisor" styleClass="sidebar-title"/>
-                        <Button text="Home"         onAction="#onOpenHome"      styleClass="sidebar-nav-button"/>
-                        <Button text="Scanning"     onAction="#onOpenScanning"  styleClass="sidebar-nav-button"/>
-                        <Button text="Manage Users" onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button"/>
+                        <VBox fx:id="userMenu" spacing="8.0">
+                            <children>
+                                <Button text="Home"     onAction="#onOpenHome"     styleClass="sidebar-nav-button"/>
+                                <Button text="Scanning" onAction="#onOpenScanning" styleClass="sidebar-nav-button"/>
+                            </children>
+                        </VBox>
+                        <VBox fx:id="adminMenu" spacing="8.0">
+                            <children>
+                                <Button text="Manage Users" onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button"/>
+                            </children>
+                        </VBox>
                     </children>
                 </VBox>
 

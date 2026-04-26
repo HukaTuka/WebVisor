@@ -1,10 +1,15 @@
 package dk.sea.webvisor.GUI.Controllers;
 
+// Project Imports
+import dk.sea.webvisor.BE.User;
+import dk.sea.webvisor.BE.UserRole;
+
 // Java Imports
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
@@ -12,10 +17,34 @@ public class MainPageController
 {
     @FXML
     private StackPane contentArea;
+    @FXML
+    private VBox adminMenu;
+    @FXML
+    private VBox userMenu;
 
     @FXML
     private void initialize()
     {
+        showHome();
+    }
+
+    public void setUser(User user)
+    {
+        // Hide menus first
+        setVisible(adminMenu, false);
+        setVisible(userMenu, false);
+
+        // Admin gets both menus, scanner gets user menu only
+        if (user.getRole() == UserRole.UserAdmin)
+        {
+            setVisible(adminMenu, true);
+            setVisible(userMenu, true);
+        }
+        else
+        {
+            setVisible(userMenu, true);
+        }
+
         showHome();
     }
 
@@ -53,5 +82,11 @@ public class MainPageController
     private void showHome()
     {
         contentArea.getChildren().clear();
+    }
+
+    private void setVisible(VBox node, boolean v)
+    {
+        node.setVisible(v);
+        node.setManaged(v);
     }
 }

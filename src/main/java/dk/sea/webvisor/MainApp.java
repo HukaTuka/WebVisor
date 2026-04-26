@@ -1,7 +1,6 @@
 package dk.sea.webvisor;
 
 // Java Imports
-import dk.sea.webvisor.BLL.UserService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

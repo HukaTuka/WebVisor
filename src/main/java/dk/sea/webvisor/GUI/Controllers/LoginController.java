@@ -2,7 +2,6 @@ package dk.sea.webvisor.GUI.Controllers;
 
 // Project Imports
 import dk.sea.webvisor.BE.User;
-import dk.sea.webvisor.BE.UserRole;
 import dk.sea.webvisor.BLL.UserService;
 
 // Java Imports
@@ -16,7 +15,6 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 public class LoginController
 {
@@ -47,14 +45,7 @@ public class LoginController
         try
         {
             User user = userService.login(txtUsername.getText(), txtPassword.getText());
-            if (user.getRole() == UserRole.UserAdmin)
-            {
-                openMainPage();
-            }
-            else
-            {
-                showStatus("Login successful.", "status-success");
-            }
+            openMainPage(user);
         }
         catch (IllegalArgumentException e)
         {
@@ -73,11 +64,15 @@ public class LoginController
         lblStatus.setText(message);
     }
 
-    private void openMainPage()
+    private void openMainPage(User user)
     {
         try
         {
-            Parent mainPageRoot = FXMLLoader.load(getClass().getResource("/Views/MainPageView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/MainPageView.fxml"));
+            Parent mainPageRoot = loader.load();
+            MainPageController mainPageController = loader.getController();
+            mainPageController.setUser(user);
+
             Scene currentScene = txtUsername.getScene();
             if (currentScene == null)
             {
