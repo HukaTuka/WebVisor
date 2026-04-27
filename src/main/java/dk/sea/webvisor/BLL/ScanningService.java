@@ -1,5 +1,6 @@
 package dk.sea.webvisor.BLL;
 
+import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.ScannedPage;
 import dk.sea.webvisor.BLL.Util.BarcodeDetector;
 import dk.sea.webvisor.DAL.API.TiffApiClient;
@@ -33,6 +34,9 @@ public class ScanningService
     private final TiffApiClient      apiClient;
     private final List<ScannedPage>  pages;
     private final AtomicInteger      pageCounter;
+    // document tracking
+    private final List<Document> documents = Collections.synchronizedList(new ArrayList<>());
+    private final AtomicInteger documentCounter = new AtomicInteger(0);
 
     public ScanningService()
     {
@@ -52,17 +56,25 @@ public class ScanningService
      * @return newly added pages (never {@code null}, may be empty)
      * @throws IOException if the API call or ZIP parsing fails
      */
-    public List<ScannedPage> fetchAndAppendNext() throws IOException
-    {
-        List<BufferedImage> images   = apiClient.fetchRandomPage();
-        List<ScannedPage>   newPages = new ArrayList<>();
+    public List<ScannedPage> fetchAndAppendNext() throws IOException {
+        List<BufferedImage> images = apiClient.fetchRandomPage();
+        List<ScannedPage> newPages = new ArrayList<>();
 
-        for (BufferedImage image : images)
-        {
-            boolean     barcode = BarcodeDetector.isBarcode(image);
-            ScannedPage page    = new ScannedPage(pageCounter.incrementAndGet(), image, barcode);
+        for (BufferedImage image : images) {
+            boolean barcode = BarcodeDetector.isBarcode(image);
+            ScannedPage page = new ScannedPage(pageCounter.incrementAndGet(), image, barcode);
             pages.add(page);
             newPages.add(page);
+
+            if (barcode) {
+                // Barcode signals a document split  start a fresh document
+                documents.add(new Document(documentCounter.incrementAndGet()));
+            } else {
+                if (documents.isEmpty()) {
+                    documents.add(new Document(documentCounter.incrementAndGet()));
+                }
+                documents.get(documents.size() - 1).addPage(page);
+            }
         }
 
         return newPages;
@@ -83,13 +95,17 @@ public class ScanningService
      * Resets the session: clears all pages and resets the page counter.
      * Call this before starting a fresh scan.
      */
-    public void clearSession()
-    {
-        synchronized (pages)
-        {
-            pages.clear();
-        }
+    public void clearSession() {
+        synchronized (pages) { pages.clear(); }
+        synchronized (documents) { documents.clear(); }
         pageCounter.set(0);
+        documentCounter.set(0);
+    }
+
+    public List<Document> getDocuments() {
+        synchronized (documents) {
+            return List.copyOf(documents);
+        }
     }
 
     /** Returns the total number of pages collected so far. */
@@ -97,4 +113,6 @@ public class ScanningService
     {
         return pageCounter.get();
     }
+
+
 }
