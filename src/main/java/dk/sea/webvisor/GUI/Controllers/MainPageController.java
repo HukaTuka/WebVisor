@@ -2,6 +2,7 @@ package dk.sea.webvisor.GUI.Controllers;
 
 // Project Imports
 import dk.sea.webvisor.BE.User;
+import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BE.UserRole;
 
 // Java Imports
@@ -25,6 +26,8 @@ public class MainPageController
     private VBox adminMenu;
     @FXML
     private VBox userMenu;
+
+    private final AuditService audit = AuditService.getInstance();
 
     @FXML
     private void initialize()
@@ -55,18 +58,21 @@ public class MainPageController
     @FXML
     private void onOpenAdminUsers()
     {
+        audit.log("NAVIGATE", "Opened Admin Users view");
         openView("/Views/AdminUsersView.fxml");
     }
 
     @FXML
     private void onOpenHome()
     {
+        audit.log("NAVIGATE", "Navigated to Home");
         showHome();
     }
 
     @FXML
     private void onOpenScanning()
     {
+        audit.log("NAVIGATE", "Opened Scanning view");
         openView("/Views/ScanningView.fxml");
     }
 
@@ -97,6 +103,9 @@ public class MainPageController
     @FXML
     private void onLogout(ActionEvent actionEvent)
     {
+        audit.log("LOGOUT", "User logged out");
+        audit.clearCurrentUser();
+
         try
         {
             Parent loginRoot = FXMLLoader.load(getClass().getResource("/Views/LoginView.fxml"));

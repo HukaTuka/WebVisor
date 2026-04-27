@@ -3,6 +3,7 @@ package dk.sea.webvisor.GUI.Controllers;
 // Project Imports
 import dk.sea.webvisor.BE.User;
 import dk.sea.webvisor.BE.UserRole;
+import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BLL.UserService;
 
 // Java Imports
@@ -48,6 +49,7 @@ public class AdminUsersController
     private Label lblStatus;
 
     private final UserService userService;
+    private final AuditService audit = AuditService.getInstance();
     private User selectedUser;
 
     public AdminUsersController()
@@ -90,7 +92,12 @@ public class AdminUsersController
         txtUsername.setText(selectedUser.getUsername());
         txtPassword.clear();
         cmbRole.getSelectionModel().select(selectedUser.getRole().getDisplayName());
+
+        audit.log("USER_SELECTED", "Selected user for editing: " + selectedUser.getUsername()
+                + " (ID: " + selectedUser.getId() + ")");
+
         showStatus("User selected. Enter new password to update.", "status-info");
+
     }
 
     @FXML
@@ -107,6 +114,10 @@ public class AdminUsersController
                     getLastLogin()
 
             );
+
+            audit.log("CREATE_USER", "Created new user: " + createdUser.getUsername()
+                    + " | Name: " + createdUser.getFirstName() + " " + createdUser.getLastName()
+                    + " | Role: " + createdUser.getRole().getDisplayName());
 
             refreshUsers();
             clearForm();
@@ -133,6 +144,11 @@ public class AdminUsersController
 
         try
         {
+            String oldUsername = selectedUser.getUsername();
+            String oldRole     = selectedUser.getRole().getDisplayName();
+            String newUsername = txtUsername.getText();
+            String newRole     = getSelectedRole().getDisplayName();
+
             userService.updateUser
                     (
                     selectedUser.getId(),
@@ -143,6 +159,13 @@ public class AdminUsersController
                     getSelectedRole(),
                             getLastLogin()
                     );
+
+
+            audit.log("UPDATE_USER", "Updated user ID " + selectedUser.getId()
+                    + " | Username: " + oldUsername + " → " + newUsername
+                    + " | Name: " + txtFirstName.getText() + " " + txtLastName.getText()
+                    + " | Role: " + oldRole + " → " + newRole
+                    + (txtPassword.getText().isBlank() ? "" : " | Password changed"));
 
             refreshUsers();
             clearForm();
@@ -169,7 +192,11 @@ public class AdminUsersController
 
         try
         {
+            String deletedUsername = selectedUser.getUsername();
+            int    deletedId       = selectedUser.getId();
+
             userService.deleteUser(selectedUser.getId());
+            audit.log("DELETE_USER", "Deleted user: " + deletedUsername + " (ID: " + deletedId + ")");
             refreshUsers();
             clearForm();
             showStatus("User deleted.", "status-success");

@@ -2,6 +2,7 @@ package dk.sea.webvisor.GUI.Controllers;
 
 // Project imports
 import dk.sea.webvisor.BE.ScannedPage;
+import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BLL.ScanningService;
 
 // JavaFX imports
@@ -45,6 +46,7 @@ public class ScanningController
 
     private final ScanningService           scanningService  = new ScanningService();
     private final ObservableList<ScannedPage> pageItems      = FXCollections.observableArrayList();
+    private final AuditService                audit           = AuditService.getInstance();
 
     private volatile boolean running         = false;
     private Thread           pollingThread   = null;
@@ -92,6 +94,7 @@ public class ScanningController
             confirm.setHeaderText(null);
             if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES)
             {
+                audit.log("SCAN_START_CANCELLED", "User cancelled starting a new scanning session");
                 return;
             }
         }
@@ -100,6 +103,8 @@ public class ScanningController
         pageItems.clear();
         currentIndex = -1;
         imgPage.setImage(null);
+        audit.log("SCAN_STARTED", "Scanning session started. Polling every "
+                + POLL_INTERVAL_MS / 1000 + "s");
         showStatus("Scanning started — polling API every " + POLL_INTERVAL_MS / 1000 + " s…", "status-info");
 
         running = true;
@@ -115,6 +120,7 @@ public class ScanningController
     {
         running = false;
         updateButtonState();
+        audit.log("SCAN_STOPPED", "Scanning session stopped. Total pages collected: " + pageItems.size());
         showStatus("Scanning stopped. " + pageItems.size() + " page(s) collected.", "status-info");
     }
 
@@ -161,10 +167,14 @@ public class ScanningController
         if (clockwise)
         {
             page.rotateRight();
+            audit.log("PAGE_ROTATED", "Page " + page.getPageNumber()
+                    + " rotated 90° clockwise (total rotation: " + page.getRotationDegrees() + "°)");
         }
         else
         {
             page.rotateLeft();
+            audit.log("PAGE_ROTATED", "Page " + page.getPageNumber()
+                    + " rotated 90° counter-clockwise (total rotation: " + page.getRotationDegrees() + "°)");
         }
 
         displayPage(page);
@@ -222,11 +232,26 @@ public class ScanningController
             }
         }
 
+        //Audit new pages recieved
+        long barcodeCount = newPages.stream().filter(ScannedPage::isBarcode).count();
+        audit.log("PAGES_RECEIVED", newPages.size() + " page(s) received from API"
+                + (barcodeCount > 0 ? " (" + barcodeCount + " barcode page(s) detected)" : "")
+                + ". Total pages in session: " + pageItems.size());
+
         // Auto-navigate to the latest page
         navigateTo(pageItems.size() - 1);
 
         if (barcodeFound)
         {
+            int splitPage = newPages.stream()
+                    .filter(ScannedPage::isBarcode)
+                    .mapToInt(ScannedPage::getPageNumber)
+                    .min()
+                    .orElse(-1);
+
+            //Audit: barcode / document split detected
+            audit.log("BARCODE_DETECTED", "Document split barcode detected at page " + splitPage);
+
             showStatus("⚠ Barcode detected — document split at page " +
                     newPages.stream().filter(dk.sea.webvisor.BE.ScannedPage::isBarcode)
                             .mapToInt(ScannedPage::getPageNumber).min().orElse(-1),

@@ -2,6 +2,7 @@ package dk.sea.webvisor.GUI.Controllers;
 
 // Project Imports
 import dk.sea.webvisor.BE.User;
+import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BLL.UserService;
 
 // Java Imports
@@ -26,6 +27,7 @@ public class LoginController
     private Label lblStatus;
 
     private final UserService userService;
+    private final AuditService audit = AuditService.getInstance();
 
     public LoginController()
     {
@@ -42,9 +44,16 @@ public class LoginController
     @FXML
     private void onLogin()
     {
+        String username = txtUsername.getText();
+
         try
         {
             User user = userService.login(txtUsername.getText(), txtPassword.getText());
+
+            // ── Audit: successful login ───────────────────────────────────────
+            audit.setCurrentUser(user.getUsername());
+            audit.log("LOGIN", "User logged in successfully. Role: " + user.getRole().getDisplayName());
+
             openMainPage(user);
         }
         catch (IllegalArgumentException e)

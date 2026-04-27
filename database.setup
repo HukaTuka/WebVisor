@@ -24,6 +24,15 @@ CREATE TABLE felnie01_WebVisor.dbo.Users  (
                                               IsSeeded bit default ((0)) not null
 );
 
+-- Create AuditLog table
+CREATE TABLE felnie01_WebVisor.dbo.AuditLog (
+    ID        INT           PRIMARY KEY IDENTITY(1,1),
+    Timestamp DATETIME2     NOT NULL DEFAULT SYSDATETIME(),
+    Username  VARCHAR(100)  NOT NULL,
+    Action    VARCHAR(100)  NOT NULL,
+    Details   VARCHAR(500)  NOT NULL
+);
+
 
 INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
 VALUES (1, 'Admin','Admin','admin','pbkdf2$65536$PPYhG4wWGCLuJA1y6Q3s+A==$s+KPL+8+7oEkpwxiM1RuCzrvWtUAi4+OvORmYmjNZGQ=','Administrator','2026-04-24 09:16:45','false')
