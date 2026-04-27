@@ -1,0 +1,35 @@
+USE master;
+GO
+IF EXISTS(SELECT * FROM sys.databases WHERE name = 'felnie01_WebVisor')
+    BEGIN
+        DROP DATABASE felnie01_WebVisor;
+    END
+
+CREATE DATABASE felnie01_WebVisor;
+GO
+USE felnie01_WebVisor;
+GO
+
+
+-- Create Users table
+CREATE TABLE felnie01_WebVisor.dbo.Users  (
+
+                                              ID int primary key not null,
+                                              FirstName varchar(50),
+                                              LastName varchar(50),
+                                              Username varchar(100),
+                                              Password varchar(255),
+                                              Role varchar(20),
+                                              Timestamp DATETIME2 NULL,
+                                              IsSeeded bit default ((0)) not null
+);
+
+
+INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
+VALUES (1, 'Admin','Admin','admin','pbkdf2$65536$PPYhG4wWGCLuJA1y6Q3s+A==$s+KPL+8+7oEkpwxiM1RuCzrvWtUAi4+OvORmYmjNZGQ=','Administrator','2026-04-24 09:16:45','false')
+
+INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
+VALUES (2,'René','Stegmann','rekast','pbkdf2$65536$fTLgoIad5Rb+f+osMPjvaA==$B2k5frKhuxdkyJSRVy5Ja2HVsyeYDzi/5EgLLvDrEag=','Scanner','2026-04-24 09:16:39','false')
+
+INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
+VALUES (3,'Rasmus','Christensen', 'goraser','pbkdf2$65536$LuGoX6kJQmEWA570YfbZRQ==$PAq+aiq39/CI2cYnNrj9THIF5hygsK40GVpr0Xqe5ds=','Scanner','2026-04-23 05:10:54','false')
