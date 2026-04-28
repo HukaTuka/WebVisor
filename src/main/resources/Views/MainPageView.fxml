@@ -18,12 +18,12 @@
                             <children>
                                 <Button onAction="#onOpenHome" styleClass="sidebar-nav-button" text="Home" />
                                 <Button onAction="#onOpenScanning" styleClass="sidebar-nav-button" text="Scanning" />
-                                <Button onAction="#onOpenAuditLog" styleClass="sidebar-nav-button" text="Audit Log" />
                             </children>
                         </VBox>
                         <VBox fx:id="adminMenu" spacing="8.0">
                             <children>
                                 <Button onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button" text="Manage Users" />
+                                <Button onAction="#onOpenAuditLog" styleClass="sidebar-nav-button" text="Audit Log" />
                             </children>
                         </VBox>
                   <VBox fx:id="logoutMenu" spacing="8.0">
