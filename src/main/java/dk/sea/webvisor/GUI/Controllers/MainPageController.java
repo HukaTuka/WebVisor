@@ -76,6 +76,13 @@ public class MainPageController
         openView("/Views/ScanningView.fxml");
     }
 
+    @FXML
+    private void onOpenAuditLog() {
+            audit.log("NAVIGATE", "Opened Audit Log window");
+            openView("/Views/AuditLogView.fxml");
+
+    }
+
     private void openView(String fxmlPath)
     {
         try

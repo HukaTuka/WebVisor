@@ -93,7 +93,6 @@ public class AuditService
             }
         }
 
-        System.out.println("[AUDIT] " + entry.toLogLine());
     }
 
     /**
