@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -38,6 +39,7 @@ public class ScanningController
     @FXML private Button    btnRotateRight;
     @FXML private Button    btnPrev;
     @FXML private Button    btnNext;
+    @FXML private Button    btnDelete;
     @FXML private Label     lblPageInfo;
     @FXML private Label     lblStatus;
     @FXML private ImageView imgPage;
@@ -352,6 +354,7 @@ public class ScanningController
         btnStop.setDisable(!running);
         btnRotateLeft.setDisable(currentIndex < 0);
         btnRotateRight.setDisable(currentIndex < 0);
+        btnDelete.setDisable(pageItems.isEmpty());
     }
 
     private void showStatus(String message, String styleClass)
@@ -359,5 +362,27 @@ public class ScanningController
         lblStatus.getStyleClass().removeAll("status-success", "status-error", "status-info");
         lblStatus.getStyleClass().add(styleClass);
         lblStatus.setText(message);
+    }
+
+    public void onDelete(ActionEvent actionEvent) {
+
+        if (pageItems.isEmpty()){
+            showStatus("No page available for deletion","status-error");
+            return;
+        }
+
+        audit.log("PAGE_DELETED", "Page at index " + currentIndex + " was deleted");
+        pageItems.remove(currentIndex);
+
+        if (!pageItems.isEmpty()){
+            navigateTo(Math.min(currentIndex, pageItems.size() - 1));
+        } else {
+            currentIndex = -1;
+            imgPage.setImage(null);
+            updatePageLabel();
+        }
+
+        updateButtonState();
+
     }
 }
