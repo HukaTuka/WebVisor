@@ -42,11 +42,14 @@ public class ScannedPage
         rotationDegrees = (rotationDegrees + 270) % 360;
     }
 
+    public String getReferenceId() {
+    return String.format("Scan-%03d", pageNumber);}
+
     @Override
     public String toString()
     {
         return isBarcode
-                ? "Page " + pageNumber + " [BARCODE]"
-                : "Page " + pageNumber;
+                ? getReferenceId() + " [BARCODE]"
+                : getReferenceId();
     }
 }

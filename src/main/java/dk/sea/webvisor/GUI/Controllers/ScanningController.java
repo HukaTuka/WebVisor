@@ -63,6 +63,7 @@ public class ScanningController
     private void initialize()
     {
         lstPages.setItems(pageItems);
+        lstPages.setCellFactory(lv -> new PageListCell());
 
         // Selecting a page in the list navigates to it
         lstPages.getSelectionModel().selectedIndexProperty().addListener(
@@ -395,5 +396,27 @@ public class ScanningController
      */
     private void updateTotalScansLabel(){
         lblTotalScans.setText("Total Scans: " + pageItems.size());
+    }
+
+    private static final class PageListCell extends ListCell<ScannedPage>{
+        @Override
+        protected void updateItem(ScannedPage page, boolean empty) {
+            super.updateItem(page, empty);
+
+            if (empty || page == null){
+                setText(null);
+                setStyle("");
+                return;
+            }
+
+            if (page.isBarcode()){
+                setText(page.getReferenceId() + " [BARCODE]");
+                setStyle("-fx-font-style: italic; -fx-text-fill: #d73a49;");
+            }
+            else{
+                setText(page.getReferenceId());
+                setStyle("");
+            }
+        }
     }
 }
