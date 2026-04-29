@@ -26,7 +26,11 @@ public class MainApp extends Application
         scene.getStylesheets().add(getClass().getResource("/CSS/styles.css").toExternalForm());
         primaryStage.setTitle("WebVisor Login");
         primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
+        primaryStage.setMinWidth(1280);
+        primaryStage.setMinHeight(800);
+        primaryStage.setWidth(1500);
+        primaryStage.setHeight(920);
+        primaryStage.setResizable(true);
         primaryStage.show();
     }
 }

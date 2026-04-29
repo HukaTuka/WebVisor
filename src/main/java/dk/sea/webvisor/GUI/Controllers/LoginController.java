@@ -92,7 +92,16 @@ public class LoginController
             currentScene.setRoot(mainPageRoot);
             Stage stage = (Stage) currentScene.getWindow();
             stage.setTitle("WebVisor - Main Page");
-            stage.sizeToScene();
+            stage.setMinWidth(1280);
+            stage.setMinHeight(800);
+            if (stage.getWidth() < 1280)
+            {
+                stage.setWidth(1500);
+            }
+            if (stage.getHeight() < 800)
+            {
+                stage.setHeight(920);
+            }
         }
         catch (IOException e)
         {
