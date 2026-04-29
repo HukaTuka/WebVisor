@@ -27,6 +27,9 @@
                     <Button fx:id="btnStart" onAction="#onStartScanning" styleClass="primary-button" text="▶  Start Scanning" />
                     <Button fx:id="btnStop" disable="true" onAction="#onStopScanning" styleClass="danger-button" text="■  Stop" />
 
+                    <Label styleClass="separator-label" text="|" />
+                    <Label fx:id="lblTotalScans" styleClass="page-info-label"
+                           minWidth="110.0" text="Total scanned: 0" />
 
                     <Label styleClass="separator-label" text="|" />
 

@@ -33,6 +33,7 @@ import java.util.List;
  */
 public class ScanningController
 {
+    @FXML private Label lblTotalScans;
     @FXML private Button    btnStart;
     @FXML private Button    btnStop;
     @FXML private Button    btnRotateLeft;
@@ -105,6 +106,7 @@ public class ScanningController
         pageItems.clear();
         currentIndex = -1;
         imgPage.setImage(null);
+        updateTotalScansLabel();
         audit.log("SCAN_STARTED", "Scanning session started. Polling every "
                 + POLL_INTERVAL_MS / 1000 + "s");
         showStatus("Scanning started — polling API every " + POLL_INTERVAL_MS / 1000 + " s…", "status-info");
@@ -242,6 +244,7 @@ public class ScanningController
 
         // Auto-navigate to the latest page
         navigateTo(pageItems.size() - 1);
+        updateTotalScansLabel();
 
         if (barcodeFound)
         {
@@ -383,6 +386,14 @@ public class ScanningController
         }
 
         updateButtonState();
+        updateTotalScansLabel();
 
+    }
+
+    /**
+     * Refreshes the total-scan counter in the toolbar.
+     */
+    private void updateTotalScansLabel(){
+        lblTotalScans.setText("Total Scans: " + pageItems.size());
     }
 }
