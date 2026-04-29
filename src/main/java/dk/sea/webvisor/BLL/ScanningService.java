@@ -37,6 +37,7 @@ public class ScanningService
     // document tracking
     private final List<Document> documents = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger documentCounter = new AtomicInteger(0);
+    private boolean startNewDocumentOnNextPage = false;
 
     public ScanningService()
     {
@@ -66,14 +67,22 @@ public class ScanningService
             pages.add(page);
             newPages.add(page);
 
-            if (barcode) {
-                // Barcode signals a document split  start a fresh document
+            if (documents.isEmpty()) {
                 documents.add(new Document(documentCounter.incrementAndGet()));
-            } else {
-                if (documents.isEmpty()) {
-                    documents.add(new Document(documentCounter.incrementAndGet()));
-                }
-                documents.get(documents.size() - 1).addPage(page);
+            }
+
+            // If previous page was a barcode, this page starts a new document
+            if (startNewDocumentOnNextPage) {
+                documents.add(new Document(documentCounter.incrementAndGet()));
+                startNewDocumentOnNextPage = false;
+            }
+
+            // Always include the current page in the active document
+            documents.get(documents.size() - 1).addPage(page);
+
+            // Barcode signals a document split  start a fresh document
+            if (barcode) {
+                startNewDocumentOnNextPage = true;
             }
         }
 
@@ -100,6 +109,7 @@ public class ScanningService
         synchronized (documents) { documents.clear(); }
         pageCounter.set(0);
         documentCounter.set(0);
+        startNewDocumentOnNextPage = false;
     }
 
     public List<Document> getDocuments() {
