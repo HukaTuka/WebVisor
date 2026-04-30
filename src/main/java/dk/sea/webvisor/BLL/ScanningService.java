@@ -118,6 +118,59 @@ public class ScanningService
         }
     }
 
+    /**
+     Deletes one page from the current session and rebuilds document grouping.
+
+     @param pageIndex index in current page order
+     @return true if deleted, false if index was invalid
+     */
+    public boolean deletePageAt(int pageIndex)
+    {
+        synchronized (pages)
+        {
+            if (pageIndex < 0 || pageIndex >= pages.size())
+            {
+                return false;
+            }
+
+            pages.remove(pageIndex);
+            rebuildDocumentsFromPages();
+            return true;
+        }
+    }
+
+    private void rebuildDocumentsFromPages()
+    {
+        List<Document> rebuilt = new ArrayList<>();
+        Document current = null;
+
+        for (ScannedPage page : pages)
+        {
+            if (current == null)
+            {
+                current = new Document(rebuilt.size() + 1);
+                rebuilt.add(current);
+            }
+
+            current.addPage(page);
+
+            // Barcode closes the current document; next page starts a new one.
+            if (page.isBarcode())
+            {
+                current = null;
+            }
+        }
+
+        synchronized (documents)
+        {
+            documents.clear();
+            documents.addAll(rebuilt);
+        }
+
+        documentCounter.set(rebuilt.size());
+        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+    }
+
     /** Returns the total number of pages collected so far. */
     public int getPageCount()
     {

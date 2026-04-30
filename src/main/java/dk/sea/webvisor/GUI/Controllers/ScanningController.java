@@ -290,12 +290,19 @@ public class ScanningController
             return;
         }
 
-        audit.log("PAGE_DELETED", "Page at index " + currentIndex + " was deleted");
-        pageItems.remove(currentIndex);
+        int deleteIndex = currentIndex;
+        if (!scanningService.deletePageAt(deleteIndex))
+        {
+            showStatus("Could not delete selected file.", "status-error");
+            return;
+        }
+
+        audit.log("PAGE_DELETED", "Page at index " + deleteIndex + " was deleted");
+        pageItems.setAll(scanningService.getAllPages());
 
         if (!pageItems.isEmpty())
         {
-            navigateTo(Math.min(currentIndex, pageItems.size() - 1));
+            navigateTo(Math.min(deleteIndex, pageItems.size() - 1));
         }
         else
         {
@@ -615,15 +622,20 @@ public class ScanningController
         {
             showDocumentsLevel();
         }
-        if (currentLevel == ExplorerLevel.FILES && selectedDocument != null)
+        if (currentLevel == ExplorerLevel.FILES)
         {
-            for (Document document : selectedBox.getDocuments())
+            if (selectedDocument != null)
             {
-                if (document.getDocumentNumber() == selectedDocument.getDocumentNumber())
+                Document foundDocument = null;
+                for (Document document : selectedBox.getDocuments())
                 {
-                    selectedDocument = document;
-                    break;
+                    if (document.getDocumentNumber() == selectedDocument.getDocumentNumber())
+                    {
+                        foundDocument = document;
+                        break;
+                    }
                 }
+                selectedDocument = foundDocument;
             }
             showFilesLevel();
         }
