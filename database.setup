@@ -42,3 +42,19 @@ VALUES (2,'René','Stegmann','rekast','pbkdf2$65536$fTLgoIad5Rb+f+osMPjvaA==$B2k
 
 INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
 VALUES (3,'Rasmus','Christensen', 'goraser','pbkdf2$65536$LuGoX6kJQmEWA570YfbZRQ==$PAq+aiq39/CI2cYnNrj9THIF5hygsK40GVpr0Xqe5ds=','Scanner','2026-04-23 05:10:54','false')
+
+
+CREATE TABLE Profiles (
+                          ID INT PRIMARY KEY IDENTITY(1,1),
+                          Name VARCHAR(100) NOT NULL,
+                          SplitOnBarcode BIT NOT NULL DEFAULT 1,
+                          DefaultRotation INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE UserProfiles (
+                              UserID INT NOT NULL,
+                              ProfileID INT NOT NULL,
+                              PRIMARY KEY (UserID, ProfileID),
+                              FOREIGN KEY (UserID) REFERENCES Users(ID),
+                              FOREIGN KEY (ProfileID) REFERENCES Profiles(ID)
+);
