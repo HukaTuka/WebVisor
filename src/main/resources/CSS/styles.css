@@ -186,6 +186,12 @@
     -fx-background-color: transparent;
 }
 
+/* Barcode rows inside scan list */
+.pages-list .list-cell.barcode-item-cell {
+    -fx-font-style: italic;
+    -fx-text-fill: #d73a49;
+}
+
 /* Image viewer */
 .image-viewer-panel {
     -fx-background-color: #eaecf0;

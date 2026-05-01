@@ -19,7 +19,7 @@ import java.sql.SQLException;
  */
 public class AuditService
 {
-    // ── Singleton ─────────────────────────────────────────────────────────────
+    // Singleton
 
     private static AuditService instance;
 

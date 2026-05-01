@@ -121,7 +121,16 @@ public class MainPageController
 
             Stage stage = (Stage) scene.getWindow();
             stage.setTitle("WebVisor Login");
-            stage.sizeToScene();
+            stage.setMinWidth(1280);
+            stage.setMinHeight(800);
+            if (stage.getWidth() < 1280)
+            {
+                stage.setWidth(1500);
+            }
+            if (stage.getHeight() < 800)
+            {
+                stage.setHeight(920);
+            }
         }
         catch (IOException e)
         {

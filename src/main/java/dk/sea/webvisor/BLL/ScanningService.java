@@ -37,6 +37,7 @@ public class ScanningService
     // document tracking
     private final List<Document> documents = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger documentCounter = new AtomicInteger(0);
+    private boolean startNewDocumentOnNextPage = false;
 
     public ScanningService()
     {
@@ -66,14 +67,22 @@ public class ScanningService
             pages.add(page);
             newPages.add(page);
 
-            if (barcode) {
-                // Barcode signals a document split  start a fresh document
+            if (documents.isEmpty()) {
                 documents.add(new Document(documentCounter.incrementAndGet()));
-            } else {
-                if (documents.isEmpty()) {
-                    documents.add(new Document(documentCounter.incrementAndGet()));
-                }
-                documents.get(documents.size() - 1).addPage(page);
+            }
+
+            // If previous page was a barcode, this page starts a new document
+            if (startNewDocumentOnNextPage) {
+                documents.add(new Document(documentCounter.incrementAndGet()));
+                startNewDocumentOnNextPage = false;
+            }
+
+            // Always include the current page in the active document
+            documents.get(documents.size() - 1).addPage(page);
+
+            // Barcode signals a document split  start a fresh document
+            if (barcode) {
+                startNewDocumentOnNextPage = true;
             }
         }
 
@@ -100,12 +109,66 @@ public class ScanningService
         synchronized (documents) { documents.clear(); }
         pageCounter.set(0);
         documentCounter.set(0);
+        startNewDocumentOnNextPage = false;
     }
 
     public List<Document> getDocuments() {
         synchronized (documents) {
             return List.copyOf(documents);
         }
+    }
+
+    /**
+     Deletes one page from the current session and rebuilds document grouping.
+
+     @param pageIndex index in current page order
+     @return true if deleted, false if index was invalid
+     */
+    public boolean deletePageAt(int pageIndex)
+    {
+        synchronized (pages)
+        {
+            if (pageIndex < 0 || pageIndex >= pages.size())
+            {
+                return false;
+            }
+
+            pages.remove(pageIndex);
+            rebuildDocumentsFromPages();
+            return true;
+        }
+    }
+
+    private void rebuildDocumentsFromPages()
+    {
+        List<Document> rebuilt = new ArrayList<>();
+        Document current = null;
+
+        for (ScannedPage page : pages)
+        {
+            if (current == null)
+            {
+                current = new Document(rebuilt.size() + 1);
+                rebuilt.add(current);
+            }
+
+            current.addPage(page);
+
+            // Barcode closes the current document; next page starts a new one.
+            if (page.isBarcode())
+            {
+                current = null;
+            }
+        }
+
+        synchronized (documents)
+        {
+            documents.clear();
+            documents.addAll(rebuilt);
+        }
+
+        documentCounter.set(rebuilt.size());
+        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
     }
 
     /** Returns the total number of pages collected so far. */
