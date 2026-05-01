@@ -15,8 +15,6 @@ GO
 CREATE TABLE felnie01_WebVisor.dbo.Users  (
 
                                               ID int primary key not null,
-                                              FirstName varchar(50),
-                                              LastName varchar(50),
                                               Username varchar(100),
                                               Password varchar(255),
                                               Role varchar(20),
@@ -24,21 +22,23 @@ CREATE TABLE felnie01_WebVisor.dbo.Users  (
                                               IsSeeded bit default ((0)) not null
 );
 
--- Create AuditLog table
 CREATE TABLE felnie01_WebVisor.dbo.AuditLog (
-    ID        INT           PRIMARY KEY IDENTITY(1,1),
-    Timestamp DATETIME2     NOT NULL DEFAULT SYSDATETIME(),
-    Username  VARCHAR(100)  NOT NULL,
-    Action    VARCHAR(100)  NOT NULL,
-    Details   VARCHAR(500)  NOT NULL
+                                                ID        INT           PRIMARY KEY IDENTITY(1,1),
+                                                Timestamp DATETIME2     NOT NULL DEFAULT SYSDATETIME(),
+                                                Username  VARCHAR(100)  NOT NULL,
+                                                Action    VARCHAR(100)  NOT NULL,
+                                                Details   VARCHAR(500)  NOT NULL
 );
 
 
-INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
-VALUES (1, 'Admin','Admin','admin','pbkdf2$65536$PPYhG4wWGCLuJA1y6Q3s+A==$s+KPL+8+7oEkpwxiM1RuCzrvWtUAi4+OvORmYmjNZGQ=','Administrator','2026-04-24 09:16:45','false')
+INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+VALUES (1,'admin','pbkdf2$65536$PPYhG4wWGCLuJA1y6Q3s+A==$s+KPL+8+7oEkpwxiM1RuCzrvWtUAi4+OvORmYmjNZGQ=','Administrator','2026-04-24 09:16:45','false')
 
-INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
-VALUES (2,'René','Stegmann','rekast','pbkdf2$65536$fTLgoIad5Rb+f+osMPjvaA==$B2k5frKhuxdkyJSRVy5Ja2HVsyeYDzi/5EgLLvDrEag=','Scanner','2026-04-24 09:16:39','false')
+INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+VALUES (2,'rekast','pbkdf2$65536$fTLgoIad5Rb+f+osMPjvaA==$B2k5frKhuxdkyJSRVy5Ja2HVsyeYDzi/5EgLLvDrEag=','Scanner','2026-04-24 09:16:39','false')
 
-INSERT INTO USERS (ID, FirstName, LastName, Username, Password, Role, Timestamp, IsSeeded)
-VALUES (3,'Rasmus','Christensen', 'goraser','pbkdf2$65536$LuGoX6kJQmEWA570YfbZRQ==$PAq+aiq39/CI2cYnNrj9THIF5hygsK40GVpr0Xqe5ds=','Scanner','2026-04-23 05:10:54','false')
+INSERT INTO USERS (ID,  Username, Password, Role, Timestamp, IsSeeded)
+VALUES (3, 'goraser','pbkdf2$65536$LuGoX6kJQmEWA570YfbZRQ==$PAq+aiq39/CI2cYnNrj9THIF5hygsK40GVpr0Xqe5ds=','Scanner','2026-04-23 05:10:54','false')
+
+INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+VALUES (4, 'jonlinnet', 'pbkdf2$65536$AlG8lMuqrB4D6RPswdI2/A==$unw2oE0fQ/Av4cYhGrtj+9cboNgz6JB4zIijJs33lZ4=', 'Scanner','2026-04-27 13:58:19.8258214','false')
