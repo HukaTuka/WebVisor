@@ -27,7 +27,7 @@ public class UsersDAO implements UsersInterface
     public Optional<User> getUserByUsername(String username) throws SQLException
     {
         String sql = """
-                SELECT TOP 1 ID, FirstName, LastName, Username, Password, Role, Timestamp 
+                SELECT TOP 1 ID, Username, Password, Role, Timestamp 
                 FROM dbo.Users
                 WHERE Username = ?
                 """;
@@ -45,8 +45,6 @@ public class UsersDAO implements UsersInterface
                 }
 
                 int id = rs.getInt("ID");
-                String firstName = rs.getString("FirstName");
-                String lastName = rs.getString("LastName");
                 String dbUsername = rs.getString("Username");
                 String password = rs.getString("Password");
                 UserRole role = mapRole(rs.getString("Role"));
@@ -55,8 +53,8 @@ public class UsersDAO implements UsersInterface
                         : null;
 
                 User user = role == UserRole.UserAdmin
-                        ? new UserAdmin(id, firstName, lastName, dbUsername, password, role, Timestamp)
-                        : new UserScanner(id, firstName, lastName, dbUsername, password, role, Timestamp);
+                        ? new UserAdmin(id, dbUsername, password, role, Timestamp)
+                        : new UserScanner(id, dbUsername, password, role, Timestamp);
 
                 return Optional.of(user);
             }
@@ -67,7 +65,7 @@ public class UsersDAO implements UsersInterface
     public List<User> getAllUsers() throws SQLException
     {
         String sql = """
-                SELECT ID, FirstName, LastName, Username, Password, Role, Timestamp
+                SELECT ID, Username, Password, Role, Timestamp
                 FROM dbo.Users
                 ORDER BY Username
                 """;
@@ -91,8 +89,8 @@ public class UsersDAO implements UsersInterface
     public User createUser(User user) throws SQLException
     {
         String sql = """
-                INSERT INTO dbo.Users (ID, FirstName, LastName, Username, Password, Role, [Timestamp])
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO dbo.Users (ID, Username, Password, Role, [Timestamp])
+                VALUES (?, ?, ?, ?, ?)
                 """;
 
         int newId = getNextUserId();
@@ -102,25 +100,21 @@ public class UsersDAO implements UsersInterface
              PreparedStatement statement = connection.prepareStatement(sql))
         {
             statement.setInt(1, newId);
-            statement.setString(2, user.getFirstName());
-            statement.setString(3, user.getLastName());
-            statement.setString(4, user.getUsername());
-            statement.setString(5, user.getPassword());
-            statement.setString(6, toDatabaseRole(user.getRole()));
+            statement.setString(2, user.getUsername());
+            statement.setString(3, user.getPassword());
+            statement.setString(4, toDatabaseRole(user.getRole()));
 
             LocalDateTime timestamp = user.getLastLogin() != null
                     ? user.getLastLogin()
                     : LocalDateTime.now();
             user.setLastLogin(timestamp);
-            statement.setTimestamp(7, Timestamp.valueOf(timestamp));
+            statement.setTimestamp(5, Timestamp.valueOf(timestamp));
 
             statement.executeUpdate();
         }
 
         return createUserObject(
                 newId,
-                user.getFirstName(),
-                user.getLastName(),
                 user.getUsername(),
                 user.getPassword(),
                 user.getRole(),
@@ -133,25 +127,23 @@ public class UsersDAO implements UsersInterface
     {
         String sql = """
                 UPDATE dbo.Users
-                SET FirstName = ?, LastName = ?, Username = ?, Password = ?, Role = ?, [Timestamp] = ?
+                SET Username = ?, Password = ?, Role = ?, [Timestamp] = ?
                 WHERE ID = ?
                 """;
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
         {
-            statement.setString(1, user.getFirstName());
-            statement.setString(2, user.getLastName());
-            statement.setString(3, user.getUsername());
-            statement.setString(4, user.getPassword());
-            statement.setString(5, toDatabaseRole(user.getRole()));
+            statement.setString(1, user.getUsername());
+            statement.setString(2, user.getPassword());
+            statement.setString(3, toDatabaseRole(user.getRole()));
 
             LocalDateTime timestamp = user.getLastLogin() != null
                     ? user.getLastLogin()
                     : LocalDateTime.now();
-            statement.setTimestamp(6, Timestamp.valueOf(timestamp));
+            statement.setTimestamp(4, Timestamp.valueOf(timestamp));
 
-            statement.setInt(7, user.getId());
+            statement.setInt(5, user.getId());
             statement.executeUpdate();
         }
     }
@@ -189,8 +181,7 @@ public class UsersDAO implements UsersInterface
     private User createUserFromResultSet(ResultSet rs) throws SQLException
     {
         int id = rs.getInt("ID");
-        String firstName = rs.getString("FirstName");
-        String lastName = rs.getString("LastName");
+
         String username = rs.getString("Username");
         String password = rs.getString("Password");
         UserRole role = mapRole(rs.getString("Role"));
@@ -198,16 +189,16 @@ public class UsersDAO implements UsersInterface
                 ? rs.getTimestamp("Timestamp").toLocalDateTime()
                 : null;
 
-        return createUserObject(id, firstName, lastName, username, password, role, Timestamp);
+        return createUserObject(id, username, password, role, Timestamp);
     }
 
-    private User createUserObject(int id, String firstName, String lastName, String username, String password, UserRole role, LocalDateTime Timestamp)
+    private User createUserObject(int id, String username, String password, UserRole role, LocalDateTime Timestamp)
     {
         if (role == UserRole.UserAdmin)
         {
-            return new UserAdmin(id, firstName, lastName, username, password, role, Timestamp);
+            return new UserAdmin(id, username, password, role, Timestamp);
         }
-        return new UserScanner(id, firstName, lastName, username, password, role, Timestamp);
+        return new UserScanner(id, username, password, role, Timestamp);
     }
 
     private String toDatabaseRole(UserRole role)

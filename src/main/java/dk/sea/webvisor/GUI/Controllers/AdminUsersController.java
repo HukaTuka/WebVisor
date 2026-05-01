@@ -27,18 +27,11 @@ public class AdminUsersController
     @FXML
     private TableView<User> tblUsers;
     @FXML
-    private TableColumn<User, String> colFirstName;
-    @FXML
-    private TableColumn<User, String> colLastName;
-    @FXML
     private TableColumn<User, String> colUsername;
     @FXML
     private TableColumn<User, String> colRole;
 
-    @FXML
-    private TextField txtFirstName;
-    @FXML
-    private TextField txtLastName;
+
     @FXML
     private TextField txtUsername;
     @FXML
@@ -67,8 +60,6 @@ public class AdminUsersController
     @FXML
     private void initialize()
     {
-        colFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
-        colLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         colRole.setCellValueFactory(new PropertyValueFactory<>("roleDisplayName"));
 
@@ -87,8 +78,6 @@ public class AdminUsersController
             return;
         }
 
-        txtFirstName.setText(selectedUser.getFirstName());
-        txtLastName.setText(selectedUser.getLastName());
         txtUsername.setText(selectedUser.getUsername());
         txtPassword.clear();
         cmbRole.getSelectionModel().select(selectedUser.getRole().getDisplayName());
@@ -106,8 +95,6 @@ public class AdminUsersController
         try
         {
             User createdUser = userService.createUser(
-                    txtFirstName.getText(),
-                    txtLastName.getText(),
                     txtUsername.getText(),
                     txtPassword.getText(),
                     getSelectedRole(),
@@ -116,7 +103,6 @@ public class AdminUsersController
             );
 
             audit.log("CREATE_USER", "Created new user: " + createdUser.getUsername()
-                    + " | Name: " + createdUser.getFirstName() + " " + createdUser.getLastName()
                     + " | Role: " + createdUser.getRole().getDisplayName());
 
             refreshUsers();
@@ -152,8 +138,6 @@ public class AdminUsersController
             userService.updateUser
                     (
                     selectedUser.getId(),
-                    txtFirstName.getText(),
-                    txtLastName.getText(),
                     txtUsername.getText(),
                     txtPassword.getText(),
                     getSelectedRole(),
@@ -163,7 +147,6 @@ public class AdminUsersController
 
             audit.log("UPDATE_USER", "Updated user ID " + selectedUser.getId()
                     + " | Username: " + oldUsername + " → " + newUsername
-                    + " | Name: " + txtFirstName.getText() + " " + txtLastName.getText()
                     + " | Role: " + oldRole + " → " + newRole
                     + (txtPassword.getText().isBlank() ? "" : " | Password changed"));
 
@@ -243,8 +226,6 @@ public class AdminUsersController
     {
         selectedUser = null;
         tblUsers.getSelectionModel().clearSelection();
-        txtFirstName.clear();
-        txtLastName.clear();
         txtUsername.clear();
         txtPassword.clear();
         cmbRole.getSelectionModel().select("Scanner");

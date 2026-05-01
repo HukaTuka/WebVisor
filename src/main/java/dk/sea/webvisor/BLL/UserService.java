@@ -57,26 +57,26 @@ public class UserService
         return usersDAO.getAllUsers();
     }
 
-    public User createUser(String firstName, String lastName, String username, String plainPassword, UserRole role, LocalDateTime lastLogin) throws SQLException
+    public User createUser(String username, String plainPassword, UserRole role, LocalDateTime lastLogin) throws SQLException
     {
-        validateUserInput(firstName, lastName, username, plainPassword, role);
+        validateUserInput(username, plainPassword, role);
 
         String hashedPassword = PasswordHasher.hashPassword(plainPassword.trim());
-        User user = createUserObject(0, firstName, lastName, username, hashedPassword, role, lastLogin);
+        User user = createUserObject(0, username, hashedPassword, role, lastLogin);
         return usersDAO.createUser(user);
     }
 
-    public void updateUser(int userId, String firstName, String lastName, String username, String plainPassword, UserRole role, LocalDateTime lastLogin) throws SQLException
+    public void updateUser(int userId, String username, String plainPassword, UserRole role, LocalDateTime lastLogin) throws SQLException
     {
         if (userId <= 0)
         {
             throw new IllegalArgumentException("Please choose a valid user.");
         }
 
-        validateUserInput(firstName, lastName, username, plainPassword, role);
+        validateUserInput(username, plainPassword, role);
 
         String hashedPassword = PasswordHasher.hashPassword(plainPassword.trim());
-        User user = createUserObject(userId, firstName, lastName, username, hashedPassword, role, lastLogin);
+        User user = createUserObject(userId, username, hashedPassword, role, lastLogin);
         usersDAO.updateUser(user);
     }
 
@@ -90,17 +90,8 @@ public class UserService
         usersDAO.deleteUser(userId);
     }
 
-    private void validateUserInput(String firstName, String lastName, String username, String plainPassword, UserRole role)
+    private void validateUserInput(String username, String plainPassword, UserRole role)
     {
-        if (firstName == null || firstName.isBlank())
-        {
-            throw new IllegalArgumentException("First name must be filled out.");
-        }
-
-        if (lastName == null || lastName.isBlank())
-        {
-            throw new IllegalArgumentException("Last name must be filled out.");
-        }
 
         if (username == null || username.isBlank())
         {
@@ -118,12 +109,12 @@ public class UserService
         }
     }
 
-    private User createUserObject(int id, String firstName, String lastName, String username, String password, UserRole role, LocalDateTime lastLogin)
+    private User createUserObject(int id, String username, String password, UserRole role, LocalDateTime lastLogin)
     {
         if (role == UserRole.UserAdmin)
         {
-            return new UserAdmin(id, firstName.trim(), lastName.trim(), username.trim(), password, role, lastLogin);
+            return new UserAdmin(id, username.trim(), password, role, lastLogin);
         }
-        return new UserScanner(id, firstName.trim(), lastName.trim(), username.trim(), password, role, lastLogin);
+        return new UserScanner(id, username.trim(), password, role, lastLogin);
     }
 }
