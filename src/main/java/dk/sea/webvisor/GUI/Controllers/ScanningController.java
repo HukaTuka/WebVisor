@@ -83,7 +83,7 @@ public class ScanningController
     private ExplorerLevel currentLevel = ExplorerLevel.BOXES;
 
     /** Interval between API polls while a session is active (milliseconds). */
-    private static final long POLL_INTERVAL_MS = 3_000;
+    private static final long POLL_INTERVAL_MS = 0;
 
 
     @FXML
