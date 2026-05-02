@@ -7,6 +7,7 @@ import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BLL.UserService;
 
 // Java Imports
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -61,7 +62,8 @@ public class AdminUsersController
     private void initialize()
     {
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
-        colRole.setCellValueFactory(new PropertyValueFactory<>("roleDisplayName"));
+        //lambda expression to set the roll accurately without user in front of the role
+        colRole.setCellValueFactory(celldata -> new SimpleStringProperty(celldata.getValue().getRole().getDisplayName()));
 
         cmbRole.setItems(FXCollections.observableArrayList("Administrator", "Scanner"));
         cmbRole.getSelectionModel().select("Scanner");
