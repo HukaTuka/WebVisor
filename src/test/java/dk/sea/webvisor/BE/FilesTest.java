@@ -2,7 +2,7 @@ package dk.sea.webvisor.BE;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ScannedPageTest {
+class FilesTest {
 
     @org.junit.jupiter.api.Test
     void getPageNumber() {
