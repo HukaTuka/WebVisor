@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="dk.sea.webvisor.GUI.Controllers.AdminProfilesController"
+            prefHeight="650.0" prefWidth="900.0"
+            styleClass="root-pane">
+    <children>
+        <VBox spacing="14.0" styleClass="admin-screen"
+              AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0"
+              AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+            <padding>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+            </padding>
+
+            <children>
+                <Label text="Admin - Profile Management" styleClass="title-label"/>
+
+                <TableView fx:id="tblProfiles" onMouseClicked="#onTableClicked"
+                           styleClass="users-table" prefHeight="280.0">
+                    <columns>
+                        <TableColumn fx:id="colName"             text="Name"              prefWidth="280.0"/>
+                        <TableColumn fx:id="colSplitOnBarcode"   text="Split on Barcode"  prefWidth="160.0"/>
+                        <TableColumn fx:id="colDefaultRotation"  text="Default Rotation"  prefWidth="160.0"/>
+                    </columns>
+                </TableView>
+
+                <GridPane hgap="12.0" vgap="12.0" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="140.0"/>
+                        <ColumnConstraints minWidth="280.0"/>
+                    </columnConstraints>
+
+                    <children>
+                        <Label text="Profile Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="txtName" promptText="e.g. Standard A4"
+                                   styleClass="input-field"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <Label text="Split on Barcode:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <CheckBox fx:id="chkSplitOnBarcode" selected="true"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <Label text="Default Rotation (°):" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <TextField fx:id="txtRotation" promptText="e.g. 0, 90, 180, 270"
+                                   styleClass="input-field" text="0"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    </children>
+                </GridPane>
+
+                <HBox spacing="10.0">
+                    <children>
+                        <Button text="Create Profile" onAction="#onCreateProfile" styleClass="primary-button"/>
+                        <Button text="Update Profile" onAction="#onUpdateProfile" styleClass="secondary-button"/>
+                        <Button text="Delete Profile" onAction="#onDeleteProfile" styleClass="danger-button"/>
+                    </children>
+                </HBox>
+
+                <Label fx:id="lblStatus" styleClass="status-label"/>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

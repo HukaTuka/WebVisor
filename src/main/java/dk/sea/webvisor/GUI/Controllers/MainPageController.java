@@ -83,6 +83,12 @@ public class MainPageController
 
     }
 
+    @FXML
+    private void onOpenAdminProfiles() {
+        audit.log("NAVIGATE", "Opened Admin Profiles view");
+        openView("/Views/AdminProfilesView.fxml");
+    }
+
     private void openView(String fxmlPath)
     {
         try
