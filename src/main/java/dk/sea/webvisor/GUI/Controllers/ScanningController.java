@@ -363,6 +363,8 @@ public class ScanningController
         updateTotalScansLabel();
         updateBoxSnapshotFromCurrentSession();
 
+        audit.log("NEW_PAGES", "Page at index " + pageItems.size() + " was created");
+
         if (currentLevel == ExplorerLevel.FILES)
         {
             showFilesLevel();
