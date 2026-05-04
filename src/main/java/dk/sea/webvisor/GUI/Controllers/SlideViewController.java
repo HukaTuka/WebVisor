@@ -1,6 +1,6 @@
 package dk.sea.webvisor.GUI.Controllers;
 
-import dk.sea.webvisor.BE.ScannedPage;
+import dk.sea.webvisor.BE.Files;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
@@ -22,10 +22,10 @@ public class SlideViewController
     @FXML private Label     lblPageInfo;
     @FXML private Label     lblBarcodeWarning;
 
-    private List<ScannedPage> pages;
+    private List<Files> pages;
     private int currentIndex = 0;
 
-    public void setPages(List<ScannedPage> pages, int startIndex)
+    public void setPages(List<Files> pages, int startIndex)
     {
         this.pages = pages;
         this.currentIndex = startIndex;
@@ -95,13 +95,20 @@ public class SlideViewController
 
     private void showPage(int index)
     {
-        ScannedPage page = pages.get(index);
+        Files page = pages.get(index);
 
-        BufferedImage rotated = applyAwtRotation(page.getImage(), page.getRotationDegrees());
-        Image fxImage = SwingFXUtils.toFXImage(rotated, null);
-        imgSlide.setImage(fxImage);
+        BufferedImage raw = page.getImage();
+        if (raw != null)
+        {
+            BufferedImage rotated = applyAwtRotation(raw, page.getRotationDegrees());
+            imgSlide.setImage(SwingFXUtils.toFXImage(rotated, null));
+        }
+        else
+        {
+            imgSlide.setImage(null);
+        }
+
         imgSlide.setOpacity(page.isBarcode() ? 0.55 : 1.0);
-
         lblPageInfo.setText((index + 1) + " / " + pages.size() + "  —  " + page.getReferenceId());
         lblBarcodeWarning.setVisible(page.isBarcode());
         lblBarcodeWarning.setManaged(page.isBarcode());
