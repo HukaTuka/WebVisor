@@ -30,7 +30,7 @@
                               <ColumnConstraints minWidth="240.0" />
                            </columnConstraints>
                         </GridPane>
-                        <Button mnemonicParsing="false" onAction="#onLogin" prefWidth="120.0" text="Log in" styleClass="primary-button" />
+                        <Button mnemonicParsing="false" onAction="#onLogin" prefWidth="120.0" text="Log in" styleClass="primary-button" defaultButton="true" />
                         <Label fx:id="lblStatus" text="" styleClass="status-label" />
                      </children>
                      <padding>
