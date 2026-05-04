@@ -29,14 +29,28 @@
             <children>
                 <Label text="Admin - Profile Management" styleClass="title-label"/>
 
-                <TableView fx:id="tblProfiles" onMouseClicked="#onTableClicked"
-                           styleClass="users-table" prefHeight="280.0">
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Search:"/>
+                        <TextField fx:id="txtSearch"
+                                   promptText="Filter by name..."
+                                   prefWidth="300.0"
+                                   styleClass="input-field"
+                                   onKeyReleased="#onSearchChanged"/>
+                        <Button text="Clear" onAction="#onClearSearch" styleClass="sidebar-nav-button"/>
+                    </children>
+                </HBox>
+
+                <TableView fx:id="tblProfiles" styleClass="users-table" prefHeight="260.0" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colName"             text="Name"              prefWidth="280.0"/>
-                        <TableColumn fx:id="colSplitOnBarcode"   text="Split on Barcode"  prefWidth="160.0"/>
-                        <TableColumn fx:id="colDefaultRotation"  text="Default Rotation"  prefWidth="160.0"/>
+                        <TableColumn fx:id="colName"            text="Name"             prefWidth="230.0"/>
+                        <TableColumn fx:id="colSplitOnBarcode"  text="Split on Barcode" prefWidth="140.0"/>
+                        <TableColumn fx:id="colDefaultRotation" text="Default Rotation" prefWidth="140.0"/>
+                        <TableColumn fx:id="colActions"         text="Actions"          prefWidth="180.0" sortable="false"/>
                     </columns>
                 </TableView>
+
+                <Label fx:id="lblFormHeading" styleClass="panel-header-label" text="Create New Profile"/>
 
                 <GridPane hgap="12.0" vgap="12.0" styleClass="form-grid">
                     <columnConstraints>
@@ -61,11 +75,10 @@
                     </children>
                 </GridPane>
 
-                <HBox spacing="10.0">
+                <HBox fx:id="formButtons" spacing="10.0">
                     <children>
-                        <Button text="Create Profile" onAction="#onCreateProfile" styleClass="primary-button"/>
-                        <Button text="Update Profile" onAction="#onUpdateProfile" styleClass="secondary-button"/>
-                        <Button text="Delete Profile" onAction="#onDeleteProfile" styleClass="danger-button"/>
+                        <Button fx:id="btnSave"   text="Create Profile" onAction="#onSaveProfile" styleClass="primary-button"/>
+                        <Button fx:id="btnCancel" text="Cancel" onAction="#onCancelEdit" styleClass="secondary-button"/>
                     </children>
                 </HBox>
 

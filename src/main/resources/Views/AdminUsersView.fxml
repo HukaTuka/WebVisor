@@ -15,58 +15,82 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="650.0" prefWidth="900.0" styleClass="root-pane" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dk.sea.webvisor.GUI.Controllers.AdminUsersController">
+<AnchorPane prefHeight="650.0" prefWidth="900.0" styleClass="root-pane"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dk.sea.webvisor.GUI.Controllers.AdminUsersController">
     <children>
-        <VBox spacing="14.0" styleClass="admin-screen" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <VBox spacing="14.0" styleClass="admin-screen"
+              AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
-                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
             </padding>
 
             <children>
-                <Label styleClass="title-label" text="Admin - User Management" />
+                <Label styleClass="title-label" text="Admin - User Management"/>
 
-                <TableView fx:id="tblUsers" onMouseClicked="#onTableClicked" prefHeight="300.0" styleClass="users-table">
-                    <columns>
-                        <TableColumn fx:id="colUsername" prefWidth="220.0" text="Username" />
-                        <TableColumn fx:id="colRole" prefWidth="180.0" text="Role" />
-                    </columns>
-                </TableView>
-
-                <GridPane hgap="12.0" styleClass="form-grid" vgap="12.0">
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="120.0" />
-                        <ColumnConstraints minWidth="260.0" />
-                        <ColumnConstraints minWidth="120.0" />
-                        <ColumnConstraints minWidth="260.0" />
-                    </columnConstraints>
-
+                <!-- Search bar -->
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
                     <children>
-
-                        <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-
-                        <Label text="Password:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-
-                        <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                        <ComboBox fx:id="cmbRole" styleClass="combo-box-default" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                    </children>
-               <rowConstraints>
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-               </rowConstraints>
-                </GridPane>
-
-                <HBox spacing="10.0">
-                    <children>
-                        <Button onAction="#onCreateUser" styleClass="primary-button" text="Create User" />
-                        <Button onAction="#onUpdateUser" styleClass="secondary-button" text="Update User" />
-                        <Button onAction="#onDeleteUser" styleClass="danger-button" text="Delete User" />
+                        <Label text="Search:"/>
+                        <TextField fx:id="txtSearch"
+                                   promptText="Filter by username or role..."
+                                   prefWidth="300.0"
+                                   styleClass="input-field"
+                                   onKeyReleased="#onSearchChanged"/>
+                        <Button text="Clear" onAction="#onClearSearch" styleClass="sidebar-nav-button"/>
                     </children>
                 </HBox>
 
-                <Label fx:id="lblStatus" styleClass="status-label" />
+                <!-- User table with inline Actions column -->
+                <TableView fx:id="tblUsers" prefHeight="280.0" styleClass="users-table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colUsername" prefWidth="300.0" text="Username"/>
+                        <TableColumn fx:id="colRole"     prefWidth="220.0" text="Role"/>
+                        <TableColumn fx:id="colActions"  prefWidth="180.0" text="Actions" sortable="false"/>
+                    </columns>
+                </TableView>
+
+                <Label fx:id="lblFormHeading" styleClass="panel-header-label" text="Create New User"/>
+
+                <GridPane hgap="12.0" styleClass="form-grid" vgap="12.0">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120.0"/>
+                        <ColumnConstraints minWidth="260.0"/>
+                        <ColumnConstraints minWidth="120.0"/>
+                        <ColumnConstraints minWidth="260.0"/>
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints/>
+                        <RowConstraints/>
+                    </rowConstraints>
+
+                    <children>
+                        <Label text="Username:"  GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="txtUsername" promptText="Username"
+                                   styleClass="input-field"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <Label text="Password:"  GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                        <PasswordField fx:id="txtPassword" promptText="Password"
+                                       styleClass="input-field"
+                                       GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+                        <Label text="Role:"      GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <ComboBox fx:id="cmbRole" styleClass="combo-box-default"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    </children>
+                </GridPane>
+
+                <HBox fx:id="formButtons" spacing="10.0">
+                    <children>
+                        <Button fx:id="btnSave"   text="Create User" onAction="#onSaveUser"  styleClass="primary-button"/>
+                        <Button fx:id="btnCancel" text="Cancel" onAction="#onCancelEdit" styleClass="secondary-button"/>
+                    </children>
+                </HBox>
+
+                <Label fx:id="lblStatus" styleClass="status-label"/>
             </children>
         </VBox>
     </children>

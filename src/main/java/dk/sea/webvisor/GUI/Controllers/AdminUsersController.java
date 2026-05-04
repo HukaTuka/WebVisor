@@ -9,42 +9,50 @@ import dk.sea.webvisor.BLL.UserService;
 // Java Imports
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class AdminUsersController
 {
-    @FXML
-    private TableView<User> tblUsers;
-    @FXML
-    private TableColumn<User, String> colUsername;
-    @FXML
-    private TableColumn<User, String> colRole;
-
-
-    @FXML
-    private TextField txtUsername;
-    @FXML
-    private PasswordField txtPassword;
-    @FXML
-    private ComboBox<String> cmbRole;
-    @FXML
-    private Label lblStatus;
-
-    private final UserService userService;
+    @FXML private TableView<User> tblUsers;
+    @FXML private TableColumn<User, String> colUsername;
+    @FXML private TableColumn<User, String> colRole;
+    @FXML private TableColumn<User, Void> colActions;
+    @FXML private TextField txtSearch;
+    @FXML private Label lblFormHeading;
+    @FXML private TextField txtUsername;
+    @FXML private PasswordField txtPassword;
+    @FXML private ComboBox<String> cmbRole;
+    @FXML private Button btnSave;
+    @FXML private Button btnCancel;
+    @FXML private Label lblStatus;
+    private final UserService  userService;
     private final AuditService audit = AuditService.getInstance();
-    private User selectedUser;
+
+    private final ObservableList<User> allUsers = FXCollections.observableArrayList();
+    private FilteredList<User> filteredUsers;
+
+    /** Non-null while an edit is in progress; null means "create" mode. */
+    private User editingUser = null;
 
     public AdminUsersController()
     {
@@ -61,55 +69,136 @@ public class AdminUsersController
     @FXML
     private void initialize()
     {
-        colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
-        //lambda expression to set the roll accurately without user in front of the role
-        colRole.setCellValueFactory(celldata -> new SimpleStringProperty(celldata.getValue().getRole().getDisplayName()));
+        // Hide cancel here, after @FXML injection, so JavaFX layout is aware
+        // of the initial state before any layout pass runs.
+        setCancelVisible(false);
 
         cmbRole.setItems(FXCollections.observableArrayList("Administrator", "Scanner"));
         cmbRole.getSelectionModel().select("Scanner");
 
+        setupColumns();
+        setupDoubleClick();
         refreshUsers();
     }
 
-    @FXML
-    private void onTableClicked()
+    private void setupColumns()
     {
-        selectedUser = tblUsers.getSelectionModel().getSelectedItem();
-        if (selectedUser == null)
+        colUsername.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().getUsername()));
+
+        colRole.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().getRole().getDisplayName()));
+
+        // Inline Edit / Delete buttons
+        colActions.setCellFactory(col -> new TableCell<>()
         {
-            return;
-        }
+            private final Button btnEdit   = new Button("Edit");
+            private final Button btnDelete = new Button("Delete");
+            private final HBox   box       = new HBox(8, btnEdit, btnDelete);
 
-        txtUsername.setText(selectedUser.getUsername());
-        txtPassword.clear();
-        cmbRole.getSelectionModel().select(selectedUser.getRole().getDisplayName());
+            {
+                btnEdit.getStyleClass().add("secondary-button");
+                btnDelete.getStyleClass().add("danger-button");
 
-        audit.log("USER_SELECTED", "Selected user for editing: " + selectedUser.getUsername()
-                + " (ID: " + selectedUser.getId() + ")");
+                btnEdit.setOnAction(e ->
+                {
+                    User user = getTableView().getItems().get(getIndex());
+                    startEditing(user);
+                });
 
-        showStatus("User selected. Enter new password to update.", "status-info");
+                btnDelete.setOnAction(e ->
+                {
+                    User user = getTableView().getItems().get(getIndex());
+                    handleDelete(user);
+                });
+            }
 
+            @Override
+            protected void updateItem(Void item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : box);
+            }
+        });
+    }
+
+    private void setupDoubleClick()
+    {
+        tblUsers.setOnMouseClicked(event ->
+        {
+            if (event.getButton() == MouseButton.PRIMARY
+                    && event.getClickCount() == 2)
+            {
+                User selected = tblUsers.getSelectionModel().getSelectedItem();
+                if (selected != null)
+                {
+                    startEditing(selected);
+                }
+            }
+        });
     }
 
     @FXML
-    private void onCreateUser()
+    private void onSearchChanged()
+    {
+        applyFilter();
+    }
+
+    @FXML
+    private void onClearSearch()
+    {
+        txtSearch.clear();
+        applyFilter();
+    }
+
+    private void applyFilter()
+    {
+        String query = txtSearch.getText() == null ? "" : txtSearch.getText().trim().toLowerCase();
+
+        filteredUsers.setPredicate(user ->
+        {
+            if (query.isEmpty()) return true;
+            return user.getUsername().toLowerCase().contains(query)
+                    || user.getRole().getDisplayName().toLowerCase().contains(query);
+        });
+    }
+
+    @FXML
+    private void onSaveUser()
+    {
+        if (editingUser == null)
+        {
+            createUser();
+        }
+        else
+        {
+            updateUser();
+        }
+    }
+
+    @FXML
+    private void onCancelEdit()
+    {
+        clearForm();
+    }
+
+    private void createUser()
     {
         try
         {
-            User createdUser = userService.createUser(
+            User created = userService.createUser(
                     txtUsername.getText(),
                     txtPassword.getText(),
                     getSelectedRole(),
-                    getLastLogin()
-
+                    LocalDateTime.now()
             );
 
-            audit.log("CREATE_USER", "Created new user: " + createdUser.getUsername()
-                    + " | Role: " + createdUser.getRole().getDisplayName());
+            audit.log("CREATE_USER", "Created new user: " + created.getUsername()
+                    + " | Role: " + created.getRole().getDisplayName());
 
             refreshUsers();
             clearForm();
-            showStatus("Created user: " + createdUser.getUsername(), "status-success");
+            showStatus("Created user: " + created.getUsername(), "status-success");
         }
         catch (IllegalArgumentException e)
         {
@@ -121,35 +210,26 @@ public class AdminUsersController
         }
     }
 
-    @FXML
-    private void onUpdateUser()
+    private void updateUser()
     {
-        if (selectedUser == null)
-        {
-            showStatus("Choose a user from the table first.", "status-error");
-            return;
-        }
-
         try
         {
-            String oldUsername = selectedUser.getUsername();
-            String oldRole     = selectedUser.getRole().getDisplayName();
+            String oldUsername = editingUser.getUsername();
+            String oldRole     = editingUser.getRole().getDisplayName();
             String newUsername = txtUsername.getText();
             String newRole     = getSelectedRole().getDisplayName();
 
-            userService.updateUser
-                    (
-                    selectedUser.getId(),
-                    txtUsername.getText(),
+            userService.updateUser(
+                    editingUser.getId(),
+                    newUsername,
                     txtPassword.getText(),
                     getSelectedRole(),
-                            getLastLogin()
-                    );
+                    LocalDateTime.now()
+            );
 
-
-            audit.log("UPDATE_USER", "Updated user ID " + selectedUser.getId()
-                    + " | Username: " + oldUsername + " → " + newUsername
-                    + " | Role: " + oldRole + " → " + newRole
+            audit.log("UPDATE_USER", "Updated user ID " + editingUser.getId()
+                    + " | Username: " + oldUsername + " -> " + newUsername
+                    + " | Role: " + oldRole + " -> " + newRole
                     + (txtPassword.getText().isBlank() ? "" : " | Password changed"));
 
             refreshUsers();
@@ -166,25 +246,34 @@ public class AdminUsersController
         }
     }
 
-    @FXML
-    private void onDeleteUser()
+    private void handleDelete(User user)
     {
-        if (selectedUser == null)
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Delete user \"" + user.getUsername() + "\"?",
+                ButtonType.OK, ButtonType.CANCEL);
+        confirm.setHeaderText(null);
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK)
         {
-            showStatus("Choose a user from the table first.", "status-error");
+            showStatus("Deletion cancelled.", "status-info");
             return;
         }
 
         try
         {
-            String deletedUsername = selectedUser.getUsername();
-            int    deletedId       = selectedUser.getId();
+            userService.deleteUser(user.getId());
 
-            userService.deleteUser(selectedUser.getId());
-            audit.log("DELETE_USER", "Deleted user: " + deletedUsername + " (ID: " + deletedId + ")");
+            audit.log("DELETE_USER", "Deleted user: " + user.getUsername()
+                    + " (ID: " + user.getId() + ")");
+
+            if (editingUser != null && editingUser.getId() == user.getId())
+            {
+                clearForm();
+            }
+
             refreshUsers();
-            clearForm();
-            showStatus("User deleted.", "status-success");
+            showStatus("User \"" + user.getUsername() + "\" deleted.", "status-success");
         }
         catch (IllegalArgumentException e)
         {
@@ -196,19 +285,34 @@ public class AdminUsersController
         }
     }
 
-    private UserRole getSelectedRole()
+    private void startEditing(User user)
     {
-        String roleText = cmbRole.getSelectionModel().getSelectedItem();
-        if ("Administrator".equalsIgnoreCase(roleText))
-        {
-            return UserRole.UserAdmin;
-        }
-        return UserRole.UserScanner;
+        editingUser = user;
+        txtUsername.setText(user.getUsername());
+        txtPassword.clear();
+        cmbRole.getSelectionModel().select(user.getRole().getDisplayName());
+
+        lblFormHeading.setText("Edit User: " + user.getUsername());
+        btnSave.setText("Save Changes");
+        setCancelVisible(true);
+
+        showStatus("Editing user: " + user.getUsername()
+                + ". Enter a new password to change it.", "status-info");
     }
 
-    private LocalDateTime getLastLogin()
+    private void clearForm()
     {
-        return LocalDateTime.now();
+        editingUser = null;
+        txtUsername.clear();
+        txtPassword.clear();
+        cmbRole.getSelectionModel().select("Scanner");
+
+        lblFormHeading.setText("Create New User");
+        btnSave.setText("Create User");
+        setCancelVisible(false);
+
+        tblUsers.getSelectionModel().clearSelection();
+        lblStatus.setText("");
     }
 
     private void refreshUsers()
@@ -216,7 +320,15 @@ public class AdminUsersController
         try
         {
             List<User> users = userService.getAllUsers();
-            tblUsers.setItems(FXCollections.observableArrayList(users));
+            allUsers.setAll(users);
+
+            if (filteredUsers == null)
+            {
+                filteredUsers = new FilteredList<>(allUsers, u -> true);
+                tblUsers.setItems(filteredUsers);
+            }
+
+            applyFilter();
         }
         catch (SQLException e)
         {
@@ -224,13 +336,18 @@ public class AdminUsersController
         }
     }
 
-    private void clearForm()
+    private UserRole getSelectedRole()
     {
-        selectedUser = null;
-        tblUsers.getSelectionModel().clearSelection();
-        txtUsername.clear();
-        txtPassword.clear();
-        cmbRole.getSelectionModel().select("Scanner");
+        String roleText = cmbRole.getSelectionModel().getSelectedItem();
+        return "Administrator".equalsIgnoreCase(roleText)
+                ? UserRole.UserAdmin
+                : UserRole.UserScanner;
+    }
+
+    private void setCancelVisible(boolean visible)
+    {
+        btnCancel.setVisible(visible);
+        btnCancel.setManaged(visible);
     }
 
     private void showStatus(String message, String styleClass)

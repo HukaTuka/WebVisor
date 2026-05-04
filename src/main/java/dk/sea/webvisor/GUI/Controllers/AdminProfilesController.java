@@ -7,36 +7,50 @@ import dk.sea.webvisor.BLL.Util.AuditService;
 
 // Java Imports
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Controller for the Admin Profiles view.
- *
- * Follows the same GUI-layer conventions used by {@link AdminUsersController}:
- * all business logic is delegated to {@link ProfileService}, and every
- * meaningful action is recorded through {@link AuditService}.
- */
 public class AdminProfilesController
 {
-
-    @FXML private TableView<Profile> tblProfiles;
-    @FXML private TableColumn<Profile, String> colName;
+    @FXML private TableView<Profile>            tblProfiles;
+    @FXML private TableColumn<Profile, String>  colName;
     @FXML private TableColumn<Profile, Boolean> colSplitOnBarcode;
     @FXML private TableColumn<Profile, Integer> colDefaultRotation;
+    @FXML private TableColumn<Profile, Void>    colActions;
+    @FXML private TextField txtSearch;
+    @FXML private Label    lblFormHeading;
     @FXML private TextField txtName;
-    @FXML private CheckBox chkSplitOnBarcode;
+    @FXML private CheckBox  chkSplitOnBarcode;
     @FXML private TextField txtRotation;
+    @FXML private Button    btnSave;
+    @FXML private Button    btnCancel;
     @FXML private Label lblStatus;
     private final ProfileService profileService;
     private final AuditService   audit = AuditService.getInstance();
-    private Profile selectedProfile = null;
+
+    private final ObservableList<Profile> allProfiles = FXCollections.observableArrayList();
+    private FilteredList<Profile>         filteredProfiles;
+
+    /** Non-null while an edit is in progress; null means "create" mode. */
+    private Profile editingProfile = null;
 
     public AdminProfilesController()
     {
@@ -50,10 +64,14 @@ public class AdminProfilesController
         }
     }
 
+
     @FXML
     private void initialize()
     {
+        setCancelVisible(false);
+
         setupColumns();
+        setupDoubleClick();
         refreshProfiles();
     }
 
@@ -82,27 +100,100 @@ public class AdminProfilesController
                 setText(empty || value == null ? null : value + "°");
             }
         });
-    }
 
-    @FXML
-    private void onTableClicked()
-    {
-        Profile clicked = tblProfiles.getSelectionModel().getSelectedItem();
-        if (clicked == null)
+        // Inline Edit / Delete buttons
+        colActions.setCellFactory(col -> new TableCell<>()
         {
-            return;
-        }
+            private final Button btnEdit   = new Button("Edit");
+            private final Button btnDelete = new Button("Delete");
+            private final HBox   box       = new HBox(8, btnEdit, btnDelete);
 
-        selectedProfile = clicked;
-        txtName.setText(clicked.getName());
-        chkSplitOnBarcode.setSelected(clicked.isSplitOnBarcode());
-        txtRotation.setText(String.valueOf(clicked.getDefaultRotation()));
+            {
+                btnEdit.getStyleClass().add("secondary-button");
+                btnDelete.getStyleClass().add("danger-button");
 
-        showStatus("Profile selected: " + clicked.getName(), "status-info");
+                btnEdit.setOnAction(e ->
+                {
+                    Profile profile = getTableView().getItems().get(getIndex());
+                    startEditing(profile);
+                });
+
+                btnDelete.setOnAction(e ->
+                {
+                    Profile profile = getTableView().getItems().get(getIndex());
+                    handleDelete(profile);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : box);
+            }
+        });
+    }
+
+    private void setupDoubleClick()
+    {
+        tblProfiles.setOnMouseClicked(event ->
+        {
+            if (event.getButton() == MouseButton.PRIMARY
+                    && event.getClickCount() == 2)
+            {
+                Profile selected = tblProfiles.getSelectionModel().getSelectedItem();
+                if (selected != null)
+                {
+                    startEditing(selected);
+                }
+            }
+        });
     }
 
     @FXML
-    private void onCreateProfile()
+    private void onSearchChanged()
+    {
+        applyFilter();
+    }
+
+    @FXML
+    private void onClearSearch()
+    {
+        txtSearch.clear();
+        applyFilter();
+    }
+
+    private void applyFilter()
+    {
+        String query = txtSearch.getText() == null ? "" : txtSearch.getText().trim().toLowerCase();
+
+        filteredProfiles.setPredicate(profile ->
+        {
+            if (query.isEmpty()) return true;
+            return profile.getName().toLowerCase().contains(query);
+        });
+    }
+
+    @FXML
+    private void onSaveProfile()
+    {
+        if (editingProfile == null)
+        {
+            createProfile();
+        }
+        else
+        {
+            updateProfile();
+        }
+    }
+
+    @FXML
+    private void onCancelEdit()
+    {
+        clearForm();
+    }
+
+    private void createProfile()
     {
         try
         {
@@ -131,32 +222,24 @@ public class AdminProfilesController
         }
     }
 
-    @FXML
-    private void onUpdateProfile()
+    private void updateProfile()
     {
-        if (selectedProfile == null)
-        {
-            showStatus("Select a profile from the table first.", "status-error");
-            return;
-        }
-
         try
         {
-            String  oldName     = selectedProfile.getName();
-            int     oldRotation = selectedProfile.getDefaultRotation();
-            boolean oldSplit    = selectedProfile.isSplitOnBarcode();
-
-            int newRotation = parseRotation();
+            String  oldName     = editingProfile.getName();
+            int     oldRotation = editingProfile.getDefaultRotation();
+            boolean oldSplit    = editingProfile.isSplitOnBarcode();
+            int     newRotation = parseRotation();
 
             profileService.updateProfile(
-                    selectedProfile.getId(),
+                    editingProfile.getId(),
                     txtName.getText(),
                     chkSplitOnBarcode.isSelected(),
                     newRotation
             );
 
             audit.log("UPDATE_PROFILE",
-                    "Updated profile ID " + selectedProfile.getId()
+                    "Updated profile ID " + editingProfile.getId()
                             + " | name: \"" + oldName + "\" -> \"" + txtName.getText().trim() + "\""
                             + " | rotation: " + oldRotation + "° -> " + Profile.normaliseRotation(newRotation) + "°"
                             + " | split on barcode: " + oldSplit + " -> " + chkSplitOnBarcode.isSelected());
@@ -175,24 +258,15 @@ public class AdminProfilesController
         }
     }
 
-    @FXML
-    private void onDeleteProfile()
+    private void handleDelete(Profile profile)
     {
-        if (selectedProfile == null)
-        {
-            showStatus("Select a profile from the table first.", "status-error");
-            return;
-        }
-
         try
         {
-            // Check if any users are assigned to this profile
             List<String> assignedUsers =
-                    profileService.getUsernamesAssignedToProfile(selectedProfile.getId());
+                    profileService.getUsernamesAssignedToProfile(profile.getId());
 
             if (!assignedUsers.isEmpty())
             {
-                // Show a warning and ask for confirmation before deleting
                 String userList = String.join(", ", assignedUsers);
                 Alert warning = new Alert(Alert.AlertType.CONFIRMATION);
                 warning.setTitle("Profile in Use");
@@ -210,17 +284,17 @@ public class AdminProfilesController
                 }
 
                 audit.log("DELETE_PROFILE_WARNED",
-                        "Deletion of profile \"" + selectedProfile.getName()
-                                + "\" (ID: " + selectedProfile.getId()
-                                + ") was confirmed despite being assigned to: " + userList);
+                        "Deletion of profile \"" + profile.getName()
+                                + "\" (ID: " + profile.getId()
+                                + ") confirmed despite being assigned to: " + userList);
             }
             else
             {
-                // No users assigned still asks for basic confirmation
                 Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                        "Delete profile \"" + selectedProfile.getName() + "\"?",
+                        "Delete profile \"" + profile.getName() + "\"?",
                         ButtonType.OK, ButtonType.CANCEL);
                 confirm.setHeaderText(null);
+
                 Optional<ButtonType> result = confirm.showAndWait();
                 if (result.isEmpty() || result.get() != ButtonType.OK)
                 {
@@ -229,17 +303,19 @@ public class AdminProfilesController
                 }
             }
 
-            String deletedName = selectedProfile.getName();
-            int    deletedId   = selectedProfile.getId();
-
-            profileService.deleteProfile(deletedId);
+            profileService.deleteProfile(profile.getId());
 
             audit.log("DELETE_PROFILE",
-                    "Deleted profile: \"" + deletedName + "\" (ID: " + deletedId + ")");
+                    "Deleted profile: \"" + profile.getName()
+                            + "\" (ID: " + profile.getId() + ")");
+
+            if (editingProfile != null && editingProfile.getId() == profile.getId())
+            {
+                clearForm();
+            }
 
             refreshProfiles();
-            clearForm();
-            showStatus("Profile \"" + deletedName + "\" deleted.", "status-success");
+            showStatus("Profile \"" + profile.getName() + "\" deleted.", "status-success");
         }
         catch (IllegalArgumentException e)
         {
@@ -251,9 +327,59 @@ public class AdminProfilesController
         }
     }
 
+    private void startEditing(Profile profile)
+    {
+        editingProfile = profile;
+        txtName.setText(profile.getName());
+        chkSplitOnBarcode.setSelected(profile.isSplitOnBarcode());
+        txtRotation.setText(String.valueOf(profile.getDefaultRotation()));
+
+        lblFormHeading.setText("Edit Profile: " + profile.getName());
+        btnSave.setText("Save Changes");
+        setCancelVisible(true);
+
+        showStatus("Editing profile: " + profile.getName(), "status-info");
+    }
+
+    private void clearForm()
+    {
+        editingProfile = null;
+        txtName.clear();
+        chkSplitOnBarcode.setSelected(true);
+        txtRotation.setText("0");
+
+        lblFormHeading.setText("Create New Profile");
+        btnSave.setText("Create Profile");
+        setCancelVisible(false);
+
+        tblProfiles.getSelectionModel().clearSelection();
+        lblStatus.setText("");
+    }
+
+    private void refreshProfiles()
+    {
+        try
+        {
+            List<Profile> profiles = profileService.getAllProfiles();
+            allProfiles.setAll(profiles);
+
+            if (filteredProfiles == null)
+            {
+                filteredProfiles = new FilteredList<>(allProfiles, p -> true);
+                tblProfiles.setItems(filteredProfiles);
+            }
+
+            applyFilter();
+        }
+        catch (SQLException e)
+        {
+            showStatus("Could not load profiles from database.", "status-error");
+        }
+    }
+
     /**
-     * Parses the rotation text field.  Accepts any integer (positive, negative,
-     * or > 360) and returns the raw value.  Normalisation to a 0-359 range is handled by the service layer.
+     * Parses the rotation text field. Accepts any integer normalisation to
+     * [0, 359] is handled by the service layer.
      *
      * @throws IllegalArgumentException if the field is not a valid integer.
      */
@@ -277,26 +403,10 @@ public class AdminProfilesController
         }
     }
 
-    private void refreshProfiles()
+    private void setCancelVisible(boolean visible)
     {
-        try
-        {
-            List<Profile> profiles = profileService.getAllProfiles();
-            tblProfiles.setItems(FXCollections.observableArrayList(profiles));
-        }
-        catch (SQLException e)
-        {
-            showStatus("Could not load profiles from database.", "status-error");
-        }
-    }
-
-    private void clearForm()
-    {
-        selectedProfile = null;
-        tblProfiles.getSelectionModel().clearSelection();
-        txtName.clear();
-        chkSplitOnBarcode.setSelected(true);
-        txtRotation.setText("0");
+        btnCancel.setVisible(visible);
+        btnCancel.setManaged(visible);
     }
 
     private void showStatus(String message, String styleClass)
