@@ -11,6 +11,9 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -21,6 +24,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
@@ -63,6 +68,8 @@ public class ScanningController
     private Button btnNext;
     @FXML
     private Button btnDelete;
+    @FXML
+    private Button btnSlideView;
     @FXML
     private Label lblPageInfo;
     @FXML
@@ -646,5 +653,40 @@ public class ScanningController
         lblStatus.getStyleClass().removeAll("status-success", "status-error", "status-info");
         lblStatus.getStyleClass().add(styleClass);
         lblStatus.setText(message);
+    }
+
+    @FXML
+    private void onOpenSlideView()
+    {
+        if (pageItems.isEmpty())
+        {
+            showStatus("No pages to view.", "status-error");
+            return;
+        }
+
+        try
+        {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/SlideView.fxml"));
+            Parent root = loader.load();
+
+            SlideViewController controller = loader.getController();
+            controller.setPages(List.copyOf(pageItems), Math.max(currentIndex, 0));
+
+            Stage stage = new Stage();
+            stage.setTitle("Slide View");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(imgPage.getScene().getWindow());
+            stage.setMinWidth(800);
+            stage.setMinHeight(600);
+            stage.show();
+
+            audit.log("SLIDE_VIEW_OPENED", "Opened slide view at page " + (currentIndex + 1));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace(); // <-- ADD THIS
+            showStatus("Could not open slide view: " + e.getMessage(), "status-error");
+        }
     }
 }

@@ -19,7 +19,7 @@
     <top>
         <HBox alignment="CENTER" spacing="20.0" styleClass="scanning-toolbar">
             <padding><Insets top="10.0" right="16.0" bottom="10.0" left="16.0"/></padding>
-            <Button text="✕  Close" onAction="#onClose" styleClass="danger-button"/>
+            <Button text="✕  Close" onAction="#onClose" styleClass="danger-button" focusTraversable="false"/>
             <Label fx:id="lblPageInfo" styleClass="page-info-label" text=""/>
             <Label fx:id="lblBarcodeWarning" text="⚠ BARCODE PAGE"
                    styleClass="status-error" visible="false" managed="false"/>
@@ -27,8 +27,9 @@
     </top>
 
     <!-- Image area -->
+    <!-- Image area -->
     <center>
-        <StackPane fx:id="rootPane" styleClass="image-viewer-panel">
+        <StackPane styleClass="image-viewer-panel">
             <ImageView fx:id="imgSlide"
                        fitWidth="1060.0" fitHeight="700.0"
                        preserveRatio="true" smooth="true"/>
@@ -39,9 +40,9 @@
     <bottom>
         <HBox alignment="CENTER" spacing="30.0" styleClass="status-bar">
             <padding><Insets top="8.0" right="16.0" bottom="8.0" left="16.0"/></padding>
-            <Button text="◀  Previous" onAction="#onPrev" styleClass="secondary-button"/>
+            <Button text="◀  Previous" onAction="#onPrev" styleClass="secondary-button" focusTraversable="false"/>
             <Label text="← → arrow keys also work" styleClass="status-info"/>
-            <Button text="Next  ▶" onAction="#onNext" styleClass="secondary-button"/>
+            <Button text="Next  ▶" onAction="#onNext" styleClass="secondary-button" focusTraversable="false"/>
         </HBox>
     </bottom>
 
