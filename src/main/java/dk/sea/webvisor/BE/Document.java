@@ -6,17 +6,17 @@ import java.util.List;
 
 public class Document {
     private final int documentNumber;
-    private final List<ScannedPage> pages = new ArrayList<>();
+    private final List<Files> pages = new ArrayList<>();
 
     public Document(int documentNumber) {
         this.documentNumber = documentNumber;
     }
 
-    public void addPage(ScannedPage page) {
+    public void addPage(Files page) {
         pages.add(page);
     }
 
-    public List<ScannedPage> getPages() {
+    public List<Files> getPages() {
         return Collections.unmodifiableList(pages);
     }
 

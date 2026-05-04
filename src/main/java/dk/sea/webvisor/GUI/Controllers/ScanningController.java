@@ -1,8 +1,9 @@
 package dk.sea.webvisor.GUI.Controllers;
 
 import dk.sea.webvisor.BE.Document;
-import dk.sea.webvisor.BE.ScanBox;
-import dk.sea.webvisor.BE.ScannedPage;
+import dk.sea.webvisor.BE.Boxes;
+import dk.sea.webvisor.BE.Files;
+import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.BLL.ScanningService;
 import dk.sea.webvisor.BLL.Util.AuditService;
 import javafx.application.Platform;
@@ -31,7 +32,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ScanningController
 {
@@ -79,23 +83,35 @@ public class ScanningController
 
     private final ScanningService scanningService = new ScanningService();
     private final AuditService audit = AuditService.getInstance();
-    private final ObservableList<ScannedPage> pageItems = FXCollections.observableArrayList();
-    private final ObservableList<ScanBox> boxItems = FXCollections.observableArrayList();
+    private final ObservableList<Files> pageItems = FXCollections.observableArrayList();
+    private final ObservableList<Boxes> boxItems = FXCollections.observableArrayList();
+    private final Set<String> loadedBoxContent = new HashSet<>();
+    private ArchiveService archiveService;
 
     private volatile boolean running = false;
     private Thread pollingThread = null;
     private int currentIndex = -1;
-    private ScanBox selectedBox = null;
+    private Boxes selectedBox = null;
     private Document selectedDocument = null;
     private ExplorerLevel currentLevel = ExplorerLevel.BOXES;
 
     /** Interval between API polls while a session is active (milliseconds). */
-    private static final long POLL_INTERVAL_MS = 3_000;
+    private static final long POLL_INTERVAL_MS = 0;
 
 
     @FXML
     private void initialize()
     {
+        try
+        {
+            archiveService = new ArchiveService();
+            boxItems.setAll(archiveService.getAllBoxes());
+        }
+        catch (IOException | SQLException e)
+        {
+            showStatus("Could not load archive from database: " + e.getMessage(), "status-error");
+        }
+
         lstExplorer.setCellFactory(lv -> new ListCell<>()
         {
             @Override
@@ -110,7 +126,7 @@ public class ScanningController
                     return;
                 }
 
-                if (item instanceof ScanBox box)
+                if (item instanceof Boxes box)
                 {
                     setText(box.toString());
                 }
@@ -118,7 +134,7 @@ public class ScanningController
                 {
                     setText(document.toString());
                 }
-                else if (item instanceof ScannedPage page)
+                else if (item instanceof Files page)
                 {
                     if (page.isBarcode())
                     {
@@ -161,7 +177,7 @@ public class ScanningController
             return;
         }
 
-        for (ScanBox box : boxItems)
+        for (Boxes box : boxItems)
         {
             if (box.getBoxId().equalsIgnoreCase(boxId))
             {
@@ -170,8 +186,22 @@ public class ScanningController
             }
         }
 
-        ScanBox newBox = new ScanBox(boxId);
+        if (archiveService != null)
+        {
+            try
+            {
+                archiveService.createBox(boxId);
+            }
+            catch (SQLException e)
+            {
+                showStatus("Could not create box in database: " + e.getMessage(), "status-error");
+                return;
+            }
+        }
+
+        Boxes newBox = new Boxes(boxId);
         boxItems.add(newBox);
+        loadedBoxContent.add(boxId);
         txtBoxId.clear();
         showBoxesLevel();
         lstExplorer.getSelectionModel().select(newBox);
@@ -251,6 +281,20 @@ public class ScanningController
         running = false;
         updateButtonState();
         updateBoxSnapshotFromCurrentSession();
+
+        if (archiveService != null && selectedBox != null)
+        {
+            try
+            {
+                archiveService.saveBoxSnapshot(selectedBox);
+            }
+            catch (SQLException e)
+            {
+                showStatus("Could not save box to database: " + e.getMessage(), "status-error");
+                return;
+            }
+        }
+
         showStatus("Scanning stopped. " + pageItems.size() + " file(s) in this box.", "status-info");
         audit.log("SCAN_STOPPED", "Scanning stopped in box "
                 + (selectedBox == null ? "none" : selectedBox.getBoxId())
@@ -336,7 +380,7 @@ public class ScanningController
         {
             try
             {
-                List<ScannedPage> newPages = scanningService.fetchAndAppendNext();
+                List<Files> newPages = scanningService.fetchAndAppendNext();
 
                 Platform.runLater(() -> handleNewPages(newPages));
 
@@ -358,7 +402,7 @@ public class ScanningController
         }
     }
 
-    private void handleNewPages(List<ScannedPage> newPages)
+    private void handleNewPages(List<Files> newPages)
     {
         if (newPages.isEmpty())
         {
@@ -370,17 +414,19 @@ public class ScanningController
         updateTotalScansLabel();
         updateBoxSnapshotFromCurrentSession();
 
+        audit.log("NEW_PAGES", "Page at index " + pageItems.size() + " was created");
+
         if (currentLevel == ExplorerLevel.FILES)
         {
             showFilesLevel();
         }
 
-        boolean barcodeFound = newPages.stream().anyMatch(ScannedPage::isBarcode);
+        boolean barcodeFound = newPages.stream().anyMatch(Files::isBarcode);
         if (barcodeFound)
         {
             int splitPage = newPages.stream()
-                    .filter(ScannedPage::isBarcode)
-                    .mapToInt(ScannedPage::getPageNumber)
+                    .filter(Files::isBarcode)
+                    .mapToInt(Files::getPageNumber)
                     .min()
                     .orElse(-1);
 
@@ -388,8 +434,8 @@ public class ScanningController
             audit.log("BARCODE_DETECTED", "Document split barcode detected at page " + splitPage);
 
             showStatus("⚠ Barcode detected — document split at page " +
-                    newPages.stream().filter(dk.sea.webvisor.BE.ScannedPage::isBarcode)
-                            .mapToInt(ScannedPage::getPageNumber).min().orElse(-1),
+                    newPages.stream().filter(Files::isBarcode)
+                            .mapToInt(Files::getPageNumber).min().orElse(-1),
                     "status-error");
         }
         else
@@ -412,8 +458,23 @@ public class ScanningController
             return;
         }
 
-        if (currentLevel == ExplorerLevel.BOXES && selected instanceof ScanBox box)
+        if (currentLevel == ExplorerLevel.BOXES && selected instanceof Boxes box)
         {
+            if (archiveService != null && !loadedBoxContent.contains(box.getBoxId()))
+            {
+                try
+                {
+                    Boxes hydrated = archiveService.loadBoxContent(box.getBoxId());
+                    box.replaceContent(hydrated.getPages(), hydrated.getDocuments());
+                    loadedBoxContent.add(box.getBoxId());
+                }
+                catch (SQLException e)
+                {
+                    showStatus("Could not load box content: " + e.getMessage(), "status-error");
+                    return;
+                }
+            }
+
             selectedBox = box;
             selectedDocument = null;
             pageItems.setAll(box.getPages());
@@ -446,14 +507,30 @@ public class ScanningController
             return;
         }
 
-        if (currentLevel == ExplorerLevel.FILES && selected instanceof ScannedPage page)
+        if (currentLevel == ExplorerLevel.FILES && selected instanceof Files page)
         {
-            int index = pageItems.indexOf(page);
+            int index = findPageIndex(page);
             if (index >= 0)
             {
                 navigateTo(index);
             }
         }
+    }
+
+    private int findPageIndex(Files selectedPage)
+    {
+        if (selectedPage.getId() > 0)
+        {
+            for (int i = 0; i < pageItems.size(); i++)
+            {
+                if (pageItems.get(i).getId() == selectedPage.getId())
+                {
+                    return i;
+                }
+            }
+        }
+
+        return pageItems.indexOf(selectedPage);
     }
 
     private void showBoxesLevel()
@@ -520,9 +597,28 @@ public class ScanningController
         updateNavigationButtons();
     }
 
-    private void displayPage(ScannedPage page) {
+    private void displayPage(Files page) {
         if (imgPage == null) {
             return;
+        }
+
+        if (page.getImage() == null)
+        {
+            if (archiveService == null || page.getId() <= 0)
+            {
+                showStatus("Could not load image for selected file.", "status-error");
+                return;
+            }
+
+            try
+            {
+                page.setImage(archiveService.loadFileImage(page.getId()));
+            }
+            catch (SQLException e)
+            {
+                showStatus("Could not load image: " + e.getMessage(), "status-error");
+                return;
+            }
         }
 
         BufferedImage raw = page.getImage();
@@ -569,7 +665,7 @@ public class ScanningController
             return;
         }
 
-        ScannedPage page = pageItems.get(currentIndex);
+        Files page = pageItems.get(currentIndex);
         if (clockwise)
         {
             page.rotateRight();
