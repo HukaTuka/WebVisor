@@ -7,6 +7,9 @@ import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.BLL.ScanningService;
 import dk.sea.webvisor.BLL.Util.AuditService;
+import dk.sea.webvisor.BE.Profile;
+import dk.sea.webvisor.BLL.ExportService;
+import dk.sea.webvisor.BLL.ProfileService;
 
 // Java Imports
 import javafx.application.Platform;
@@ -38,6 +41,10 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javafx.scene.control.ComboBox;
+import javafx.stage.DirectoryChooser;
+import java.io.File;
+import java.util.ArrayList;
 
 public class ScanningController
 {
@@ -82,6 +89,9 @@ public class ScanningController
     private Label lblStatus;
     @FXML
     private ImageView imgPage;
+    @FXML private ComboBox<Profile> cmbProfile;
+    @FXML private Button btnExportSingle;
+    @FXML private Button btnExportMulti;
 
     private final ScanningService scanningService = new ScanningService();
     private final AuditService audit = AuditService.getInstance();
@@ -89,6 +99,8 @@ public class ScanningController
     private final ObservableList<Boxes> boxItems = FXCollections.observableArrayList();
     private final Set<String> loadedBoxContent = new HashSet<>();
     private ArchiveService archiveService;
+    private final ExportService exportService = new ExportService();
+    private ProfileService profileService;
 
     private volatile boolean running = false;
     private Thread pollingThread = null;
@@ -112,6 +124,15 @@ public class ScanningController
         catch (IOException | SQLException e)
         {
             showStatus("Could not load archive from database: " + e.getMessage(), "status-error");
+        }
+        try
+        {
+            profileService = new ProfileService();
+            cmbProfile.setItems(FXCollections.observableArrayList(profileService.getAllProfiles()));
+        }
+        catch (IOException | SQLException e)
+        {
+            showStatus("Could not load profiles: " + e.getMessage(), "status-error");
         }
 
         lstExplorer.setCellFactory(lv -> new ListCell<>()
@@ -209,6 +230,32 @@ public class ScanningController
         lstExplorer.getSelectionModel().select(newBox);
         showStatus("Created box " + boxId + ". Click it to open.", "status-success");
         audit.log("BOX_CREATED", "Created box " + boxId);
+    }
+
+    @FXML
+    private void onExportSinglePage()
+    {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Not implemented",
+                ButtonType.OK);
+        confirm.setHeaderText(null);
+        if (confirm.showAndWait().orElse(ButtonType.OK) != ButtonType.OK)
+        {
+            return;
+        }
+    }
+
+    @FXML
+    private void onExportMultiPage()
+    {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Not implemented",
+                ButtonType.OK);
+        confirm.setHeaderText(null);
+        if (confirm.showAndWait().orElse(ButtonType.OK) != ButtonType.OK)
+        {
+            return;
+        }
     }
 
     @FXML
@@ -702,6 +749,11 @@ public class ScanningController
         btnRotateLeft.setDisable(!hasPage);
         btnRotateRight.setDisable(!hasPage);
         btnDelete.setDisable(!hasPage);
+        boolean canExport = !running
+                && selectedBox != null
+                && !selectedBox.getDocuments().isEmpty();
+        btnExportSingle.setDisable(!canExport);
+        btnExportMulti.setDisable(!canExport);
         updateNavigationButtons();
     }
 
@@ -786,5 +838,19 @@ public class ScanningController
             e.printStackTrace(); // <-- ADD THIS
             showStatus("Could not open slide view: " + e.getMessage(), "status-error");
         }
+    }
+
+    private String buildExportFolderName()
+    {
+        String  boxId   = selectedBox == null ? "export" : selectedBox.getBoxId();
+        Profile profile = cmbProfile.getValue();
+
+        if (profile != null && !profile.getName().isBlank())
+        {
+            String safeName = profile.getName().trim().replaceAll("[\\\\/:*?\"<>|]", "_");
+            return safeName + "_" + boxId;
+        }
+
+        return boxId;
     }
 }
