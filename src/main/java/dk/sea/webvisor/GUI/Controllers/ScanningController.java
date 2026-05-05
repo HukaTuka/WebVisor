@@ -235,27 +235,13 @@ public class ScanningController
     @FXML
     private void onExportSinglePage()
     {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Not implemented",
-                ButtonType.OK);
-        confirm.setHeaderText(null);
-        if (confirm.showAndWait().orElse(ButtonType.OK) != ButtonType.OK)
-        {
-            return;
-        }
+        performExport(true);
     }
 
     @FXML
     private void onExportMultiPage()
     {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Not implemented",
-                ButtonType.OK);
-        confirm.setHeaderText(null);
-        if (confirm.showAndWait().orElse(ButtonType.OK) != ButtonType.OK)
-        {
-            return;
-        }
+        performExport(false);
     }
 
     @FXML
@@ -837,6 +823,104 @@ public class ScanningController
         {
             e.printStackTrace(); // <-- ADD THIS
             showStatus("Could not open slide view: " + e.getMessage(), "status-error");
+        }
+    }
+
+    private void performExport(boolean singlePage)
+    {
+        if (selectedBox == null || selectedBox.getDocuments().isEmpty())
+        {
+            showStatus("No documents to export. Complete and stop a scanning session first.", "status-error");
+            return;
+        }
+
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle("Select Export Output Directory");
+
+        // Set initial directory to Downloads if available
+        File downloads = new File(System.getProperty("user.home"), "Downloads");
+        if (downloads.exists() && downloads.isDirectory()) {
+            chooser.setInitialDirectory(downloads);
+        }
+
+        File outputDirectory = chooser.showDialog(btnExportSingle.getScene().getWindow());
+
+        if (outputDirectory == null) { return; }
+
+        String folderName = buildExportFolderName();
+        List<Document> documents = new ArrayList<>(selectedBox.getDocuments());
+
+        btnExportSingle.setDisable(true);
+        btnExportMulti.setDisable(true);
+        showStatus("Exporting — please wait…", "status-info");
+
+        String threadName = singlePage ? "export-single-page-thread" : "export-multi-page-thread";
+        Thread exportThread = new Thread(() ->
+        {
+            try
+            {
+                ensureImagesLoaded(documents);
+
+                if (singlePage)
+                {
+                    int count = exportService.exportSinglePage(documents, outputDirectory, folderName);
+                    String message = "Single-page export complete: " + count
+                            + " file(s) written to \"" + folderName + "\".";
+                    Platform.runLater(() ->
+                    {
+                        showStatus(message, "status-success");
+                        audit.log("EXPORT_SINGLE", message);
+                        updateButtonState();
+                    });
+                }
+                else
+                {
+                    int count = exportService.exportMultiPage(documents, outputDirectory, folderName);
+                    String message = "Multi-page export complete: " + count
+                            + " document(s) written to \"" + folderName + "\".";
+                    Platform.runLater(() ->
+                    {
+                        showStatus(message, "status-success");
+                        audit.log("EXPORT_MULTI", message);
+                        updateButtonState();
+                    });
+                }
+            }
+            catch (SQLException e)
+            {
+                Platform.runLater(() ->
+                {
+                    showStatus("Could not load image data for export: " + e.getMessage(), "status-error");
+                    updateButtonState();
+                });
+            }
+            catch (IOException e)
+            {
+                Platform.runLater(() ->
+                {
+                    showStatus("Export failed: " + e.getMessage(), "status-error");
+                    updateButtonState();
+                });
+            }
+        }, threadName);
+
+        exportThread.setDaemon(true);
+        exportThread.start();
+    }
+
+    private void ensureImagesLoaded(List<Document> documents) throws SQLException
+    {
+        if (archiveService == null) { return; }
+
+        for (Document document : documents)
+        {
+            for (Files page : document.getPages())
+            {
+                if (!page.isBarcode() && page.getImage() == null && page.getId() > 0)
+                {
+                    page.setImage(archiveService.loadFileImage(page.getId()));
+                }
+            }
         }
     }
 
