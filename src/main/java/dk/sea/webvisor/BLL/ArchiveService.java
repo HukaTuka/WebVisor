@@ -1,5 +1,6 @@
 package dk.sea.webvisor.BLL;
 
+// Project Imports
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.Files;
@@ -10,6 +11,7 @@ import dk.sea.webvisor.DAL.Interface.BoxesInterface;
 import dk.sea.webvisor.DAL.Interface.DocumentsInterface;
 import dk.sea.webvisor.DAL.Interface.FilesInterface;
 
+// Java Imports
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.SQLException;

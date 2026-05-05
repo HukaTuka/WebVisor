@@ -1,9 +1,11 @@
 package dk.sea.webvisor.BLL.Util;
 
+// Google Imports
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 
+// Java Imports
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.EnumMap;

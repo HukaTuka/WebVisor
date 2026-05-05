@@ -1,11 +1,14 @@
 package dk.sea.webvisor.GUI.Controllers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.BLL.ScanningService;
 import dk.sea.webvisor.BLL.Util.AuditService;
+
+// Java Imports
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -27,7 +30,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;

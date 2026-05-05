@@ -1,7 +1,9 @@
 package dk.sea.webvisor.DAL.Interface;
 
+// Project Imports
 import dk.sea.webvisor.BE.Files;
 
+// Java Imports
 import java.awt.image.BufferedImage;
 import java.sql.SQLException;
 import java.util.List;

@@ -1,9 +1,11 @@
 package dk.sea.webvisor.DAL.DAO;
 
+// Project Imports
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.DAL.DBConnector.DBConnector;
 import dk.sea.webvisor.DAL.Interface.BoxesInterface;
 
+// Java Imports
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

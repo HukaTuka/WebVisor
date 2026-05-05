@@ -1,6 +1,9 @@
 package dk.sea.webvisor.GUI.Controllers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Files;
+
+// Java Imports
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
@@ -9,7 +12,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.control.Label;
 import javafx.embed.swing.SwingFXUtils;
-
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;

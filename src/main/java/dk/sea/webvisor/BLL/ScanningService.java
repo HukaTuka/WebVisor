@@ -1,10 +1,12 @@
 package dk.sea.webvisor.BLL;
 
+// Project Imports
 import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.Util.BarcodeDetector;
 import dk.sea.webvisor.DAL.API.TiffApiClient;
 
+// Java Imports
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;

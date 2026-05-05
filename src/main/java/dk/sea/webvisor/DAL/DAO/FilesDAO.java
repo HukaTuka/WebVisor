@@ -1,9 +1,11 @@
 package dk.sea.webvisor.DAL.DAO;
 
+// Project Imports
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.DAL.DBConnector.DBConnector;
 import dk.sea.webvisor.DAL.Interface.FilesInterface;
 
+// Java Imports
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;

@@ -1,10 +1,12 @@
 package dk.sea.webvisor.BLL.Util;
 
+// Project Imports
 import dk.sea.webvisor.BE.AuditEntry;
 import dk.sea.webvisor.DAL.DAO.AuditDAO;
+
+// Java Imports
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
 import java.io.IOException;
 import java.sql.SQLException;
 

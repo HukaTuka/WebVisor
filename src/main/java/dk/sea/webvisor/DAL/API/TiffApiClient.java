@@ -1,5 +1,6 @@
 package dk.sea.webvisor.DAL.API;
 
+// Java Imports
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;

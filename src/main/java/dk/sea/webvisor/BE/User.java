@@ -1,5 +1,6 @@
 package dk.sea.webvisor.BE;
 
+// Java Imports
 import java.time.LocalDateTime;
 
 public class User
