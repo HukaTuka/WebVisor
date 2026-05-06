@@ -794,10 +794,38 @@ public class ScanningController
     @FXML
     private void onOpenSlideView()
     {
-        if (pageItems.isEmpty())
+        if (selectedBox == null)
         {
-            showStatus("No pages to view.", "status-error");
+            showStatus("Open a box first.", "status-error");
             return;
+        }
+
+        List<Files> savedPages = selectedBox.getPages();
+
+        if (savedPages.isEmpty())
+        {
+            showStatus("No saved pages in this box.", "status-error");
+            return;
+        }
+
+        // Ensure all images are loaded before passing to slide view
+        if (archiveService != null)
+        {
+            for (Files page : savedPages)
+            {
+                if (page.getImage() == null && page.getId() > 0)
+                {
+                    try
+                    {
+                        page.setImage(archiveService.loadFileImage(page.getId()));
+                    }
+                    catch (SQLException e)
+                    {
+                        showStatus("Could not load image for " + page.getReferenceId() + ": " + e.getMessage(), "status-error");
+                        return;
+                    }
+                }
+            }
         }
 
         try
@@ -806,10 +834,10 @@ public class ScanningController
             Parent root = loader.load();
 
             SlideViewController controller = loader.getController();
-            controller.setPages(List.copyOf(pageItems), Math.max(currentIndex, 0));
+            controller.setPages(savedPages, Math.max(currentIndex, 0));
 
             Stage stage = new Stage();
-            stage.setTitle("Slide View");
+            stage.setTitle("Slide View — " + selectedBox.getBoxId());
             stage.setScene(new Scene(root));
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(imgPage.getScene().getWindow());
@@ -817,12 +845,12 @@ public class ScanningController
             stage.setMinHeight(600);
             stage.show();
 
-            audit.log("SLIDE_VIEW_OPENED", "Opened slide view at page " + (currentIndex + 1));
+            audit.log("SLIDE_VIEW_OPENED", "Opened slide view for box "
+                    + selectedBox.getBoxId() + " — " + savedPages.size() + " page(s)");
         }
         catch (IOException e)
         {
-            e.printStackTrace(); // <-- ADD THIS
-            showStatus("Could not open slide view: " + e.getMessage(), "status-error");
+            showStatus("Could not open slide view.", "status-error");
         }
     }
 
