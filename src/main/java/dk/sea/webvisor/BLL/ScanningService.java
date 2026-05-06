@@ -179,5 +179,60 @@ public class ScanningService
         return pageCounter.get();
     }
 
+    /**
+     * Inserts a manual document split after the page at the given index.
+     * All pages from 0..splitIndex go into the current document,
+     * pages from splitIndex+1 onward start a new document.
+     *
+     * @param pageIndex the index of the last page in the current document
+     * @return true if the split was applied, false if the index was invalid
+     */
+    public boolean splitDocumentAt(int pageIndex)
+    {
+        synchronized (pages)
+        {
+            if (pageIndex < 0 || pageIndex >= pages.size() - 1)
+            {
+                return false;
+            }
+
+            // Insert a virtual split by rebuilding documents with a forced break
+            rebuildDocumentsWithManualSplit(pageIndex);
+            return true;
+        }
+    }
+
+    private void rebuildDocumentsWithManualSplit(int splitAfterIndex)
+    {
+        List<Document> rebuilt = new ArrayList<>();
+        Document current = new Document(rebuilt.size() + 1);
+        rebuilt.add(current);
+
+        for (int i = 0; i < pages.size(); i++)
+        {
+            Files page = pages.get(i);
+            current.addPage(page);
+
+            // Split after this index OR after a barcode
+            if (i == splitAfterIndex || page.isBarcode())
+            {
+                if (i < pages.size() - 1)
+                {
+                    current = new Document(rebuilt.size() + 1);
+                    rebuilt.add(current);
+                }
+            }
+        }
+
+        synchronized (documents)
+        {
+            documents.clear();
+            documents.addAll(rebuilt);
+        }
+
+        documentCounter.set(rebuilt.size());
+        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+    }
+
 
 }

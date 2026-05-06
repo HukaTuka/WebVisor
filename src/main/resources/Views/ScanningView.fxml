@@ -32,6 +32,7 @@
                     <Button fx:id="btnRotateRight" minWidth="80.0" prefWidth="80.0" maxWidth="80.0" disable="true" onAction="#onRotateRight" styleClass="secondary-button" text="↻ Right" />
                     <Label styleClass="separator-label" text="|" />
                     <Button fx:id="btnDelete" minWidth="90.0" prefWidth="90.0" maxWidth="90.0" disable="true" onAction="#onDelete" styleClass="secondary-button" text="🗑 Delete" />
+                    <Button fx:id="btnSplit" text="✂ Split" onAction="#onSplitDocument" styleClass="secondary-button" minWidth="80.0"/>
                     <Label styleClass="separator-label" text="|" />
                     <Button fx:id="btnPrev" minWidth="44.0" prefWidth="44.0" maxWidth="44.0" disable="true" onAction="#onPrev" styleClass="secondary-button" text="◀" />
                     <Label fx:id="lblPageInfo" minWidth="90.0" styleClass="page-info-label" text="Page 0 / 0" />

@@ -92,6 +92,7 @@ public class ScanningController
     @FXML private ComboBox<Profile> cmbProfile;
     @FXML private Button btnExportSingle;
     @FXML private Button btnExportMulti;
+    @FXML private Button btnSplit;
 
     private final ScanningService scanningService = new ScanningService();
     private final AuditService audit = AuditService.getInstance();
@@ -728,10 +729,12 @@ public class ScanningController
 
     private void updateButtonState()
     {
+        boolean hasPage = currentIndex >= 0 && currentIndex < pageItems.size();
+
         btnStart.setDisable(running || selectedBox == null);
         btnStop.setDisable(!running);
+        btnSplit.setDisable(!hasPage || currentIndex >= pageItems.size() - 1);
 
-        boolean hasPage = currentIndex >= 0 && currentIndex < pageItems.size();
         btnRotateLeft.setDisable(!hasPage);
         btnRotateRight.setDisable(!hasPage);
         btnDelete.setDisable(!hasPage);
@@ -964,5 +967,30 @@ public class ScanningController
         }
 
         return boxId;
+    }
+
+    @FXML
+    private void onSplitDocument()
+    {
+        if (currentIndex < 0 || currentIndex >= pageItems.size() - 1)
+        {
+            showStatus("Select a page to split after — it cannot be the last page.", "status-error");
+            return;
+        }
+
+        boolean split = scanningService.splitDocumentAt(currentIndex);
+        if (!split)
+        {
+            showStatus("Could not apply document split at this position.", "status-error");
+            return;
+        }
+
+        updateBoxSnapshotFromCurrentSession();
+        showDocumentsLevel();
+
+        audit.log("MANUAL_SPLIT", "Manual document split inserted after page "
+                + pageItems.get(currentIndex).getReferenceId());
+
+        showStatus("Document split applied after " + pageItems.get(currentIndex).getReferenceId(), "status-success");
     }
 }
