@@ -120,4 +120,40 @@ public class ArchiveService
         List<Files> pages = filesDAO.getFilesByBox(box.getBoxId());
         box.replaceContent(pages, documents);
     }
+    /**
+     * Inserts a manual document split after the page at splitIndex
+     * within the given box, then saves the result to the database.
+     */
+    public void splitDocumentAt(Boxes box, int splitIndex) throws SQLException
+    {
+        List<Files> pages = new ArrayList<>(box.getPages());
+
+        if (splitIndex < 0 || splitIndex >= pages.size() - 1)
+        {
+            throw new IllegalArgumentException("Cannot split at this position.");
+        }
+
+        // Rebuild documents with the manual split point
+        List<Document> rebuilt = new ArrayList<>();
+        Document current = new Document(rebuilt.size() + 1);
+        rebuilt.add(current);
+
+        for (int i = 0; i < pages.size(); i++)
+        {
+            Files page = pages.get(i);
+            current.addPage(page);
+
+            boolean isSplitPoint = (i == splitIndex);
+            boolean isBarcode    = page.isBarcode();
+
+            if ((isSplitPoint || isBarcode) && i < pages.size() - 1)
+            {
+                current = new Document(rebuilt.size() + 1);
+                rebuilt.add(current);
+            }
+        }
+
+        box.replaceContent(pages, rebuilt);
+        saveBoxSnapshot(box);
+    }
 }

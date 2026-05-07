@@ -46,12 +46,10 @@ import javafx.stage.DirectoryChooser;
 import java.io.File;
 import java.util.ArrayList;
 
-public class ScanningController
-{
+public class ScanningController {
     private static final String BARCODE_CELL_STYLE = "barcode-item-cell";
 
-    private enum ExplorerLevel
-    {
+    private enum ExplorerLevel {
         BOXES, DOCUMENTS, FILES
     }
 
@@ -89,10 +87,14 @@ public class ScanningController
     private Label lblStatus;
     @FXML
     private ImageView imgPage;
-    @FXML private ComboBox<Profile> cmbProfile;
-    @FXML private Button btnExportSingle;
-    @FXML private Button btnExportMulti;
-    @FXML private Button btnSplit;
+    @FXML
+    private ComboBox<Profile> cmbProfile;
+    @FXML
+    private Button btnExportSingle;
+    @FXML
+    private Button btnExportMulti;
+    @FXML
+    private Button btnSplit;
 
     private final ScanningService scanningService = new ScanningService();
     private final AuditService audit = AuditService.getInstance();
@@ -110,66 +112,49 @@ public class ScanningController
     private Document selectedDocument = null;
     private ExplorerLevel currentLevel = ExplorerLevel.BOXES;
 
-    /** Interval between API polls while a session is active (milliseconds). */
+    /**
+     * Interval between API polls while a session is active (milliseconds).
+     */
     private static final long POLL_INTERVAL_MS = 0;
 
 
     @FXML
-    private void initialize()
-    {
-        try
-        {
+    private void initialize() {
+        try {
             archiveService = new ArchiveService();
             boxItems.setAll(archiveService.getAllBoxes());
-        }
-        catch (IOException | SQLException e)
-        {
+        } catch (IOException | SQLException e) {
             showStatus("Could not load archive from database: " + e.getMessage(), "status-error");
         }
-        try
-        {
+        try {
             profileService = new ProfileService();
             cmbProfile.setItems(FXCollections.observableArrayList(profileService.getAllProfiles()));
-        }
-        catch (IOException | SQLException e)
-        {
+        } catch (IOException | SQLException e) {
             showStatus("Could not load profiles: " + e.getMessage(), "status-error");
         }
 
-        lstExplorer.setCellFactory(lv -> new ListCell<>()
-        {
+        lstExplorer.setCellFactory(lv -> new ListCell<>() {
             @Override
-            protected void updateItem(Object item, boolean empty)
-            {
+            protected void updateItem(Object item, boolean empty) {
                 super.updateItem(item, empty);
                 getStyleClass().remove(BARCODE_CELL_STYLE);
 
-                if (empty || item == null)
-                {
+                if (empty || item == null) {
                     setText(null);
                     return;
                 }
 
-                if (item instanceof Boxes box)
-                {
+                if (item instanceof Boxes box) {
                     setText(box.toString());
-                }
-                else if (item instanceof Document document)
-                {
+                } else if (item instanceof Document document) {
                     setText(document.toString());
-                }
-                else if (item instanceof Files page)
-                {
-                    if (page.isBarcode())
-                    {
+                } else if (item instanceof Files page) {
+                    if (page.isBarcode()) {
                         setText(page.getReferenceId() + " [BARCODE]");
-                        if (!getStyleClass().contains(BARCODE_CELL_STYLE))
-                        {
+                        if (!getStyleClass().contains(BARCODE_CELL_STYLE)) {
                             getStyleClass().add(BARCODE_CELL_STYLE);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         setText(page.getReferenceId());
                     }
                 }
@@ -178,8 +163,7 @@ public class ScanningController
 
         lstExplorer.setOnMouseClicked(event ->
         {
-            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1)
-            {
+            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                 openSelectedItem();
             }
         });
@@ -192,32 +176,24 @@ public class ScanningController
     }
 
     @FXML
-    private void onCreateBox()
-    {
+    private void onCreateBox() {
         String boxId = txtBoxId.getText() == null ? "" : txtBoxId.getText().trim();
-        if (boxId.isEmpty())
-        {
+        if (boxId.isEmpty()) {
             showStatus("Please enter a Box ID.", "status-error");
             return;
         }
 
-        for (Boxes box : boxItems)
-        {
-            if (box.getBoxId().equalsIgnoreCase(boxId))
-            {
+        for (Boxes box : boxItems) {
+            if (box.getBoxId().equalsIgnoreCase(boxId)) {
                 showStatus("Box ID already exists.", "status-error");
                 return;
             }
         }
 
-        if (archiveService != null)
-        {
-            try
-            {
+        if (archiveService != null) {
+            try {
                 archiveService.createBox(boxId);
-            }
-            catch (SQLException e)
-            {
+            } catch (SQLException e) {
                 showStatus("Could not create box in database: " + e.getMessage(), "status-error");
                 return;
             }
@@ -234,28 +210,23 @@ public class ScanningController
     }
 
     @FXML
-    private void onExportSinglePage()
-    {
+    private void onExportSinglePage() {
         performExport(true);
     }
 
     @FXML
-    private void onExportMultiPage()
-    {
+    private void onExportMultiPage() {
         performExport(false);
     }
 
     @FXML
-    private void onBack()
-    {
-        if (currentLevel == ExplorerLevel.FILES)
-        {
+    private void onBack() {
+        if (currentLevel == ExplorerLevel.FILES) {
             showDocumentsLevel();
             return;
         }
 
-        if (currentLevel == ExplorerLevel.DOCUMENTS)
-        {
+        if (currentLevel == ExplorerLevel.DOCUMENTS) {
             selectedBox = null;
             selectedDocument = null;
             showBoxesLevel();
@@ -263,27 +234,22 @@ public class ScanningController
     }
 
     @FXML
-    private void onStartScanning()
-    {
-        if (running)
-        {
+    private void onStartScanning() {
+        if (running) {
             return;
         }
 
-        if (selectedBox == null)
-        {
+        if (selectedBox == null) {
             showStatus("Open a box before scanning.", "status-error");
             return;
         }
 
-        if (!pageItems.isEmpty())
-        {
+        if (!pageItems.isEmpty()) {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                     "Start a new session in this box? This will clear current files in the box.",
                     ButtonType.YES, ButtonType.NO);
             confirm.setHeaderText(null);
-            if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES)
-            {
+            if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
                 return;
             }
         }
@@ -293,8 +259,7 @@ public class ScanningController
         pageItems.clear();
         selectedDocument = null;
         currentIndex = -1;
-        if (imgPage != null)
-        {
+        if (imgPage != null) {
             imgPage.setImage(null);
         }
         updateTotalScansLabel();
@@ -312,20 +277,15 @@ public class ScanningController
     }
 
     @FXML
-    private void onStopScanning()
-    {
+    private void onStopScanning() {
         running = false;
         updateButtonState();
         updateBoxSnapshotFromCurrentSession();
 
-        if (archiveService != null && selectedBox != null)
-        {
-            try
-            {
+        if (archiveService != null && selectedBox != null) {
+            try {
                 archiveService.saveBoxSnapshot(selectedBox);
-            }
-            catch (SQLException e)
-            {
+            } catch (SQLException e) {
                 showStatus("Could not save box to database: " + e.getMessage(), "status-error");
                 return;
             }
@@ -338,48 +298,39 @@ public class ScanningController
     }
 
     @FXML
-    private void onPrev()
-    {
-        if (currentIndex > 0)
-        {
+    private void onPrev() {
+        if (currentIndex > 0) {
             navigateTo(currentIndex - 1);
         }
     }
 
     @FXML
-    private void onNext()
-    {
-        if (currentIndex < pageItems.size() - 1)
-        {
+    private void onNext() {
+        if (currentIndex < pageItems.size() - 1) {
             navigateTo(currentIndex + 1);
         }
     }
 
 
     @FXML
-    private void onRotateLeft()
-    {
+    private void onRotateLeft() {
         applyRotation(false);
     }
 
     @FXML
-    private void onRotateRight()
-    {
+    private void onRotateRight() {
         applyRotation(true);
     }
 
     @FXML
-    public void onDelete(ActionEvent actionEvent)
-    {
-        if (pageItems.isEmpty() || currentIndex < 0 || currentIndex >= pageItems.size())
-        {
+    public void onDelete(ActionEvent actionEvent) {
+        if (pageItems.isEmpty() || currentIndex < 0 || currentIndex >= pageItems.size()) {
             showStatus("No file selected for deletion.", "status-error");
             return;
         }
 
         int deleteIndex = currentIndex;
-        if (!scanningService.deletePageAt(deleteIndex))
-        {
+        if (!scanningService.deletePageAt(deleteIndex)) {
             showStatus("Could not delete selected file.", "status-error");
             return;
         }
@@ -387,15 +338,11 @@ public class ScanningController
         audit.log("PAGE_DELETED", "Page at index " + deleteIndex + " was deleted");
         pageItems.setAll(scanningService.getAllPages());
 
-        if (!pageItems.isEmpty())
-        {
+        if (!pageItems.isEmpty()) {
             navigateTo(Math.min(deleteIndex, pageItems.size() - 1));
-        }
-        else
-        {
+        } else {
             currentIndex = -1;
-            if (imgPage != null)
-            {
+            if (imgPage != null) {
                 imgPage.setImage(null);
             }
             updatePageLabel();
@@ -404,44 +351,38 @@ public class ScanningController
         updateButtonState();
         updateTotalScansLabel();
         updateBoxSnapshotFromCurrentSession();
-        if (currentLevel == ExplorerLevel.FILES)
-        {
+        if (currentLevel == ExplorerLevel.FILES) {
             showFilesLevel();
         }
     }
 
-    private void pollLoop()
-    {
-        while (running)
-        {
-            try
-            {
+    private void pollLoop() {
+        while (running) {
+            try {
                 List<Files> newPages = scanningService.fetchAndAppendNext();
 
                 Platform.runLater(() -> handleNewPages(newPages));
 
                 Thread.sleep(POLL_INTERVAL_MS);
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 Platform.runLater(() ->
                         showStatus("API error: " + e.getMessage() + " — retrying…", "status-error"));
 
-                try { Thread.sleep(POLL_INTERVAL_MS); }
-                catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
-            }
-            catch (InterruptedException e)
-            {
+                try {
+                    Thread.sleep(POLL_INTERVAL_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
             }
         }
     }
 
-    private void handleNewPages(List<Files> newPages)
-    {
-        if (newPages.isEmpty())
-        {
+    private void handleNewPages(List<Files> newPages) {
+        if (newPages.isEmpty()) {
             return;
         }
 
@@ -452,14 +393,12 @@ public class ScanningController
 
         audit.log("NEW_PAGES", "Page at index " + pageItems.size() + " was created");
 
-        if (currentLevel == ExplorerLevel.FILES)
-        {
+        if (currentLevel == ExplorerLevel.FILES) {
             showFilesLevel();
         }
 
         boolean barcodeFound = newPages.stream().anyMatch(Files::isBarcode);
-        if (barcodeFound)
-        {
+        if (barcodeFound) {
             int splitPage = newPages.stream()
                     .filter(Files::isBarcode)
                     .mapToInt(Files::getPageNumber)
@@ -470,42 +409,32 @@ public class ScanningController
             audit.log("BARCODE_DETECTED", "Document split barcode detected at page " + splitPage);
 
             showStatus("⚠ Barcode detected — document split at page " +
-                    newPages.stream().filter(Files::isBarcode)
-                            .mapToInt(Files::getPageNumber).min().orElse(-1),
+                            newPages.stream().filter(Files::isBarcode)
+                                    .mapToInt(Files::getPageNumber).min().orElse(-1),
                     "status-error");
-        }
-        else
-        {
+        } else {
             showStatus("Page " + newPages.get(0).getPageNumber() + " received.", "status-info");
         }
     }
 
-    private void openSelectedItem()
-    {
-        if (running && currentLevel != ExplorerLevel.FILES)
-        {
+    private void openSelectedItem() {
+        if (running && currentLevel != ExplorerLevel.FILES) {
             showStatus("Stop scanning before changing box/document.", "status-error");
             return;
         }
 
         Object selected = lstExplorer.getSelectionModel().getSelectedItem();
-        if (selected == null)
-        {
+        if (selected == null) {
             return;
         }
 
-        if (currentLevel == ExplorerLevel.BOXES && selected instanceof Boxes box)
-        {
-            if (archiveService != null && !loadedBoxContent.contains(box.getBoxId()))
-            {
-                try
-                {
+        if (currentLevel == ExplorerLevel.BOXES && selected instanceof Boxes box) {
+            if (archiveService != null && !loadedBoxContent.contains(box.getBoxId())) {
+                try {
                     Boxes hydrated = archiveService.loadBoxContent(box.getBoxId());
                     box.replaceContent(hydrated.getPages(), hydrated.getDocuments());
                     loadedBoxContent.add(box.getBoxId());
-                }
-                catch (SQLException e)
-                {
+                } catch (SQLException e) {
                     showStatus("Could not load box content: " + e.getMessage(), "status-error");
                     return;
                 }
@@ -514,17 +443,13 @@ public class ScanningController
             selectedBox = box;
             selectedDocument = null;
             pageItems.setAll(box.getPages());
-            if (pageItems.isEmpty())
-            {
+            if (pageItems.isEmpty()) {
                 currentIndex = -1;
-                if (imgPage != null)
-                {
+                if (imgPage != null) {
                     imgPage.setImage(null);
                 }
                 updatePageLabel();
-            }
-            else
-            {
+            } else {
                 navigateTo(pageItems.size() - 1);
             }
             updateCurrentBoxLabel();
@@ -535,32 +460,25 @@ public class ScanningController
             return;
         }
 
-        if (currentLevel == ExplorerLevel.DOCUMENTS && selected instanceof Document document)
-        {
+        if (currentLevel == ExplorerLevel.DOCUMENTS && selected instanceof Document document) {
             selectedDocument = document;
             showFilesLevel();
             showStatus("Opened " + document, "status-info");
             return;
         }
 
-        if (currentLevel == ExplorerLevel.FILES && selected instanceof Files page)
-        {
+        if (currentLevel == ExplorerLevel.FILES && selected instanceof Files page) {
             int index = findPageIndex(page);
-            if (index >= 0)
-            {
+            if (index >= 0) {
                 navigateTo(index);
             }
         }
     }
 
-    private int findPageIndex(Files selectedPage)
-    {
-        if (selectedPage.getId() > 0)
-        {
-            for (int i = 0; i < pageItems.size(); i++)
-            {
-                if (pageItems.get(i).getId() == selectedPage.getId())
-                {
+    private int findPageIndex(Files selectedPage) {
+        if (selectedPage.getId() > 0) {
+            for (int i = 0; i < pageItems.size(); i++) {
+                if (pageItems.get(i).getId() == selectedPage.getId()) {
                     return i;
                 }
             }
@@ -569,8 +487,7 @@ public class ScanningController
         return pageItems.indexOf(selectedPage);
     }
 
-    private void showBoxesLevel()
-    {
+    private void showBoxesLevel() {
         currentLevel = ExplorerLevel.BOXES;
         lstExplorer.setItems(FXCollections.observableArrayList(boxItems));
         lblExplorerPath.setText("Boxes");
@@ -578,11 +495,9 @@ public class ScanningController
         updateButtonState();
     }
 
-    private void showDocumentsLevel()
-    {
+    private void showDocumentsLevel() {
         currentLevel = ExplorerLevel.DOCUMENTS;
-        if (selectedBox == null)
-        {
+        if (selectedBox == null) {
             lstExplorer.setItems(FXCollections.observableArrayList());
             lblExplorerPath.setText("Boxes");
             btnBack.setDisable(true);
@@ -595,18 +510,13 @@ public class ScanningController
         updateButtonState();
     }
 
-    private void showFilesLevel()
-    {
+    private void showFilesLevel() {
         currentLevel = ExplorerLevel.FILES;
-        if (selectedDocument == null)
-        {
+        if (selectedDocument == null) {
             lstExplorer.setItems(FXCollections.observableArrayList(pageItems));
-            if (selectedBox == null)
-            {
+            if (selectedBox == null) {
                 lblExplorerPath.setText("Files");
-            }
-            else
-            {
+            } else {
                 lblExplorerPath.setText("Boxes / " + selectedBox.getBoxId() + " / Files");
             }
             btnBack.setDisable(false);
@@ -620,10 +530,8 @@ public class ScanningController
         updateButtonState();
     }
 
-    private void navigateTo(int index)
-    {
-        if (index < 0 || index >= pageItems.size())
-        {
+    private void navigateTo(int index) {
+        if (index < 0 || index >= pageItems.size()) {
             return;
         }
 
@@ -638,20 +546,15 @@ public class ScanningController
             return;
         }
 
-        if (page.getImage() == null)
-        {
-            if (archiveService == null || page.getId() <= 0)
-            {
+        if (page.getImage() == null) {
+            if (archiveService == null || page.getId() <= 0) {
                 showStatus("Could not load image for selected file.", "status-error");
                 return;
             }
 
-            try
-            {
+            try {
                 page.setImage(archiveService.loadFileImage(page.getId()));
-            }
-            catch (SQLException e)
-            {
+            } catch (SQLException e) {
                 showStatus("Could not load image: " + e.getMessage(), "status-error");
                 return;
             }
@@ -659,23 +562,21 @@ public class ScanningController
 
         BufferedImage raw = page.getImage();
         BufferedImage rotated = applyAwtRotation(raw, page.getRotationDegrees());
-        Image         fxImage = SwingFXUtils.toFXImage(rotated, null);
+        Image fxImage = SwingFXUtils.toFXImage(rotated, null);
 
         imgPage.setImage(fxImage);
         imgPage.setOpacity(page.isBarcode() ? 0.55 : 1.0);
         imgPage.setRotate(0);
     }
 
-    private BufferedImage applyAwtRotation(BufferedImage src, int degrees)
-    {
-        if (degrees == 0)
-        {
+    private BufferedImage applyAwtRotation(BufferedImage src, int degrees) {
+        if (degrees == 0) {
             return src;
         }
 
         double radians = Math.toRadians(degrees);
-        double sin     = Math.abs(Math.sin(radians));
-        double cos     = Math.abs(Math.cos(radians));
+        double sin = Math.abs(Math.sin(radians));
+        double cos = Math.abs(Math.cos(radians));
 
         int newW = (int) Math.floor(src.getWidth() * cos + src.getHeight() * sin);
         int newH = (int) Math.floor(src.getWidth() * sin + src.getHeight() * cos);
@@ -694,41 +595,33 @@ public class ScanningController
         return rotated;
     }
 
-    private void applyRotation(boolean clockwise)
-    {
-        if (currentIndex < 0 || currentIndex >= pageItems.size())
-        {
+    private void applyRotation(boolean clockwise) {
+        if (currentIndex < 0 || currentIndex >= pageItems.size()) {
             return;
         }
 
         Files page = pageItems.get(currentIndex);
-        if (clockwise)
-        {
+        if (clockwise) {
             page.rotateRight();
-        }
-        else
-        {
+        } else {
             page.rotateLeft();
         }
 
         displayPage(page);
     }
 
-    private void updatePageLabel()
-    {
+    private void updatePageLabel() {
         int total = pageItems.size();
         int shown = total == 0 ? 0 : currentIndex + 1;
         lblPageInfo.setText("Page " + shown + " / " + total);
     }
 
-    private void updateNavigationButtons()
-    {
+    private void updateNavigationButtons() {
         btnPrev.setDisable(currentIndex <= 0);
         btnNext.setDisable(currentIndex >= pageItems.size() - 1 || pageItems.isEmpty());
     }
 
-    private void updateButtonState()
-    {
+    private void updateButtonState() {
         boolean hasPage = currentIndex >= 0 && currentIndex < pageItems.size();
 
         btnStart.setDisable(running || selectedBox == null);
@@ -746,37 +639,28 @@ public class ScanningController
         updateNavigationButtons();
     }
 
-    private void updateTotalScansLabel()
-    {
+    private void updateTotalScansLabel() {
         lblTotalScans.setText("Total Scans: " + pageItems.size());
     }
 
-    private void updateCurrentBoxLabel()
-    {
+    private void updateCurrentBoxLabel() {
         lblCurrentBox.setText(selectedBox == null ? "Current box: none" : "Current box: " + selectedBox.getBoxId());
     }
 
-    private void updateBoxSnapshotFromCurrentSession()
-    {
-        if (selectedBox == null)
-        {
+    private void updateBoxSnapshotFromCurrentSession() {
+        if (selectedBox == null) {
             return;
         }
 
         selectedBox.replaceContent(scanningService.getAllPages(), scanningService.getDocuments());
-        if (currentLevel == ExplorerLevel.DOCUMENTS)
-        {
+        if (currentLevel == ExplorerLevel.DOCUMENTS) {
             showDocumentsLevel();
         }
-        if (currentLevel == ExplorerLevel.FILES)
-        {
-            if (selectedDocument != null)
-            {
+        if (currentLevel == ExplorerLevel.FILES) {
+            if (selectedDocument != null) {
                 Document foundDocument = null;
-                for (Document document : selectedBox.getDocuments())
-                {
-                    if (document.getDocumentNumber() == selectedDocument.getDocumentNumber())
-                    {
+                for (Document document : selectedBox.getDocuments()) {
+                    if (document.getDocumentNumber() == selectedDocument.getDocumentNumber()) {
                         foundDocument = document;
                         break;
                     }
@@ -787,43 +671,33 @@ public class ScanningController
         }
     }
 
-    private void showStatus(String message, String styleClass)
-    {
+    private void showStatus(String message, String styleClass) {
         lblStatus.getStyleClass().removeAll("status-success", "status-error", "status-info");
         lblStatus.getStyleClass().add(styleClass);
         lblStatus.setText(message);
     }
 
     @FXML
-    private void onOpenSlideView()
-    {
-        if (selectedBox == null)
-        {
+    private void onOpenSlideView() {
+        if (selectedBox == null) {
             showStatus("Open a box first.", "status-error");
             return;
         }
 
         List<Files> savedPages = selectedBox.getPages();
 
-        if (savedPages.isEmpty())
-        {
+        if (savedPages.isEmpty()) {
             showStatus("No saved pages in this box.", "status-error");
             return;
         }
 
         // Ensure all images are loaded before passing to slide view
-        if (archiveService != null)
-        {
-            for (Files page : savedPages)
-            {
-                if (page.getImage() == null && page.getId() > 0)
-                {
-                    try
-                    {
+        if (archiveService != null) {
+            for (Files page : savedPages) {
+                if (page.getImage() == null && page.getId() > 0) {
+                    try {
                         page.setImage(archiveService.loadFileImage(page.getId()));
-                    }
-                    catch (SQLException e)
-                    {
+                    } catch (SQLException e) {
                         showStatus("Could not load image for " + page.getReferenceId() + ": " + e.getMessage(), "status-error");
                         return;
                     }
@@ -831,8 +705,7 @@ public class ScanningController
             }
         }
 
-        try
-        {
+        try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/SlideView.fxml"));
             Parent root = loader.load();
 
@@ -850,17 +723,13 @@ public class ScanningController
 
             audit.log("SLIDE_VIEW_OPENED", "Opened slide view for box "
                     + selectedBox.getBoxId() + " — " + savedPages.size() + " page(s)");
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             showStatus("Could not open slide view.", "status-error");
         }
     }
 
-    private void performExport(boolean singlePage)
-    {
-        if (selectedBox == null || selectedBox.getDocuments().isEmpty())
-        {
+    private void performExport(boolean singlePage) {
+        if (selectedBox == null || selectedBox.getDocuments().isEmpty()) {
             showStatus("No documents to export. Complete and stop a scanning session first.", "status-error");
             return;
         }
@@ -876,7 +745,9 @@ public class ScanningController
 
         File outputDirectory = chooser.showDialog(btnExportSingle.getScene().getWindow());
 
-        if (outputDirectory == null) { return; }
+        if (outputDirectory == null) {
+            return;
+        }
 
         String folderName = buildExportFolderName();
         List<Document> documents = new ArrayList<>(selectedBox.getDocuments());
@@ -888,12 +759,10 @@ public class ScanningController
         String threadName = singlePage ? "export-single-page-thread" : "export-multi-page-thread";
         Thread exportThread = new Thread(() ->
         {
-            try
-            {
+            try {
                 ensureImagesLoaded(documents);
 
-                if (singlePage)
-                {
+                if (singlePage) {
                     int count = exportService.exportSinglePage(documents, outputDirectory, folderName);
                     String message = "Single-page export complete: " + count
                             + " file(s) written to \"" + folderName + "\".";
@@ -903,9 +772,7 @@ public class ScanningController
                         audit.log("EXPORT_SINGLE", message);
                         updateButtonState();
                     });
-                }
-                else
-                {
+                } else {
                     int count = exportService.exportMultiPage(documents, outputDirectory, folderName);
                     String message = "Multi-page export complete: " + count
                             + " document(s) written to \"" + folderName + "\".";
@@ -916,17 +783,13 @@ public class ScanningController
                         updateButtonState();
                     });
                 }
-            }
-            catch (SQLException e)
-            {
+            } catch (SQLException e) {
                 Platform.runLater(() ->
                 {
                     showStatus("Could not load image data for export: " + e.getMessage(), "status-error");
                     updateButtonState();
                 });
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 Platform.runLater(() ->
                 {
                     showStatus("Export failed: " + e.getMessage(), "status-error");
@@ -939,29 +802,25 @@ public class ScanningController
         exportThread.start();
     }
 
-    private void ensureImagesLoaded(List<Document> documents) throws SQLException
-    {
-        if (archiveService == null) { return; }
+    private void ensureImagesLoaded(List<Document> documents) throws SQLException {
+        if (archiveService == null) {
+            return;
+        }
 
-        for (Document document : documents)
-        {
-            for (Files page : document.getPages())
-            {
-                if (!page.isBarcode() && page.getImage() == null && page.getId() > 0)
-                {
+        for (Document document : documents) {
+            for (Files page : document.getPages()) {
+                if (!page.isBarcode() && page.getImage() == null && page.getId() > 0) {
                     page.setImage(archiveService.loadFileImage(page.getId()));
                 }
             }
         }
     }
 
-    private String buildExportFolderName()
-    {
-        String  boxId   = selectedBox == null ? "export" : selectedBox.getBoxId();
+    private String buildExportFolderName() {
+        String boxId = selectedBox == null ? "export" : selectedBox.getBoxId();
         Profile profile = cmbProfile.getValue();
 
-        if (profile != null && !profile.getName().isBlank())
-        {
+        if (profile != null && !profile.getName().isBlank()) {
             String safeName = profile.getName().trim().replaceAll("[\\\\/:*?\"<>|]", "_");
             return safeName + "_" + boxId;
         }
@@ -970,27 +829,61 @@ public class ScanningController
     }
 
     @FXML
-    private void onSplitDocument()
-    {
-        if (currentIndex < 0 || currentIndex >= pageItems.size() - 1)
-        {
+    private void onSplitDocument() {
+        if (currentIndex < 0 || currentIndex >= pageItems.size() - 1) {
             showStatus("Select a page to split after — it cannot be the last page.", "status-error");
             return;
         }
 
-        boolean split = scanningService.splitDocumentAt(currentIndex);
-        if (!split)
-        {
-            showStatus("Could not apply document split at this position.", "status-error");
+        if (selectedBox == null) {
+            showStatus("No box is open.", "status-error");
             return;
         }
 
-        updateBoxSnapshotFromCurrentSession();
-        showDocumentsLevel();
+        Files splitAfterPage = pageItems.get(currentIndex);
 
-        audit.log("MANUAL_SPLIT", "Manual document split inserted after page "
-                + pageItems.get(currentIndex).getReferenceId());
+        // Find the index within the box's own page list
+        List<Files> boxPages = new ArrayList<>(selectedBox.getPages());
+        int boxPageIndex = -1;
+        for (int i = 0; i < boxPages.size(); i++) {
+            Files p = boxPages.get(i);
+            if (p.getId() > 0 && p.getId() == splitAfterPage.getId()) {
+                boxPageIndex = i;
+                break;
+            }
+            if (p.getPageNumber() == splitAfterPage.getPageNumber()) {
+                boxPageIndex = i;
+            }
+        }
 
-        showStatus("Document split applied after " + pageItems.get(currentIndex).getReferenceId(), "status-success");
+        if (boxPageIndex < 0 || boxPageIndex >= boxPages.size() - 1) {
+            showStatus("Could not find page position for split.", "status-error");
+            return;
+        }
+
+        try {
+            if (archiveService != null) {
+                archiveService.splitDocumentAt(selectedBox, boxPageIndex);
+            } else {
+                // In-memory only (active scan session)
+                scanningService.splitDocumentAt(currentIndex);
+                updateBoxSnapshotFromCurrentSession();
+            }
+
+            // Refresh the explorer to show the new document structure
+            showDocumentsLevel();
+
+            audit.log("MANUAL_SPLIT", "Manual document split inserted after "
+                    + splitAfterPage.getReferenceId()
+                    + " in box " + selectedBox.getBoxId());
+
+            showStatus("Split applied after " + splitAfterPage.getReferenceId()
+                            + " — " + selectedBox.getDocuments().size() + " document(s) now in box.",
+                    "status-success");
+        } catch (IllegalArgumentException e) {
+            showStatus(e.getMessage(), "status-error");
+        } catch (SQLException e) {
+            showStatus("Could not save split to database: " + e.getMessage(), "status-error");
+        }
     }
 }
