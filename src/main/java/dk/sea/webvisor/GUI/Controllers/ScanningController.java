@@ -30,7 +30,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.TransferMode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.awt.geom.AffineTransform;
@@ -101,6 +104,7 @@ public class ScanningController {
     private final ObservableList<Files> pageItems = FXCollections.observableArrayList();
     private final ObservableList<Boxes> boxItems = FXCollections.observableArrayList();
     private final Set<String> loadedBoxContent = new HashSet<>();
+    private Files draggedPage = null;
     private ArchiveService archiveService;
     private final ExportService exportService = new ExportService();
     private ProfileService profileService;
@@ -134,6 +138,50 @@ public class ScanningController {
         }
 
         lstExplorer.setCellFactory(lv -> new ListCell<>() {
+            {
+                setOnDragDetected(event ->
+                {
+                    if (!canReorderPages() || isEmpty() || !(getItem() instanceof Files page))
+                    {
+                        return;
+                    }
+
+                    draggedPage = page;
+                    Dragboard dragboard = startDragAndDrop(TransferMode.MOVE);
+                    ClipboardContent content = new ClipboardContent();
+                    content.putString("page-reorder");
+                    dragboard.setContent(content);
+                    event.consume();
+                });
+
+                setOnDragOver(event ->
+                {
+                    if (!canReorderPages() || draggedPage == null || isEmpty() || !(getItem() instanceof Files))
+                    {
+                        return;
+                    }
+
+                    if (getItem() != draggedPage)
+                    {
+                        event.acceptTransferModes(TransferMode.MOVE);
+                    }
+                    event.consume();
+                });
+
+                setOnDragDropped(event ->
+                {
+                    boolean completed = false;
+                    if (canReorderPages() && draggedPage != null && !isEmpty() && getItem() instanceof Files targetPage)
+                    {
+                        completed = reorderPage(draggedPage, targetPage);
+                    }
+                    event.setDropCompleted(completed);
+                    event.consume();
+                });
+
+                setOnDragDone(event -> draggedPage = null);
+            }
+
             @Override
             protected void updateItem(Object item, boolean empty) {
                 super.updateItem(item, empty);
@@ -443,6 +491,7 @@ public class ScanningController {
             selectedBox = box;
             selectedDocument = null;
             pageItems.setAll(box.getPages());
+            scanningService.loadSessionPages(pageItems);
             if (pageItems.isEmpty()) {
                 currentIndex = -1;
                 if (imgPage != null) {
@@ -485,6 +534,74 @@ public class ScanningController {
         }
 
         return pageItems.indexOf(selectedPage);
+    }
+
+    private boolean canReorderPages()
+    {
+        return !running
+                && selectedBox != null
+                && currentLevel == ExplorerLevel.FILES;
+    }
+
+    private boolean reorderPage(Files sourcePage, Files targetPage)
+    {
+        int fromIndex = findPageIndex(sourcePage);
+        int toIndex = findPageIndex(targetPage);
+        if (fromIndex < 0 || toIndex < 0)
+        {
+            return false;
+        }
+
+        if (!scanningService.movePage(fromIndex, toIndex))
+        {
+            return false;
+        }
+
+        pageItems.setAll(scanningService.getAllPages());
+        updateBoxSnapshotFromCurrentSession();
+        showFilesLevel();
+
+        int newIndex = findPageIndex(sourcePage);
+        if (newIndex >= 0)
+        {
+            navigateTo(newIndex);
+        }
+
+        if (!persistPageOrder())
+        {
+            return false;
+        }
+
+        audit.log("PAGES_REORDERED", "Moved page from index " + fromIndex + " to " + toIndex + " in box " + selectedBox.getBoxId());
+        showStatus("Page order updated.", "status-success");
+        return true;
+    }
+
+    private boolean persistPageOrder()
+    {
+        if (archiveService == null || selectedBox == null)
+        {
+            return true;
+        }
+
+        try
+        {
+            boolean hasPersistedIds = pageItems.stream().anyMatch(page -> page.getId() > 0);
+            if (hasPersistedIds)
+            {
+                archiveService.updatePageOrder(selectedBox.getBoxId(), pageItems);
+            }
+            else
+            {
+                archiveService.saveBoxSnapshot(selectedBox);
+            }
+            return true;
+        }
+        catch (SQLException e)
+        {
+            showStatus("Could not update page order in database: " + e.getMessage(), "status-error");
+            return false;
+        }
     }
 
     private void showBoxesLevel() {

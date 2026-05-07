@@ -85,12 +85,21 @@ public class ArchiveService
         filesDAO.deleteFilesByBox(box.getBoxId());
         documentsDAO.deleteDocumentsByBox(box.getBoxId());
 
+        int persistedPageNumber = 1;
         for (Document document : box.getDocuments())
         {
             int documentId = documentsDAO.createDocument(box.getBoxId(), document.getDocumentNumber());
             for (Files page : document.getPages())
             {
-                filesDAO.createFile(box.getBoxId(), documentId, page);
+                Files pageToPersist = new Files(
+                        0,
+                        persistedPageNumber,
+                        page.getImage(),
+                        page.isBarcode(),
+                        page.getRotationDegrees()
+                );
+                filesDAO.createFile(box.getBoxId(), documentId, pageToPersist);
+                persistedPageNumber++;
             }
         }
     }
@@ -98,6 +107,20 @@ public class ArchiveService
     public BufferedImage loadFileImage(int fileId) throws SQLException
     {
         return filesDAO.getFileImageById(fileId);
+    }
+
+    public void updatePageOrder(String boxId, List<Files> orderedPages) throws SQLException
+    {
+        List<Integer> fileIds = new ArrayList<>();
+        for (Files page : orderedPages)
+        {
+            if (page.getId() > 0)
+            {
+                fileIds.add(page.getId());
+            }
+        }
+
+        filesDAO.updatePageOrder(boxId, fileIds);
     }
 
     private void hydrateBox(Boxes box) throws SQLException

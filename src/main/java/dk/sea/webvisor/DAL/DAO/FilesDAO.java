@@ -124,6 +124,48 @@ public class FilesDAO implements FilesInterface
     }
 
     @Override
+    public void updatePageOrder(String boxId, List<Integer> orderedFileIds) throws SQLException
+    {
+        if (orderedFileIds == null || orderedFileIds.isEmpty())
+        {
+            return;
+        }
+
+        String sql = """
+                UPDATE dbo.Files
+                SET PageNumber = ?
+                WHERE ID = ? AND BoxID = ?
+                """;
+
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            connection.setAutoCommit(false);
+            try
+            {
+                for (int i = 0; i < orderedFileIds.size(); i++)
+                {
+                    statement.setInt(1, i + 1);
+                    statement.setInt(2, orderedFileIds.get(i));
+                    statement.setString(3, boxId);
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+                connection.commit();
+            }
+            catch (SQLException e)
+            {
+                connection.rollback();
+                throw e;
+            }
+            finally
+            {
+                connection.setAutoCommit(true);
+            }
+        }
+    }
+
+    @Override
     public BufferedImage getFileImageById(int fileId) throws SQLException
     {
         String sql = """

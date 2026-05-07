@@ -11,7 +11,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -120,6 +122,17 @@ public class ScanningService
         }
     }
 
+    public void loadSessionPages(List<Files> existingPages)
+    {
+        synchronized (pages)
+        {
+            pages.clear();
+            pages.addAll(existingPages);
+            rebuildDocumentsFromPages();
+            pageCounter.set(pages.size());
+        }
+    }
+
     /**
      Deletes one page from the current session and rebuilds document grouping.
 
@@ -139,6 +152,76 @@ public class ScanningService
             rebuildDocumentsFromPages();
             return true;
         }
+    }
+
+    public boolean movePage(int fromIndex, int toIndex)
+    {
+        synchronized (pages)
+        {
+            if (fromIndex < 0 || fromIndex >= pages.size() || toIndex < 0 || toIndex >= pages.size())
+            {
+                return false;
+            }
+
+            if (fromIndex == toIndex)
+            {
+                return true;
+            }
+
+            Files movedPage = pages.remove(fromIndex);
+            pages.add(toIndex, movedPage);
+            reorderPagesWithinExistingDocuments();
+            return true;
+        }
+    }
+
+    private void reorderPagesWithinExistingDocuments()
+    {
+        Map<Files, Integer> documentByPage = new IdentityHashMap<>();
+        synchronized (documents)
+        {
+            for (int docIndex = 0; docIndex < documents.size(); docIndex++)
+            {
+                for (Files page : documents.get(docIndex).getPages())
+                {
+                    documentByPage.put(page, docIndex);
+                }
+            }
+        }
+
+        if (documentByPage.isEmpty())
+        {
+            rebuildDocumentsFromPages();
+            return;
+        }
+
+        List<Document> rebuilt = new ArrayList<>();
+        synchronized (documents)
+        {
+            for (int i = 0; i < documents.size(); i++)
+            {
+                rebuilt.add(new Document(i + 1));
+            }
+        }
+
+        for (Files page : pages)
+        {
+            int targetDocIndex = documentByPage.getOrDefault(page, 0);
+            if (targetDocIndex < 0 || targetDocIndex >= rebuilt.size())
+            {
+                targetDocIndex = 0;
+            }
+            rebuilt.get(targetDocIndex).addPage(page);
+        }
+
+        synchronized (documents)
+        {
+            documents.clear();
+            documents.addAll(rebuilt);
+        }
+
+        documentCounter.set(rebuilt.size());
+        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
     }
 
     private void rebuildDocumentsFromPages()
