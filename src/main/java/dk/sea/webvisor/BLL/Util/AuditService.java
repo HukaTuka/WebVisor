@@ -116,6 +116,11 @@ public class AuditService
         }
     }
 
+    public String getCurrentUser()
+    {
+        return currentUser; // use whatever your existing field name is
+    }
+
     /**
      * Returns the live observable list — bind a TableView to this directly.
      */

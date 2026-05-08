@@ -1,10 +1,7 @@
 package dk.sea.webvisor.DAL.DAO;
 
 // Project Imports
-import dk.sea.webvisor.BE.User;
-import dk.sea.webvisor.BE.UserAdmin;
-import dk.sea.webvisor.BE.UserRole;
-import dk.sea.webvisor.BE.UserScanner;
+import dk.sea.webvisor.BE.*;
 import dk.sea.webvisor.DAL.DBConnector.DBConnector;
 import dk.sea.webvisor.DAL.Interface.UsersInterface;
 
@@ -84,6 +81,10 @@ public class UsersDAO implements UsersInterface
 
         return users;
     }
+
+
+
+
 
     @Override
     public User createUser(User user) throws SQLException
@@ -225,4 +226,5 @@ public class UsersDAO implements UsersInterface
 
         return UserRole.UserScanner;
     }
+
 }

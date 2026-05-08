@@ -1,7 +1,13 @@
 package dk.sea.webvisor.BE;
 
+//Project Imports
+import dk.sea.webvisor.BE.Profile;
+
 // Java Imports
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class User
 {
@@ -10,6 +16,7 @@ public class User
     private String password;
     private final UserRole role;
     private LocalDateTime lastLogin;
+    private List<Profile> assignedProfiles = new ArrayList<>();
 
     public User(int id,  String username, String password, UserRole role, LocalDateTime lastLogin)
     {
@@ -25,11 +32,13 @@ public class User
     public String getUsername(){return username;}
     public String getPassword(){return password;}
     public UserRole getRole(){return role;}
-    public LocalDateTime getLastLogin(){return lastLogin;};
+    public LocalDateTime getLastLogin(){return lastLogin;}
+    public List<Profile> getAssignedProfiles() {return assignedProfiles;}
 
 
     // Setters
     public void setUsername (String un){this.username = un;}
     public void setPassword(String pw){this.password = pw;}
     public void setLastLogin (LocalDateTime lastLogin){this.lastLogin = lastLogin;}
+    public void setAssignedProfiles(List<Profile> assignedProfiles){this.assignedProfiles = assignedProfiles == null ? new ArrayList<>() : assignedProfiles;}
 }

@@ -1,8 +1,11 @@
 package dk.sea.webvisor.GUI.Controllers;
 
 // Project Imports
+import dk.sea.webvisor.BE.Profile;
 import dk.sea.webvisor.BE.User;
 import dk.sea.webvisor.BE.UserRole;
+import dk.sea.webvisor.BLL.ProfileService;
+import dk.sea.webvisor.BLL.ProfileUserService;
 import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BLL.UserService;
 
@@ -12,16 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import java.io.IOException;
@@ -29,25 +23,32 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class AdminUsersController
 {
     @FXML private TableView<User> tblUsers;
     @FXML private TableColumn<User, String> colUsername;
     @FXML private TableColumn<User, String> colRole;
+    @FXML private TableColumn<User, String> colProfiles;
     @FXML private TableColumn<User, Void> colActions;
     @FXML private TextField txtSearch;
     @FXML private Label lblFormHeading;
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
     @FXML private ComboBox<String> cmbRole;
+    @FXML private ListView<Profile> lstProfiles;
     @FXML private Button btnSave;
     @FXML private Button btnCancel;
     @FXML private Label lblStatus;
+
     private final UserService  userService;
+    private final ProfileUserService profileUserService;
+    private final ProfileService profileService;
     private final AuditService audit = AuditService.getInstance();
 
     private final ObservableList<User> allUsers = FXCollections.observableArrayList();
+    private final ObservableList<Profile> allProfiles = FXCollections.observableArrayList();
     private FilteredList<User> filteredUsers;
 
     /** Non-null while an edit is in progress; null means "create" mode. */
@@ -57,7 +58,9 @@ public class AdminUsersController
     {
         try
         {
+            this.profileUserService = new ProfileUserService();
             this.userService = new UserService();
+            this.profileService = new ProfileService();
         }
         catch (IOException e)
         {
@@ -75,6 +78,8 @@ public class AdminUsersController
         cmbRole.setItems(FXCollections.observableArrayList("Administrator", "Scanner"));
         cmbRole.getSelectionModel().select("Scanner");
 
+        loadProfiles();
+        setupProfileList();
         setupColumns();
         setupDoubleClick();
         refreshUsers();
@@ -87,6 +92,20 @@ public class AdminUsersController
 
         colRole.setCellValueFactory(data ->
                 new SimpleStringProperty(data.getValue().getRole().getDisplayName()));
+
+        // Show comma-separated list of assigned profile names
+        colProfiles.setCellValueFactory(data ->
+        {
+            List<Profile> profiles = data.getValue().getAssignedProfiles();
+            if (profiles == null || profiles.isEmpty())
+            {
+                return new SimpleStringProperty("—");
+            }
+            String names = profiles.stream()
+                    .map(Profile::getName)
+                    .collect(Collectors.joining(", "));
+            return new SimpleStringProperty(names);
+        });
 
         // Inline Edit / Delete buttons
         colActions.setCellFactory(col -> new TableCell<>()
@@ -133,6 +152,37 @@ public class AdminUsersController
                 {
                     startEditing(selected);
                 }
+            }
+        });
+    }
+
+    //Loading the profile combo
+    private void loadProfiles(){
+        try
+        {
+            List<Profile> profiles = profileService.getAllProfiles();
+            allProfiles.setAll(profiles);
+        }
+        catch (SQLException e)
+        {
+            showStatus("Could not load profiles" + e.getMessage(), "status error");
+        }
+    }
+
+    //Setting up the profile combo to show the profiles
+    private void setupProfileList() {
+        lstProfiles.setItems(allProfiles);
+        lstProfiles.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        //Show only the profile names, without the rotation details
+        lstProfiles.setCellFactory(lv -> new ListCell<>()
+        {
+            @Override
+            protected void updateItem(Profile item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getName() + " (" + item.getDefaultRotation() +
+                                                       "°" + ((item.isSplitOnBarcode()) ? ", split on barcode" : "") + ")");
             }
         });
     }
@@ -192,8 +242,20 @@ public class AdminUsersController
                     LocalDateTime.now()
             );
 
+            //Assign profile if one was selected
+            List<Profile> selectedProfiles = List.copyOf(
+                    lstProfiles.getSelectionModel().getSelectedItems());
+            for (Profile profile : selectedProfiles)
+            {
+                profileUserService.addProfileToUser(created.getId(), profile.getId());
+            }
+
+            String profileNames = selectedProfiles.stream()
+                            .map(Profile::getName)
+                                    .collect(Collectors.joining(","));
+
             audit.log("CREATE_USER", "Created new user: " + created.getUsername()
-                    + " | Role: " + created.getRole().getDisplayName());
+                    + " | Role: " + created.getRole().getDisplayName() + " | Profile" + (profileNames.isEmpty() ? "none" : profileNames));
 
             refreshUsers();
             clearForm();
@@ -225,6 +287,22 @@ public class AdminUsersController
                     getSelectedRole(),
                     LocalDateTime.now()
             );
+
+            //Update profile assignment
+            profileUserService.removeAllProfilesFromUser(editingUser.getId());
+            List<Profile> selectedProfiles = List.copyOf(
+                    lstProfiles.getSelectionModel().getSelectedItems());
+            for (Profile profile : selectedProfiles)
+            {
+                profileUserService.addProfileToUser(editingUser.getId(), profile.getId());
+            }
+
+            String oldProfileNames = editingUser.getAssignedProfiles().stream()
+                    .map(Profile::getName)
+                    .collect(Collectors.joining(", "));
+            String newProfileNames = selectedProfiles.stream()
+                    .map(Profile::getName)
+                    .collect(Collectors.joining(", "));
 
             audit.log("UPDATE_USER", "Updated user ID " + editingUser.getId()
                     + " | Username: " + oldUsername + " -> " + newUsername
@@ -261,6 +339,8 @@ public class AdminUsersController
 
         try
         {
+            //Deleting a user removes the profiles from user first, as to keep the audit trail clean.
+            profileUserService.removeAllProfilesFromUser(user.getId());
             userService.deleteUser(user.getId());
 
             audit.log("DELETE_USER", "Deleted user: " + user.getUsername()
@@ -291,6 +371,19 @@ public class AdminUsersController
         txtPassword.clear();
         cmbRole.getSelectionModel().select(user.getRole().getDisplayName());
 
+        //auto selects the user's currently assigned profile
+        lstProfiles.getSelectionModel().clearSelection();
+        List<Profile> assigned = user.getAssignedProfiles();
+        for (int i = 0; i < allProfiles.size(); i++)
+        {
+            Profile p = allProfiles.get(i);
+            boolean isAssigned = assigned.stream().anyMatch(a -> a.getId() == p.getId());
+            if (isAssigned)
+            {
+                lstProfiles.getSelectionModel().select(i);
+            }
+        }
+
         lblFormHeading.setText("Edit User: " + user.getUsername());
         btnSave.setText("Save Changes");
         setCancelVisible(true);
@@ -305,6 +398,7 @@ public class AdminUsersController
         txtUsername.clear();
         txtPassword.clear();
         cmbRole.getSelectionModel().select("Scanner");
+        lstProfiles.getSelectionModel().clearSelection();
 
         lblFormHeading.setText("Create New User");
         btnSave.setText("Create User");
@@ -319,6 +413,13 @@ public class AdminUsersController
         try
         {
             List<User> users = userService.getAllUsers();
+
+            for (User user : users)
+            {
+                List<Profile> profiles = profileUserService.getProfilesForUser(user.getId());
+                user.setAssignedProfiles(profiles);
+            }
+
             allUsers.setAll(users);
 
             if (filteredUsers == null)
@@ -332,6 +433,7 @@ public class AdminUsersController
         catch (SQLException e)
         {
             showStatus("Could not load users from database.", "status-error");
+            e.printStackTrace();
         }
     }
 

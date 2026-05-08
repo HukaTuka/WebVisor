@@ -117,4 +117,15 @@ public class UserService
         }
         return new UserScanner(id, username.trim(), password, role, lastLogin);
     }
+
+    public Optional<User> getUserByUsername(String username) throws SQLException
+    {
+        if (username == null || username.isBlank())
+        {
+            throw new IllegalArgumentException("Username must not be blank.");
+        }
+
+        return usersDAO.getUserByUsername(username);
+    }
+
 }

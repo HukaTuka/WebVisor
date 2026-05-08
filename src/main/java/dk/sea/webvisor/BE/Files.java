@@ -52,6 +52,11 @@ public class Files
         rotationDegrees = (rotationDegrees + 270) % 360;
     }
 
+    public void setRotationDegrees(int degrees)
+    {
+        this.rotationDegrees = Profile.normaliseRotation(degrees);
+    }
+
     public String getReferenceId() {
     return String.format("Scan-%03d", pageNumber);}
 

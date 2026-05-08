@@ -2,14 +2,12 @@ package dk.sea.webvisor.GUI.Controllers;
 
 // Project Imports
 import dk.sea.webvisor.BE.Document;
+import dk.sea.webvisor.BE.User;
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Files;
-import dk.sea.webvisor.BLL.ArchiveService;
-import dk.sea.webvisor.BLL.ScanningService;
+import dk.sea.webvisor.BLL.*;
 import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BE.Profile;
-import dk.sea.webvisor.BLL.ExportService;
-import dk.sea.webvisor.BLL.ProfileService;
 
 // Java Imports
 import javafx.application.Platform;
@@ -41,13 +39,11 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
 import javafx.scene.control.ComboBox;
 import javafx.stage.DirectoryChooser;
 import java.io.File;
-import java.util.ArrayList;
 
 public class ScanningController {
     private static final String BARCODE_CELL_STYLE = "barcode-item-cell";
@@ -100,6 +96,8 @@ public class ScanningController {
     private Button btnSplit;
 
     private final ScanningService scanningService = new ScanningService();
+    private UserService userService;
+    private ProfileUserService profileUserService;
     private final AuditService audit = AuditService.getInstance();
     private final ObservableList<Files> pageItems = FXCollections.observableArrayList();
     private final ObservableList<Boxes> boxItems = FXCollections.observableArrayList();
@@ -130,12 +128,34 @@ public class ScanningController {
         } catch (IOException | SQLException e) {
             showStatus("Could not load archive from database: " + e.getMessage(), "status-error");
         }
+
         try {
             profileService = new ProfileService();
-            cmbProfile.setItems(FXCollections.observableArrayList(profileService.getAllProfiles()));
-        } catch (IOException | SQLException e) {
+            userService = new UserService();
+            profileUserService = new ProfileUserService();
+
+            //figure out who is logged in by using the audit service log in tracker
+            String currentUsername = audit.getCurrentUser();
+            if (currentUsername != null && !currentUsername.isBlank())
+            {
+                Optional<User> currentUser = userService.getUserByUsername(currentUsername);
+                if (currentUser != null){
+                    List<Profile> assignedProfiles =
+                            profileUserService.getProfilesForUser(currentUser.get().getId());
+                    cmbProfile.setItems(FXCollections.observableArrayList(assignedProfiles));
+                }
+            }
+
+            //If nothing loaded, all profiles are selected
+            if (cmbProfile.getItems().isEmpty()){
+                cmbProfile.setItems(
+                        FXCollections.observableArrayList(profileService.getAllProfiles()));
+            }
+        }  catch (IOException | SQLException e){
             showStatus("Could not load profiles: " + e.getMessage(), "status-error");
         }
+
+
 
         lstExplorer.setCellFactory(lv -> new ListCell<>() {
             {
@@ -221,9 +241,11 @@ public class ScanningController {
         updateTotalScansLabel();
         updatePageLabel();
         updateButtonState();
+
     }
 
-    @FXML
+
+        @FXML
     private void onCreateBox() {
         String boxId = txtBoxId.getText() == null ? "" : txtBoxId.getText().trim();
         if (boxId.isEmpty()) {
@@ -284,6 +306,11 @@ public class ScanningController {
     @FXML
     private void onStartScanning() {
         if (running) {
+            return;
+        }
+
+        if (cmbProfile.getValue() == null) {
+            showStatus("Select a Profile before starting a scan.", "status-error");
             return;
         }
 
@@ -434,6 +461,13 @@ public class ScanningController {
             return;
         }
 
+        //applies the rotation of the profile selected
+        Profile activeProfile = cmbProfile.getValue();
+        if (activeProfile != null && activeProfile.getDefaultRotation() != 0) {
+            for (Files page : newPages) {
+                page.setRotationDegrees(activeProfile.getDefaultRotation());
+            }
+        }
         pageItems.addAll(newPages);
         navigateTo(pageItems.size() - 1);
         updateTotalScansLabel();
@@ -455,6 +489,23 @@ public class ScanningController {
 
             //Audit: barcode / document split detected
             audit.log("BARCODE_DETECTED", "Document split barcode detected at page " + splitPage);
+
+            //Only auto splits if the profile has the split on barcode enabled
+            boolean shouldAutoSplit = activeProfile != null && activeProfile.isSplitOnBarcode();
+            if (shouldAutoSplit && selectedBox != null) {
+                int barcodeOffset = newPages.stream()
+                        .filter(Files::isBarcode)
+                        .mapToInt(newPages::indexOf)
+                        .min()
+                        .orElse(0);
+                int absoluteSplitIndex = (pageItems.size() - newPages.size()) + barcodeOffset;
+
+                if(absoluteSplitIndex > 0 && absoluteSplitIndex < pageItems.size() -1) {
+                    scanningService.splitDocumentAt(absoluteSplitIndex);
+                    updateBoxSnapshotFromCurrentSession();
+                    audit.log("AUTO_SPLIT", "Auto-split triggered by a barcode at page " + splitPage);
+                }
+            }
 
             showStatus("⚠ Barcode detected — document split at page " +
                             newPages.stream().filter(Files::isBarcode)

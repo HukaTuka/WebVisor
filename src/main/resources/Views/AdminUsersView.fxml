@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -15,7 +16,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="650.0" prefWidth="900.0" styleClass="root-pane"
+<AnchorPane prefHeight="680.0" prefWidth="960.0" styleClass="root-pane"
             xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="dk.sea.webvisor.GUI.Controllers.AdminUsersController">
@@ -43,11 +44,12 @@
                     </children>
                 </HBox>
 
-                <!-- User table with inline Actions column -->
-                <TableView fx:id="tblUsers" prefHeight="280.0" styleClass="users-table" VBox.vgrow="ALWAYS">
+                <!-- User table — colProfiles column added -->
+                <TableView fx:id="tblUsers" prefHeight="260.0" styleClass="users-table" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colUsername" prefWidth="300.0" text="Username"/>
-                        <TableColumn fx:id="colRole"     prefWidth="220.0" text="Role"/>
+                        <TableColumn fx:id="colUsername" prefWidth="200.0" text="Username"/>
+                        <TableColumn fx:id="colRole"     prefWidth="140.0" text="Role"/>
+                        <TableColumn fx:id="colProfiles" prefWidth="260.0" text="Assigned Profiles"/>
                         <TableColumn fx:id="colActions"  prefWidth="180.0" text="Actions" sortable="false"/>
                     </columns>
                 </TableView>
@@ -64,29 +66,44 @@
                     <rowConstraints>
                         <RowConstraints/>
                         <RowConstraints/>
+                        <RowConstraints minHeight="110.0"/>
                     </rowConstraints>
 
                     <children>
-                        <Label text="Username:"  GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <!-- Row 0: Username / Password -->
+                        <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                         <TextField fx:id="txtUsername" promptText="Username"
                                    styleClass="input-field"
                                    GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                        <Label text="Password:"  GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                        <Label text="Password:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
                         <PasswordField fx:id="txtPassword" promptText="Password"
                                        styleClass="input-field"
                                        GridPane.columnIndex="3" GridPane.rowIndex="0"/>
 
-                        <Label text="Role:"      GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <!-- Row 1: Role -->
+                        <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                         <ComboBox fx:id="cmbRole" styleClass="combo-box-default"
                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <!-- Row 2: Assigned Profiles (multi-select ListView) -->
+                        <Label text="Assigned Profiles:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="2"
+                               GridPane.valignment="TOP"/>
+                        <ListView fx:id="lstProfiles"
+                                  prefHeight="100.0"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="2"
+                                  GridPane.columnSpan="3"/>
                     </children>
                 </GridPane>
+
+                <Label text="Hold Ctrl (or Cmd on Mac) to select multiple profiles."
+                       style="-fx-font-size: 11px; -fx-text-fill: #888;"/>
 
                 <HBox fx:id="formButtons" spacing="10.0">
                     <children>
                         <Button fx:id="btnSave"   text="Create User" onAction="#onSaveUser"  styleClass="primary-button"/>
-                        <Button fx:id="btnCancel" text="Cancel" onAction="#onCancelEdit" styleClass="secondary-button"/>
+                        <Button fx:id="btnCancel" text="Cancel"      onAction="#onCancelEdit" styleClass="secondary-button"/>
                     </children>
                 </HBox>
 

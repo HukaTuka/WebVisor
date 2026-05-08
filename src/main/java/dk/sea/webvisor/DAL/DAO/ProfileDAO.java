@@ -188,7 +188,6 @@ public class ProfileDAO implements ProfileInterface
         return names;
     }
 
-
     private Profile mapRow(ResultSet rs) throws SQLException
     {
         return new Profile(
