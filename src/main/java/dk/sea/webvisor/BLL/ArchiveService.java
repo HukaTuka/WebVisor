@@ -82,24 +82,25 @@ public class ArchiveService
 
         createBox(box.getBoxId());
 
-        filesDAO.deleteFilesByBox(box.getBoxId());
+        // Delete only documents (not files) and re-link them
         documentsDAO.deleteDocumentsByBox(box.getBoxId());
 
-        int persistedPageNumber = 1;
         for (Document document : box.getDocuments())
         {
             int documentId = documentsDAO.createDocument(box.getBoxId(), document.getDocumentNumber());
             for (Files page : document.getPages())
             {
-                Files pageToPersist = new Files(
-                        0,
-                        persistedPageNumber,
-                        page.getImage(),
-                        page.isBarcode(),
-                        page.getRotationDegrees()
-                );
-                filesDAO.createFile(box.getBoxId(), documentId, pageToPersist);
-                persistedPageNumber++;
+                if (page.getId() > 0)
+                {
+                    // Page already exists in DB — just update its DocumentID link
+                    filesDAO.updateFileDocument(page.getId(), documentId);
+                }
+                else if (page.getImage() != null)
+                {
+                    // New page with image data — insert it
+                    filesDAO.createFile(box.getBoxId(), documentId, page);
+                }
+                // If id <= 0 and image is null, skip — nothing to save
             }
         }
     }

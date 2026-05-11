@@ -266,5 +266,18 @@ public class FilesDAO implements FilesInterface
             throw new SQLException("Could not encode scanned page image.", e);
         }
     }
+    @Override
+    public void updateFileDocument(int fileId, int documentId) throws SQLException
+    {
+        String sql = "UPDATE dbo.Files SET DocumentID = ? WHERE ID = ?";
+
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setInt(1, documentId);
+            statement.setInt(2, fileId);
+            statement.executeUpdate();
+        }
+    }
 
 }
