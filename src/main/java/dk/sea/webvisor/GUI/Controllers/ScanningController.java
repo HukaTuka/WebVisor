@@ -22,13 +22,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
@@ -43,7 +37,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import javafx.scene.control.ComboBox;
+
 import javafx.stage.DirectoryChooser;
 import java.io.File;
 
@@ -177,8 +171,6 @@ public class ScanningController {
 
             List<Profile> profilesForDropdown = new ArrayList<>(profileService.getAllProfiles());
 
-            // Figure out who is logged in by using the audit service log in tracker.
-            // Admins can use all profiles; scanners are limited to assigned profiles when available.
             String currentUsername = audit.getCurrentUser();
             if (currentUsername != null && !currentUsername.isBlank())
             {
@@ -197,8 +189,6 @@ public class ScanningController {
         }  catch (IOException | SQLException e){
             showStatus("Could not load profiles: " + e.getMessage(), "status-error");
         }
-
-
 
         lstExplorer.setCellFactory(lv -> new ListCell<>() {
             {
@@ -252,6 +242,7 @@ public class ScanningController {
 
                 if (empty || item == null) {
                     setText(null);
+                    setContextMenu(null);
                     return;
                 }
 
@@ -259,8 +250,10 @@ public class ScanningController {
                     String documentsText = box.getDocumentCount() == 1 ? "1 document" : box.getDocumentCount() + " documents";
                     String filesText = box.getFileCount() == 1 ? "1 file" : box.getFileCount() + " files";
                     setText(box.getBoxId() + " (" + documentsText + ", " + filesText + ")");
+                    setContextMenu(null);
                 } else if (item instanceof Document document) {
                     setText(document.toString());
+                    setContextMenu(null);
                 } else if (item instanceof Files page) {
                     if (page.isBarcode()) {
                         setText(page.getReferenceId() + " [BARCODE]");
@@ -270,6 +263,9 @@ public class ScanningController {
                     } else {
                         setText(page.getReferenceId());
                     }
+
+                    // ── Right-click context menu: Move to Document X ──────────
+                    setContextMenu(buildMoveContextMenu(page));
                 }
             }
         });
@@ -297,11 +293,100 @@ public class ScanningController {
         updateTotalScansLabel();
         updatePageLabel();
         updateButtonState();
-
     }
 
+    /**
+     * Builds a context menu for a Files row with one "Move to Document N"
+     * item per document that the page does not already belong to.
+     * Returns null (no menu) when not at FILES level, scanning is running,
+     * or there is only one document.
+     */
+    private ContextMenu buildMoveContextMenu(Files page)
+    {
+        if (running || currentLevel != ExplorerLevel.FILES || selectedBox == null)
+        {
+            return null;
+        }
 
-        @FXML
+        List<Document> docs = scanningService.getDocuments();
+        if (docs.size() <= 1)
+        {
+            return null; // nothing to move to
+        }
+
+        // Find which document currently owns this page
+        int sourceDocIndex = -1;
+        outer:
+        for (int i = 0; i < docs.size(); i++)
+        {
+            for (Files p : docs.get(i).getPages())
+            {
+                if (p == page) { sourceDocIndex = i; break outer; }
+            }
+        }
+
+        ContextMenu menu = new ContextMenu();
+        for (int i = 0; i < docs.size(); i++)
+        {
+            if (i == sourceDocIndex) continue; // skip current document
+
+            final int targetIndex = i;
+            MenuItem item = new MenuItem("Move to " + docs.get(i));
+            item.setOnAction(e -> handleMoveToDocument(page, targetIndex));
+            menu.getItems().add(item);
+        }
+
+        return menu.getItems().isEmpty() ? null : menu;
+    }
+
+    /**
+     * Moves {@code page} to the document at {@code targetDocumentIndex},
+     * persists the change, refreshes the list, and writes an audit entry.
+     */
+    private void handleMoveToDocument(Files page, int targetDocumentIndex)
+    {
+        int pageIndex = findPageIndex(page);
+        if (pageIndex < 0)
+        {
+            showStatus("Could not find page to move.", "status-error");
+            return;
+        }
+
+        boolean moved = scanningService.movePageToDocument(pageIndex, targetDocumentIndex);
+        if (!moved)
+        {
+            showStatus("Could not move page — it may already be in that document.", "status-error");
+            return;
+        }
+
+        pageItems.setAll(scanningService.getAllPages());
+        updateBoxSnapshotFromCurrentSession();
+
+        if (archiveService != null)
+        {
+            try
+            {
+                archiveService.saveBoxSnapshot(selectedBox);
+            }
+            catch (SQLException e)
+            {
+                showStatus("Moved in memory but could not persist to database: "
+                        + e.getMessage(), "status-error");
+            }
+        }
+
+        showFilesLevel();
+
+        audit.log("PAGE_MOVED_TO_DOCUMENT",
+                "Moved " + page.getReferenceId()
+                        + " to Document " + (targetDocumentIndex + 1)
+                        + " in box " + selectedBox.getBoxId());
+
+        showStatus("Moved " + page.getReferenceId()
+                + " → Document " + (targetDocumentIndex + 1), "status-success");
+    }
+
+    @FXML
     private void onCreateBox() {
         String boxId = txtBoxId.getText() == null ? "" : txtBoxId.getText().trim();
         Client selectedClient = cmbClient.getValue();
@@ -1148,7 +1233,6 @@ public class ScanningController {
             return;
         }
 
-        // Ensure all images are loaded before passing to slide view
         if (archiveService != null) {
             for (Files page : savedPages) {
                 if (page.getImage() == null && page.getId() > 0) {
@@ -1194,7 +1278,6 @@ public class ScanningController {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Select Export Output Directory");
 
-        // Set initial directory to Downloads if available
         File downloads = new File(System.getProperty("user.home"), "Downloads");
         if (downloads.exists() && downloads.isDirectory()) {
             chooser.setInitialDirectory(downloads);
@@ -1299,7 +1382,6 @@ public class ScanningController {
 
         Files splitAfterPage = pageItems.get(currentIndex);
 
-        // Find the index within the box's own page list
         List<Files> boxPages = new ArrayList<>(selectedBox.getPages());
         int boxPageIndex = -1;
         for (int i = 0; i < boxPages.size(); i++) {
@@ -1322,12 +1404,10 @@ public class ScanningController {
             if (archiveService != null) {
                 archiveService.splitDocumentAt(selectedBox, boxPageIndex);
             } else {
-                // In-memory only (active scan session)
                 scanningService.splitDocumentAt(currentIndex);
                 updateBoxSnapshotFromCurrentSession();
             }
 
-            // Refresh the explorer to show the new document structure
             showDocumentsLevel();
 
             audit.log("MANUAL_SPLIT", "Manual document split inserted after "

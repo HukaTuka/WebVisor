@@ -175,6 +175,96 @@ public class ScanningService
         }
     }
 
+    /**
+     * Moves the page at {@code pageIndex} into the document at
+     * {@code targetDocumentIndex}. The page is removed from its current
+     * document and appended to the target. If the source document becomes
+     * empty it is removed and remaining documents are renumbered.
+     *
+     * @return true if the move was applied, false if indices were invalid or
+     *         the page is already in the target document
+     */
+    public boolean movePageToDocument(int pageIndex, int targetDocumentIndex)
+    {
+        synchronized (pages)
+        {
+            if (pageIndex < 0 || pageIndex >= pages.size())
+            {
+                return false;
+            }
+
+            synchronized (documents)
+            {
+                if (targetDocumentIndex < 0 || targetDocumentIndex >= documents.size())
+                {
+                    return false;
+                }
+
+                Files pageToMove = pages.get(pageIndex);
+
+                // Find source document
+                int sourceDocumentIndex = -1;
+                outer:
+                for (int i = 0; i < documents.size(); i++)
+                {
+                    for (Files p : documents.get(i).getPages())
+                    {
+                        if (p == pageToMove)
+                        {
+                            sourceDocumentIndex = i;
+                            break outer;
+                        }
+                    }
+                }
+
+                if (sourceDocumentIndex == targetDocumentIndex)
+                {
+                    return false; // already in target document
+                }
+
+                // Build page buckets per document, removing the page from its source
+                List<List<Files>> buckets = new ArrayList<>();
+                for (Document d : documents)
+                {
+                    List<Files> bucket = new ArrayList<>();
+                    for (Files p : d.getPages())
+                    {
+                        if (p != pageToMove) bucket.add(p);
+                    }
+                    buckets.add(bucket);
+                }
+
+                // Append page to target bucket
+                buckets.get(targetDocumentIndex).add(pageToMove);
+
+                // Drop empty buckets and rebuild documents
+                List<Document> finalDocs = new ArrayList<>();
+                for (List<Files> bucket : buckets)
+                {
+                    if (bucket.isEmpty()) continue;
+                    Document d = new Document(finalDocs.size() + 1);
+                    for (Files p : bucket) d.addPage(p);
+                    finalDocs.add(d);
+                }
+
+                documents.clear();
+                documents.addAll(finalDocs);
+                documentCounter.set(finalDocs.size());
+
+                // Reorder flat pages list to match document order
+                List<Files> reordered = new ArrayList<>();
+                for (Document d : finalDocs) reordered.addAll(d.getPages());
+                pages.clear();
+                pages.addAll(reordered);
+
+                startNewDocumentOnNextPage =
+                        !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+
+                return true;
+            }
+        }
+    }
+
     private void reorderPagesWithinExistingDocuments()
     {
         Map<Files, Integer> documentByPage = new IdentityHashMap<>();
@@ -279,7 +369,6 @@ public class ScanningService
                 return false;
             }
 
-            // Insert a virtual split by rebuilding documents with a forced break
             rebuildDocumentsWithManualSplit(pageIndex);
             return true;
         }
@@ -316,6 +405,4 @@ public class ScanningService
         documentCounter.set(rebuilt.size());
         startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
     }
-
-
 }
