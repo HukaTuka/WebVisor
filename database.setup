@@ -57,3 +57,101 @@ CREATE TABLE UserProfiles (
     FOREIGN KEY (UserID) REFERENCES Users(ID),
     FOREIGN KEY (ProfileID) REFERENCES Profiles(ID)
 );
+
+create table dbo.Clients
+(
+    ID   int identity
+        constraint PK_Clients
+            primary key,
+    Name varchar(150) not null
+        constraint UQ_Clients_Name
+            unique
+)
+go
+
+create table dbo.Boxes
+(
+    BoxID     varchar(50)                                   not null
+        constraint PK_Boxes
+            primary key,
+    ClientID  int                                           not null
+        constraint FK_Boxes_Clients
+            references dbo.Clients,
+    ArchiveID int                                           not null
+        constraint FK_Boxes_Archives
+            references dbo.Archives,
+    CreatedAt datetime2
+        constraint DF_Boxes_CreatedAt default sysdatetime() not null
+)
+go
+
+create index IX_Boxes_ArchiveID
+    on dbo.Boxes (ArchiveID)
+go
+
+create table dbo.Documents
+(
+    ID             int identity
+        constraint PK_Documents
+            primary key,
+    BoxID          varchar(50)                                  not null
+        constraint FK_Documents_Boxes
+            references dbo.Boxes
+            on delete cascade,
+    DocumentNumber int                                          not null
+        constraint CK_Documents_DocumentNumber_Positive
+            check ([DocumentNumber] > 0),
+    CreatedAt      datetime2
+        constraint DF_Documents_CreatedAt default sysdatetime() not null,
+    constraint UQ_Documents_Box_DocumentNumber
+        unique (BoxID, DocumentNumber)
+)
+go
+
+create index IX_Documents_BoxID
+    on dbo.Documents (BoxID)
+go
+
+create table dbo.Files
+(
+    ID              int identity
+        constraint PK_Files
+            primary key,
+    BoxID           varchar(50)                             not null
+        constraint FK_Files_Boxes
+            references dbo.Boxes
+            on delete cascade,
+    DocumentID      int
+        constraint FK_Files_Documents
+            references dbo.Documents,
+    PageNumber      int                                     not null,
+    IsBarcode       bit                                     not null,
+    RotationDegrees int                                     not null,
+    ImageData       varbinary(max)                          not null,
+    CreatedAt       datetime2
+        constraint DF_Files_CreatedAt default sysdatetime() not null
+)
+go
+
+create index IX_Files_BoxID
+    on dbo.Files (BoxID)
+go
+
+create index IX_Files_DocumentID
+    on dbo.Files (DocumentID)
+go
+
+create table dbo.Archives
+(
+    ID        int identity
+        primary key,
+    Name      varchar(150)                                     not null,
+    ClientID  int                                              not null,
+    CreatedAt datetime2
+        constraint DF_Archives_CreatedAt default sysdatetime() not null
+)
+go
+
+create index IX_Archives_ClientID
+    on dbo.Archives (ClientID)
+go

@@ -12,6 +12,6 @@ public interface BoxesInterface
 {
     Optional<Boxes> getBoxById(String boxId) throws SQLException;
     List<Boxes> getAllBoxes() throws SQLException;
-    Boxes createBox(String boxId) throws SQLException;
+    Boxes createBox(String boxId, int clientId, int archiveId) throws SQLException;
     void deleteBox(String boxId) throws SQLException;
 }

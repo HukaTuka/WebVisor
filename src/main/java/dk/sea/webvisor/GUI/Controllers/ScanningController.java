@@ -4,10 +4,13 @@ package dk.sea.webvisor.GUI.Controllers;
 import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.User;
 import dk.sea.webvisor.BE.Boxes;
+import dk.sea.webvisor.BE.Client;
+import dk.sea.webvisor.BE.Archive;
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.*;
 import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BE.Profile;
+import dk.sea.webvisor.BE.UserRole;
 
 // Java Imports
 import javafx.application.Platform;
@@ -40,13 +43,13 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-
 import javafx.scene.control.ComboBox;
 import javafx.stage.DirectoryChooser;
 import java.io.File;
 
 public class ScanningController {
     private static final String BARCODE_CELL_STYLE = "barcode-item-cell";
+    private static final Client NO_CLIENT_OPTION = new Client(-1, "-- No client selected --");
 
     private enum ExplorerLevel {
         BOXES, DOCUMENTS, FILES
@@ -54,6 +57,10 @@ public class ScanningController {
 
     @FXML
     private TextField txtBoxId;
+    @FXML
+    private ComboBox<Client> cmbClient;
+    @FXML
+    private ComboBox<Archive> cmbArchive;
     @FXML
     private Label lblCurrentBox;
     @FXML
@@ -101,6 +108,7 @@ public class ScanningController {
     private final AuditService audit = AuditService.getInstance();
     private final ObservableList<Files> pageItems = FXCollections.observableArrayList();
     private final ObservableList<Boxes> boxItems = FXCollections.observableArrayList();
+    private final ObservableList<Archive> archiveItems = FXCollections.observableArrayList();
     private final Set<String> loadedBoxContent = new HashSet<>();
     private Files draggedPage = null;
     private ArchiveService archiveService;
@@ -125,32 +133,67 @@ public class ScanningController {
         try {
             archiveService = new ArchiveService();
             boxItems.setAll(archiveService.getAllBoxes());
+            List<Client> clients = new ArrayList<>();
+            clients.add(NO_CLIENT_OPTION);
+            clients.addAll(archiveService.getAllClients());
+            cmbClient.setItems(FXCollections.observableArrayList(clients));
+            cmbClient.setValue(NO_CLIENT_OPTION);
+            archiveItems.setAll(archiveService.getAllArchives());
+            cmbArchive.setItems(FXCollections.observableArrayList());
         } catch (IOException | SQLException e) {
             showStatus("Could not load archive from database: " + e.getMessage(), "status-error");
         }
+
+        cmbClient.valueProperty().addListener((obs, oldClient, newClient) ->
+        {
+            refreshArchivesForClient(newClient);
+            selectedBox = null;
+            selectedDocument = null;
+            pageItems.clear();
+            clearImagePreview();
+            updateTotalScansLabel();
+            updateCurrentBoxLabel();
+            if (currentLevel == ExplorerLevel.BOXES) {
+                showBoxesLevel();
+            }
+        });
+        cmbArchive.valueProperty().addListener((obs, oldArchive, newArchive) ->
+        {
+            selectedBox = null;
+            selectedDocument = null;
+            pageItems.clear();
+            clearImagePreview();
+            updateTotalScansLabel();
+            updateCurrentBoxLabel();
+            if (currentLevel == ExplorerLevel.BOXES) {
+                showBoxesLevel();
+            }
+        });
 
         try {
             profileService = new ProfileService();
             userService = new UserService();
             profileUserService = new ProfileUserService();
 
-            //figure out who is logged in by using the audit service log in tracker
+            List<Profile> profilesForDropdown = new ArrayList<>(profileService.getAllProfiles());
+
+            // Figure out who is logged in by using the audit service log in tracker.
+            // Admins can use all profiles; scanners are limited to assigned profiles when available.
             String currentUsername = audit.getCurrentUser();
             if (currentUsername != null && !currentUsername.isBlank())
             {
                 Optional<User> currentUser = userService.getUserByUsername(currentUsername);
-                if (currentUser != null){
+                if (currentUser.isPresent() && currentUser.get().getRole() != UserRole.UserAdmin)
+                {
                     List<Profile> assignedProfiles =
                             profileUserService.getProfilesForUser(currentUser.get().getId());
-                    cmbProfile.setItems(FXCollections.observableArrayList(assignedProfiles));
+                    if (!assignedProfiles.isEmpty())
+                    {
+                        profilesForDropdown = assignedProfiles;
+                    }
                 }
             }
-
-            //If nothing loaded, all profiles are selected
-            if (cmbProfile.getItems().isEmpty()){
-                cmbProfile.setItems(
-                        FXCollections.observableArrayList(profileService.getAllProfiles()));
-            }
+            cmbProfile.setItems(FXCollections.observableArrayList(profilesForDropdown));
         }  catch (IOException | SQLException e){
             showStatus("Could not load profiles: " + e.getMessage(), "status-error");
         }
@@ -213,7 +256,9 @@ public class ScanningController {
                 }
 
                 if (item instanceof Boxes box) {
-                    setText(box.toString());
+                    String documentsText = box.getDocumentCount() == 1 ? "1 document" : box.getDocumentCount() + " documents";
+                    String filesText = box.getFileCount() == 1 ? "1 file" : box.getFileCount() + " files";
+                    setText(box.getBoxId() + " (" + documentsText + ", " + filesText + ")");
                 } else if (item instanceof Document document) {
                     setText(document.toString());
                 } else if (item instanceof Files page) {
@@ -231,13 +276,24 @@ public class ScanningController {
 
         lstExplorer.setOnMouseClicked(event ->
         {
-            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
+
+            if (currentLevel == ExplorerLevel.FILES && event.getClickCount() == 1) {
+                openSelectedItem();
+                return;
+            }
+
+            if (event.getClickCount() == 2) {
                 openSelectedItem();
             }
         });
+        lstExplorer.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> updateButtonState());
 
         showBoxesLevel();
         updateCurrentBoxLabel();
+        updateCaseMetadataFields();
         updateTotalScansLabel();
         updatePageLabel();
         updateButtonState();
@@ -248,8 +304,21 @@ public class ScanningController {
         @FXML
     private void onCreateBox() {
         String boxId = txtBoxId.getText() == null ? "" : txtBoxId.getText().trim();
+        Client selectedClient = cmbClient.getValue();
+        Archive selectedArchive = cmbArchive.getValue();
+        String client = selectedClient == null ? "" : selectedClient.getName().trim();
+        String archive = selectedArchive == null ? "" : selectedArchive.getName().trim();
+
         if (boxId.isEmpty()) {
             showStatus("Please enter a Box ID.", "status-error");
+            return;
+        }
+        if (selectedClient == null || selectedClient.getId() <= 0) {
+            showStatus("Please fill Client.", "status-error");
+            return;
+        }
+        if (archive.isEmpty()) {
+            showStatus("Please select an Archive.", "status-error");
             return;
         }
 
@@ -260,23 +329,31 @@ public class ScanningController {
             }
         }
 
+        Boxes createdBox = null;
         if (archiveService != null) {
             try {
-                archiveService.createBox(boxId);
+                createdBox = archiveService.createBox(boxId, client, archive);
             } catch (SQLException e) {
                 showStatus("Could not create box in database: " + e.getMessage(), "status-error");
                 return;
             }
+            catch (IllegalArgumentException e)
+            {
+                showStatus(e.getMessage(), "status-error");
+                return;
+            }
         }
 
-        Boxes newBox = new Boxes(boxId);
+        Boxes newBox = createdBox != null
+                ? createdBox
+                : new Boxes(boxId, selectedArchive == null ? 0 : selectedArchive.getId(), client, archive);
         boxItems.add(newBox);
         loadedBoxContent.add(boxId);
         txtBoxId.clear();
         showBoxesLevel();
         lstExplorer.getSelectionModel().select(newBox);
         showStatus("Created box " + boxId + ". Click it to open.", "status-success");
-        audit.log("BOX_CREATED", "Created box " + boxId);
+        audit.log("BOX_CREATED", "Created box " + boxId + " (client: " + client + ", archive: " + archive + ")");
     }
 
     @FXML
@@ -292,6 +369,7 @@ public class ScanningController {
     @FXML
     private void onBack() {
         if (currentLevel == ExplorerLevel.FILES) {
+            clearImagePreview();
             showDocumentsLevel();
             return;
         }
@@ -299,6 +377,10 @@ public class ScanningController {
         if (currentLevel == ExplorerLevel.DOCUMENTS) {
             selectedBox = null;
             selectedDocument = null;
+            pageItems.clear();
+            clearImagePreview();
+            updateTotalScansLabel();
+            updateCurrentBoxLabel();
             showBoxesLevel();
         }
     }
@@ -399,35 +481,118 @@ public class ScanningController {
 
     @FXML
     public void onDelete(ActionEvent actionEvent) {
-        if (pageItems.isEmpty() || currentIndex < 0 || currentIndex >= pageItems.size()) {
-            showStatus("No file selected for deletion.", "status-error");
+        if (running) {
+            showStatus("Stop scanning before deleting items.", "status-error");
             return;
         }
 
-        int deleteIndex = currentIndex;
-        if (!scanningService.deletePageAt(deleteIndex)) {
-            showStatus("Could not delete selected file.", "status-error");
+        Object selected = lstExplorer.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showStatus("No item selected for deletion.", "status-error");
             return;
         }
 
-        audit.log("PAGE_DELETED", "Page at index " + deleteIndex + " was deleted");
-        pageItems.setAll(scanningService.getAllPages());
-
-        if (!pageItems.isEmpty()) {
-            navigateTo(Math.min(deleteIndex, pageItems.size() - 1));
-        } else {
-            currentIndex = -1;
-            if (imgPage != null) {
-                imgPage.setImage(null);
+        try
+        {
+            if (currentLevel == ExplorerLevel.BOXES && selected instanceof Boxes box)
+            {
+                if (archiveService != null) {
+                    archiveService.deleteBox(box.getBoxId());
+                }
+                boxItems.remove(box);
+                loadedBoxContent.remove(box.getBoxId());
+                if (selectedBox != null && selectedBox.getBoxId().equalsIgnoreCase(box.getBoxId())) {
+                    selectedBox = null;
+                    selectedDocument = null;
+                    pageItems.clear();
+                    scanningService.clearSession();
+                    clearImagePreview();
+                    updateTotalScansLabel();
+                    updateCurrentBoxLabel();
+                }
+                showBoxesLevel();
+                showStatus("Box deleted: " + box.getBoxId(), "status-success");
+                audit.log("BOX_DELETED", "Deleted box " + box.getBoxId());
+                return;
             }
-            updatePageLabel();
-        }
 
-        updateButtonState();
-        updateTotalScansLabel();
-        updateBoxSnapshotFromCurrentSession();
-        if (currentLevel == ExplorerLevel.FILES) {
-            showFilesLevel();
+            if (selectedBox == null)
+            {
+                showStatus("Open a box before deleting documents or files.", "status-error");
+                return;
+            }
+
+            if (currentLevel == ExplorerLevel.DOCUMENTS && selected instanceof Document document)
+            {
+                if (archiveService != null) {
+                    for (Files documentPage : document.getPages()) {
+                        if (documentPage.getId() > 0) {
+                            archiveService.deleteFileById(documentPage.getId());
+                        }
+                    }
+                    archiveService.deleteDocumentByNumber(selectedBox.getBoxId(), document.getDocumentNumber());
+                }
+
+                List<Files> remaining = new ArrayList<>();
+                for (Files page : pageItems) {
+                    if (!document.getPages().contains(page)) {
+                        remaining.add(page);
+                    }
+                }
+                scanningService.loadSessionPages(remaining);
+                pageItems.setAll(scanningService.getAllPages());
+                clearImagePreview();
+                updateTotalScansLabel();
+                updateBoxSnapshotFromCurrentSession();
+                if (archiveService != null) {
+                    archiveService.updatePageOrder(selectedBox.getBoxId(), pageItems);
+                }
+                showDocumentsLevel();
+                showStatus("Deleted " + document, "status-success");
+                audit.log("DOCUMENT_DELETED", "Deleted " + document + " in box " + selectedBox.getBoxId());
+                return;
+            }
+
+            if (currentLevel == ExplorerLevel.FILES && selected instanceof Files page)
+            {
+                int deleteIndex = findPageIndex(page);
+                if (deleteIndex < 0) {
+                    showStatus("Could not delete selected file.", "status-error");
+                    return;
+                }
+
+                if (archiveService != null && page.getId() > 0) {
+                    archiveService.deleteFileById(page.getId());
+                }
+
+                if (!scanningService.deletePageAt(deleteIndex)) {
+                    showStatus("Could not delete selected file.", "status-error");
+                    return;
+                }
+
+                pageItems.setAll(scanningService.getAllPages());
+                if (!pageItems.isEmpty()) {
+                    navigateTo(Math.min(deleteIndex, pageItems.size() - 1));
+                } else {
+                    clearImagePreview();
+                }
+
+                updateTotalScansLabel();
+                updateBoxSnapshotFromCurrentSession();
+                if (archiveService != null) {
+                    archiveService.updatePageOrder(selectedBox.getBoxId(), pageItems);
+                }
+                showFilesLevel();
+                showStatus("Deleted file: " + page.getReferenceId(), "status-success");
+                audit.log("PAGE_DELETED", "Deleted file " + page.getReferenceId() + " in box " + selectedBox.getBoxId());
+                return;
+            }
+
+            showStatus("Select a valid item to delete.", "status-error");
+        }
+        catch (SQLException e)
+        {
+            showStatus("Could not delete item from database: " + e.getMessage(), "status-error");
         }
     }
 
@@ -541,17 +706,10 @@ public class ScanningController {
 
             selectedBox = box;
             selectedDocument = null;
+            updateCaseMetadataFields();
             pageItems.setAll(box.getPages());
             scanningService.loadSessionPages(pageItems);
-            if (pageItems.isEmpty()) {
-                currentIndex = -1;
-                if (imgPage != null) {
-                    imgPage.setImage(null);
-                }
-                updatePageLabel();
-            } else {
-                navigateTo(pageItems.size() - 1);
-            }
+            clearImagePreview();
             updateCurrentBoxLabel();
             updateTotalScansLabel();
             showDocumentsLevel();
@@ -562,6 +720,7 @@ public class ScanningController {
 
         if (currentLevel == ExplorerLevel.DOCUMENTS && selected instanceof Document document) {
             selectedDocument = document;
+            clearImagePreview();
             showFilesLevel();
             showStatus("Opened " + document, "status-info");
             return;
@@ -657,7 +816,18 @@ public class ScanningController {
 
     private void showBoxesLevel() {
         currentLevel = ExplorerLevel.BOXES;
-        lstExplorer.setItems(FXCollections.observableArrayList(boxItems));
+        Client selectedClient = cmbClient == null ? null : cmbClient.getValue();
+        Archive selectedArchive = cmbArchive == null ? null : cmbArchive.getValue();
+
+        List<Boxes> filteredBoxes = new ArrayList<>();
+        if (selectedClient != null && selectedArchive != null) {
+            for (Boxes box : boxItems) {
+                if (box.getArchiveId() == selectedArchive.getId()) {
+                    filteredBoxes.add(box);
+                }
+            }
+        }
+        lstExplorer.setItems(FXCollections.observableArrayList(filteredBoxes));
         lblExplorerPath.setText("Boxes");
         btnBack.setDisable(true);
         updateButtonState();
@@ -789,8 +959,29 @@ public class ScanningController {
         btnNext.setDisable(currentIndex >= pageItems.size() - 1 || pageItems.isEmpty());
     }
 
+    private void clearImagePreview()
+    {
+        currentIndex = -1;
+        if (imgPage != null) {
+            imgPage.setImage(null);
+        }
+        updatePageLabel();
+        updateNavigationButtons();
+    }
+
     private void updateButtonState() {
         boolean hasPage = currentIndex >= 0 && currentIndex < pageItems.size();
+        Object selected = lstExplorer == null ? null : lstExplorer.getSelectionModel().getSelectedItem();
+        boolean canDelete;
+        if (running) {
+            canDelete = false;
+        } else if (currentLevel == ExplorerLevel.BOXES) {
+            canDelete = selected instanceof Boxes;
+        } else if (currentLevel == ExplorerLevel.DOCUMENTS) {
+            canDelete = selected instanceof Document;
+        } else {
+            canDelete = selected instanceof Files || hasPage;
+        }
 
         btnStart.setDisable(running || selectedBox == null);
         btnStop.setDisable(!running);
@@ -798,7 +989,7 @@ public class ScanningController {
 
         btnRotateLeft.setDisable(!hasPage);
         btnRotateRight.setDisable(!hasPage);
-        btnDelete.setDisable(!hasPage);
+        btnDelete.setDisable(!canDelete);
         boolean canExport = !running
                 && selectedBox != null
                 && !selectedBox.getDocuments().isEmpty();
@@ -813,6 +1004,104 @@ public class ScanningController {
 
     private void updateCurrentBoxLabel() {
         lblCurrentBox.setText(selectedBox == null ? "Current box: none" : "Current box: " + selectedBox.getBoxId());
+    }
+
+    private void updateCaseMetadataFields() {
+        if (cmbClient == null || cmbArchive == null) {
+            return;
+        }
+
+        if (selectedBox == null) {
+            return;
+        }
+
+        Client matchedClient = findClientByName(selectedBox.getClient());
+        if (matchedClient == null) {
+            cmbClient.setValue(NO_CLIENT_OPTION);
+            cmbArchive.getSelectionModel().clearSelection();
+            return;
+        }
+        cmbClient.setValue(matchedClient);
+
+        Archive matchedArchive = findArchiveByName(selectedBox.getArchive(), matchedClient.getId());
+        if (matchedArchive == null) {
+            cmbArchive.getSelectionModel().clearSelection();
+            return;
+        }
+        cmbArchive.setValue(matchedArchive);
+    }
+
+    private void refreshArchivesForClient(Client client)
+    {
+        if (cmbArchive == null) {
+            return;
+        }
+
+        if (client == null) {
+            cmbArchive.setItems(FXCollections.observableArrayList());
+            cmbArchive.getSelectionModel().clearSelection();
+            return;
+        }
+        if (client.getId() <= 0) {
+            cmbArchive.setItems(FXCollections.observableArrayList());
+            cmbArchive.getSelectionModel().clearSelection();
+            return;
+        }
+
+        List<Archive> filtered = new ArrayList<>();
+        for (Archive archive : archiveItems) {
+            if (archive.getClientId() == client.getId()) {
+                filtered.add(archive);
+            }
+        }
+        Archive currentArchive = cmbArchive.getValue();
+        cmbArchive.setItems(FXCollections.observableArrayList(filtered));
+        if (currentArchive == null) {
+            cmbArchive.getSelectionModel().clearSelection();
+        } else {
+            Archive replacement = null;
+            for (Archive archive : filtered) {
+                if (archive.getId() == currentArchive.getId()) {
+                    replacement = archive;
+                    break;
+                }
+            }
+            if (replacement == null) {
+                cmbArchive.getSelectionModel().clearSelection();
+            } else {
+                cmbArchive.setValue(replacement);
+            }
+        }
+        if (cmbArchive.getItems().isEmpty()) {
+            cmbArchive.getSelectionModel().clearSelection();
+        }
+    }
+
+    private Client findClientByName(String clientName)
+    {
+        if (clientName == null || clientName.isBlank()) {
+            return null;
+        }
+        for (Client client : cmbClient.getItems()) {
+            if (client.getName().equalsIgnoreCase(clientName)) {
+                return client;
+            }
+        }
+        return null;
+    }
+
+    private Archive findArchiveByName(String archiveName, int clientId)
+    {
+        if (archiveName == null || archiveName.isBlank()) {
+            return null;
+        }
+        for (Archive archive : archiveItems) {
+            if (archive.getClientId() == clientId
+                    && archive.getName().equalsIgnoreCase(archiveName)) {
+                return archive;
+            }
+        }
+        return null;
     }
 
     private void updateBoxSnapshotFromCurrentSession() {
