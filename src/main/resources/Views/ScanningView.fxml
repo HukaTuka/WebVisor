@@ -44,10 +44,22 @@
                     <Insets bottom="6.0" left="16.0" right="16.0" top="6.0" />
                 </padding>
                 <children>
+                    <Label text="Client:" />
+                    <ComboBox fx:id="cmbClient"
+                               promptText="No client selected"
+                               prefWidth="180.0"
+                               styleClass="combo-box-default" />
+                    <Label styleClass="separator-label" text="|" />
+                    <Label text="Archive:" />
+                    <ComboBox fx:id="cmbArchive"
+                               promptText="No archive selected"
+                               prefWidth="180.0"
+                               styleClass="combo-box-default" />
+                    <Label styleClass="separator-label" text="|" />
                     <Label text="Profile:" />
                     <ComboBox fx:id="cmbProfile"
                               promptText="No profile selected"
-                              prefWidth="220.0"
+                              prefWidth="180.0"
                               styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
                     <Button fx:id="btnExportSingle"

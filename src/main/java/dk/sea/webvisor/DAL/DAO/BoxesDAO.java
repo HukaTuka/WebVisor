@@ -26,8 +26,10 @@ public class BoxesDAO implements BoxesInterface
     public Optional<Boxes> getBoxById(String boxId) throws SQLException
     {
         String sql = """
-                SELECT TOP 1 BoxID
-                FROM dbo.Boxes
+                SELECT TOP 1 b.BoxID, b.ArchiveID, c.Name AS ClientName, a.Name AS ArchiveName
+                FROM dbo.Boxes b
+                LEFT JOIN dbo.Clients c ON c.ID = b.ClientID
+                LEFT JOIN dbo.Archives a ON a.ID = b.ArchiveID
                 WHERE BoxID = ?
                 """;
 
@@ -42,7 +44,12 @@ public class BoxesDAO implements BoxesInterface
                 {
                     return Optional.empty();
                 }
-                return Optional.of(new Boxes(rs.getString("BoxID")));
+                return Optional.of(new Boxes(
+                        rs.getString("BoxID"),
+                        rs.getInt("ArchiveID"),
+                        rs.getString("ClientName"),
+                        rs.getString("ArchiveName")
+                ));
             }
         }
     }
@@ -51,10 +58,12 @@ public class BoxesDAO implements BoxesInterface
     public List<Boxes> getAllBoxes() throws SQLException
     {
         String sql = """
-                SELECT b.BoxID,
+                SELECT b.BoxID, b.ArchiveID, c.Name AS ClientName, a.Name AS ArchiveName,
                        (SELECT COUNT(*) FROM dbo.Documents d WHERE d.BoxID = b.BoxID) AS DocumentCount,
                        (SELECT COUNT(*) FROM dbo.Files f WHERE f.BoxID = b.BoxID) AS FileCount
                 FROM dbo.Boxes b
+                LEFT JOIN dbo.Clients c ON c.ID = b.ClientID
+                LEFT JOIN dbo.Archives a ON a.ID = b.ArchiveID
                 ORDER BY b.BoxID
                 """;
 
@@ -66,7 +75,12 @@ public class BoxesDAO implements BoxesInterface
         {
             while (rs.next())
             {
-                Boxes box = new Boxes(rs.getString("BoxID"));
+                Boxes box = new Boxes(
+                        rs.getString("BoxID"),
+                        rs.getInt("ArchiveID"),
+                        rs.getString("ClientName"),
+                        rs.getString("ArchiveName")
+                );
                 box.setSummaryCounts(
                         rs.getInt("DocumentCount"),
                         rs.getInt("FileCount")
@@ -79,21 +93,23 @@ public class BoxesDAO implements BoxesInterface
     }
 
     @Override
-    public Boxes createBox(String boxId) throws SQLException
+    public Boxes createBox(String boxId, int clientId, int archiveId) throws SQLException
     {
         String sql = """
-                INSERT INTO dbo.Boxes (BoxID)
-                VALUES (?)
+                INSERT INTO dbo.Boxes (BoxID, ClientID, ArchiveID)
+                VALUES (?, ?, ?)
                 """;
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
         {
             statement.setString(1, boxId);
+            statement.setInt(2, clientId);
+            statement.setInt(3, archiveId);
             statement.executeUpdate();
         }
 
-        return new Boxes(boxId);
+        return getBoxById(boxId).orElse(new Boxes(boxId, ""));
     }
 
     @Override
