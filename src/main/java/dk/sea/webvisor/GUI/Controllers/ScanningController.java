@@ -340,8 +340,7 @@ public class ScanningController {
     }
 
     /**
-     * Moves {@code page} to the document at {@code targetDocumentIndex},
-     * persists the change, refreshes the list, and writes an audit entry.
+      moves page to document persists the change, refreshes the list, and writes an audit entry.
      */
     private void handleMoveToDocument(Files page, int targetDocumentIndex)
     {

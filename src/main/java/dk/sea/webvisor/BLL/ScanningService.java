@@ -105,8 +105,7 @@ public class ScanningService
     }
 
     /**
-     * Resets the session: clears all pages and resets the page counter.
-     * Call this before starting a fresh scan.
+     Resets the session: clears all pages and resets the page counter. Call this before starting a fresh scan.
      */
     public void clearSession() {
         synchronized (pages) { pages.clear(); }
@@ -356,7 +355,6 @@ public class ScanningService
      * Inserts a manual document split after the page at the given index.
      * All pages from 0..splitIndex go into the current document,
      * pages from splitIndex+1 onward start a new document.
-     *
      * @param pageIndex the index of the last page in the current document
      * @return true if the split was applied, false if the index was invalid
      */
@@ -376,8 +374,9 @@ public class ScanningService
 
     private void rebuildDocumentsWithManualSplit(int splitAfterIndex)
     {
+        // Kald kun fra synchronized(pages)-blok, så pages er stabil
         List<Document> rebuilt = new ArrayList<>();
-        Document current = new Document(rebuilt.size() + 1);
+        Document current = new Document(1);
         rebuilt.add(current);
 
         for (int i = 0; i < pages.size(); i++)
@@ -385,7 +384,6 @@ public class ScanningService
             Files page = pages.get(i);
             current.addPage(page);
 
-            // Split after this index OR after a barcode
             if (i == splitAfterIndex || page.isBarcode())
             {
                 if (i < pages.size() - 1)
@@ -396,13 +394,11 @@ public class ScanningService
             }
         }
 
-        synchronized (documents)
-        {
-            documents.clear();
-            documents.addAll(rebuilt);
-        }
-
+        // Opdater documents mens vi stadig holder pages-låsen
+        documents.clear();
+        documents.addAll(rebuilt);
         documentCounter.set(rebuilt.size());
-        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+        startNewDocumentOnNextPage = !pages.isEmpty()
+                && pages.get(pages.size() - 1).isBarcode();
     }
 }
