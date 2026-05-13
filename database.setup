@@ -11,7 +11,9 @@ USE felnie01_WebVisor;
 GO
 
 
+-- Create Users table
 CREATE TABLE felnie01_WebVisor.dbo.Users  (
+
                                               ID int primary key not null,
                                               Username varchar(100),
                                               Password varchar(255),
@@ -67,21 +69,6 @@ create table dbo.Clients
 )
 go
 
-create table dbo.Archives
-(
-    ID        int identity
-        primary key,
-    Name      varchar(150)                                     not null,
-    ClientID  int                                              not null,
-    CreatedAt datetime2
-        constraint DF_Archives_CreatedAt default sysdatetime() not null
-)
-go
-
-create index IX_Archives_ClientID
-    on dbo.Archives (ClientID)
-go
-
 create table dbo.Boxes
 (
     BoxID     varchar(50)                                   not null
@@ -90,16 +77,9 @@ create table dbo.Boxes
     ClientID  int                                           not null
         constraint FK_Boxes_Clients
             references dbo.Clients,
-    ArchiveID int                                           not null
-        constraint FK_Boxes_Archives
-            references dbo.Archives,
     CreatedAt datetime2
         constraint DF_Boxes_CreatedAt default sysdatetime() not null
 )
-go
-
-create index IX_Boxes_ArchiveID
-    on dbo.Boxes (ArchiveID)
 go
 
 create table dbo.Documents
