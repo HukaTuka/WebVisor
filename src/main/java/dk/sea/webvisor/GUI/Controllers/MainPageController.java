@@ -95,6 +95,12 @@ public class MainPageController
         openView("/Views/AdminClientsView.fxml");
     }
 
+    @FXML
+    private void onOpenAdminMetadata()
+    {
+        audit.log("NAVIGATE", "Opened Admin Metadata Fields view");
+        openView("/Views/AdminMetadataView.fxml");
+    }
     private void openView(String fxmlPath)
     {
         try

@@ -95,6 +95,8 @@ public class ScanningController {
     private Button btnExportMulti;
     @FXML
     private Button btnSplit;
+    @FXML
+    private Button btnMetadata;
 
     private final ScanningService scanningService = new ScanningService();
     private UserService userService;
@@ -106,6 +108,7 @@ public class ScanningController {
     private final Set<String> loadedBoxContent = new HashSet<>();
     private Files draggedPage = null;
     private ArchiveService archiveService;
+    private BoxMetadataService boxMetadataService;
     private final ExportService exportService = new ExportService();
     private ProfileService profileService;
 
@@ -168,6 +171,7 @@ public class ScanningController {
             profileService = new ProfileService();
             userService = new UserService();
             profileUserService = new ProfileUserService();
+            boxMetadataService  = new BoxMetadataService();
 
             List<Profile> profilesForDropdown = new ArrayList<>(profileService.getAllProfiles());
 
@@ -1053,6 +1057,38 @@ public class ScanningController {
         updateNavigationButtons();
     }
 
+    @FXML
+    private void onOpenMetadata()
+    {
+        if (selectedBox == null)
+        {
+            showStatus("Open a box before editing metadata.", "status-error");
+            return;
+        }
+
+        try
+        {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/MetadataDialogView.fxml"));
+            Parent root = loader.load();
+
+            MetadataDialogController controller = loader.getController();
+            controller.setBox(selectedBox.getBoxId());
+
+            Stage stage = new Stage();
+            stage.setTitle("Metadata — " + selectedBox.getBoxId());
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(imgPage.getScene().getWindow());
+            stage.setMinWidth(540);
+            stage.setMinHeight(460);
+            stage.showAndWait();
+        }
+        catch (IOException e)
+        {
+            showStatus("Could not open metadata dialog.", "status-error");
+        }
+    }
+
     private void updateButtonState() {
         boolean hasPage = currentIndex >= 0 && currentIndex < pageItems.size();
         Object selected = lstExplorer == null ? null : lstExplorer.getSelectionModel().getSelectedItem();
@@ -1074,6 +1110,7 @@ public class ScanningController {
         btnRotateLeft.setDisable(!hasPage);
         btnRotateRight.setDisable(!hasPage);
         btnDelete.setDisable(!canDelete);
+        btnMetadata.setDisable(selectedBox == null);
         boolean canExport = !running
                 && selectedBox != null
                 && !selectedBox.getDocuments().isEmpty();

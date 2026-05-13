@@ -17,7 +17,7 @@
         <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="scanning-toolbar">
                 <padding>
-                    <Insets bottom="10.0" left="16.0" right="16.0" top="10.0" />
+                    <Insets bottom="10.0" left="16.0" right="16.0" top="10.0"/>
                 </padding>
                 <children>
                     <Label minWidth="190.0" prefWidth="190.0" maxWidth="190.0" styleClass="title-label" text="Scanning Session" />
@@ -71,7 +71,13 @@
                             text="⬇ Multi-Page Export"
                             onAction="#onExportMultiPage"
                             styleClass="secondary-button"
-                            disable="true" />
+                            disable="true"/>
+                    <Label styleClass="separator-label" text="|"/>
+                    <Button fx:id="btnMetadata"
+                            text="📋 Metadata"
+                            onAction="#onOpenMetadata"
+                            styleClass="secondary-button"
+                            disable="true"/>
                 </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="status-bar">

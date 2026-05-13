@@ -11,9 +11,7 @@ USE felnie01_WebVisor;
 GO
 
 
--- Create Users table
 CREATE TABLE felnie01_WebVisor.dbo.Users  (
-
                                               ID int primary key not null,
                                               Username varchar(100),
                                               Password varchar(255),
@@ -67,6 +65,21 @@ create table dbo.Clients
         constraint UQ_Clients_Name
             unique
 )
+go
+
+create table dbo.Archives
+(
+    ID        int identity
+        primary key,
+    Name      varchar(150)                                     not null,
+    ClientID  int                                              not null,
+    CreatedAt datetime2
+        constraint DF_Archives_CreatedAt default sysdatetime() not null
+)
+go
+
+create index IX_Archives_ClientID
+    on dbo.Archives (ClientID)
 go
 
 create table dbo.Boxes
@@ -141,17 +154,26 @@ create index IX_Files_DocumentID
     on dbo.Files (DocumentID)
 go
 
-create table dbo.Archives
+CREATE TABLE dbo.MetadataFields
 (
-    ID        int identity
-        primary key,
-    Name      varchar(150)                                     not null,
-    ClientID  int                                              not null,
-    CreatedAt datetime2
-        constraint DF_Archives_CreatedAt default sysdatetime() not null
-)
+    ID        INT          PRIMARY KEY IDENTITY(1,1),
+    Name      VARCHAR(150) NOT NULL,
+    FieldType VARCHAR(20)  NOT NULL DEFAULT 'TEXT'
+);
 go
 
-create index IX_Archives_ClientID
-    on dbo.Archives (ClientID)
+CREATE TABLE dbo.BoxMetadata
+(
+    ID      INT          PRIMARY KEY IDENTITY(1,1),
+    BoxID   VARCHAR(50)  NOT NULL,
+    FieldID INT          NOT NULL,
+    Value   VARCHAR(500) NULL,
+    CONSTRAINT FK_BoxMetadata_Boxes   FOREIGN KEY (BoxID)   REFERENCES dbo.Boxes(BoxID)           ON DELETE CASCADE,
+    CONSTRAINT FK_BoxMetadata_Fields  FOREIGN KEY (FieldID) REFERENCES dbo.MetadataFields(ID)     ON DELETE CASCADE,
+    CONSTRAINT UQ_BoxMetadata         UNIQUE (BoxID, FieldID)
+);
+go
+
+create index IX_BoxMetadata_BoxID
+    on dbo.BoxMetadata (BoxID)
 go

@@ -25,6 +25,7 @@
                                 <Button onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button" text="Manage Users" />
                                 <Button onAction="#onOpenAdminProfiles" styleClass="sidebar-nav-button" text="Manage Profiles" />
                                 <Button onAction="#onOpenAdminClients" styleClass="sidebar-nav-button" text="Manage Clients/Archives" />
+                                <Button onAction="#onOpenAdminMetadata" styleClass="sidebar-nav-button" text="Manage Metadata Fields"/>
                                 <Button onAction="#onOpenAuditLog" styleClass="sidebar-nav-button" text="Audit Log" />
                             </children>
                         </VBox>
