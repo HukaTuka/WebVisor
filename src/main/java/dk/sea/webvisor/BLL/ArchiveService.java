@@ -5,13 +5,10 @@ import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Client;
 import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.Files;
-import dk.sea.webvisor.BE.Archive;
-import dk.sea.webvisor.DAL.DAO.ArchivesDAO;
 import dk.sea.webvisor.DAL.DAO.BoxesDAO;
 import dk.sea.webvisor.DAL.DAO.ClientsDAO;
 import dk.sea.webvisor.DAL.DAO.DocumentsDAO;
 import dk.sea.webvisor.DAL.DAO.FilesDAO;
-import dk.sea.webvisor.DAL.Interface.ArchivesInterface;
 import dk.sea.webvisor.DAL.Interface.BoxesInterface;
 import dk.sea.webvisor.DAL.Interface.ClientsInterface;
 import dk.sea.webvisor.DAL.Interface.DocumentsInterface;
@@ -29,7 +26,6 @@ public class ArchiveService
 {
     private final BoxesInterface boxesDAO;
     private final ClientsInterface clientsDAO;
-    private final ArchivesInterface archivesDAO;
     private final DocumentsInterface documentsDAO;
     private final FilesInterface filesDAO;
 
@@ -37,7 +33,6 @@ public class ArchiveService
     {
         this.boxesDAO = new BoxesDAO();
         this.clientsDAO = new ClientsDAO();
-        this.archivesDAO = new ArchivesDAO();
         this.documentsDAO = new DocumentsDAO();
         this.filesDAO = new FilesDAO();
     }
@@ -64,16 +59,6 @@ public class ArchiveService
         return new ArrayList<>(clientsDAO.getAllClients());
     }
 
-    public List<Archive> getAllArchives() throws SQLException
-    {
-        return new ArrayList<>(archivesDAO.getAllArchives());
-    }
-
-    public List<Archive> getArchivesByClient(int clientId) throws SQLException
-    {
-        return new ArrayList<>(archivesDAO.getArchivesByClient(clientId));
-    }
-
     public Boxes loadBoxContent(String boxId) throws SQLException
     {
         Optional<Boxes> maybeBox = boxesDAO.getBoxById(boxId);
@@ -87,7 +72,7 @@ public class ArchiveService
         return box;
     }
 
-    public Boxes createBox(String boxId, String client, String archive) throws SQLException
+    public Boxes createBox(String boxId, String client) throws SQLException
     {
         Optional<Boxes> existing = boxesDAO.getBoxById(boxId);
         if (existing.isPresent())
@@ -101,26 +86,13 @@ public class ArchiveService
             throw new IllegalArgumentException("Client is required.");
         }
 
-        String archiveName = archive == null ? "" : archive.trim();
-        if (archiveName.isBlank())
-        {
-            throw new IllegalArgumentException("Archive is required.");
-        }
-
         Optional<Client> existingClient = clientsDAO.getClientByName(clientName);
         Client resolved = existingClient.isPresent()
                 ? existingClient.get()
                 : clientsDAO.createClient(clientName);
 
-        Optional<Archive> existingArchive = archivesDAO.getArchiveByClientAndName(resolved.getId(), archiveName);
-        if (existingArchive.isEmpty())
-        {
-            throw new IllegalArgumentException("Archive does not exist for selected client.");
-        }
-
-        Archive selectedArchive = existingArchive.get();
-        Boxes persisted = boxesDAO.createBox(boxId, resolved.getId(), selectedArchive.getId());
-        return new Boxes(persisted.getBoxId(), selectedArchive.getId(), resolved.getName(), selectedArchive.getName());
+        Boxes persisted = boxesDAO.createBox(boxId, resolved.getId());
+        return new Boxes(persisted.getBoxId(), resolved.getName());
     }
 
     public void saveBoxSnapshot(Boxes box) throws SQLException
@@ -133,17 +105,12 @@ public class ArchiveService
         Optional<Boxes> existing = boxesDAO.getBoxById(box.getBoxId());
         if (existing.isEmpty())
         {
-            if (box.getArchiveId() <= 0)
-            {
-                throw new IllegalArgumentException("Archive is required for box persistence.");
-            }
-
             Optional<Client> existingClient = clientsDAO.getClientByName(box.getClient());
             if (existingClient.isEmpty())
             {
                 throw new IllegalArgumentException("Client not found: " + box.getClient());
             }
-            boxesDAO.createBox(box.getBoxId(), existingClient.get().getId(), box.getArchiveId());
+            boxesDAO.createBox(box.getBoxId(), existingClient.get().getId());
         }
 
         // Delete only documents (not files) and re-link them

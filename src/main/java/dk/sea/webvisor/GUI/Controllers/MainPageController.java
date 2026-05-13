@@ -91,7 +91,7 @@ public class MainPageController
     @FXML
     private void onOpenAdminClients()
     {
-        audit.log("NAVIGATE", "Opened Admin Clients/Archives view");
+        audit.log("NAVIGATE", "Opened Admin Clients view");
         openView("/Views/AdminClientsView.fxml");
     }
 

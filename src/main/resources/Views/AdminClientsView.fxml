@@ -26,7 +26,7 @@
             </padding>
 
             <children>
-                <Label text="Admin - Client &amp; Archive Management" styleClass="title-label"/>
+                <Label text="Admin - Client Management" styleClass="title-label"/>
 
                 <HBox spacing="10.0" alignment="CENTER_LEFT">
                     <children>
@@ -42,10 +42,8 @@
 
                 <TableView fx:id="tblClients" styleClass="users-table" prefHeight="260.0" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colName" text="Client Name" prefWidth="190.0"/>
-                        <TableColumn fx:id="colArchives" text="Archives" prefWidth="260.0"/>
-                        <TableColumn fx:id="colClientActions" text="Client Actions" prefWidth="190.0" sortable="false"/>
-                        <TableColumn fx:id="colArchiveActions" text="Archive Actions" prefWidth="230.0" sortable="false"/>
+                        <TableColumn fx:id="colName" text="Client Name" prefWidth="380.0"/>
+                        <TableColumn fx:id="colClientActions" text="Client Actions" prefWidth="300.0" sortable="false"/>
                     </columns>
                 </TableView>
 
@@ -60,13 +58,8 @@
                     <children>
                         <Label text="Client Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                         <TextField fx:id="txtName" promptText="e.g. Nordic Insurance"
-                                   styleClass="input-field"
-                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-                        <Label text="First Archive:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                        <TextField fx:id="txtArchiveName" promptText="e.g. Default Archive"
-                                   styleClass="input-field"
-                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                    styleClass="input-field"
+                                    GridPane.columnIndex="1" GridPane.rowIndex="0"/>
                     </children>
                 </GridPane>
 

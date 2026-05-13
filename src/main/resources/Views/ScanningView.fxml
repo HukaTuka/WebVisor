@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -47,12 +47,6 @@
                     <Label text="Client:" />
                     <ComboBox fx:id="cmbClient"
                                promptText="No client selected"
-                               prefWidth="180.0"
-                               styleClass="combo-box-default" />
-                    <Label styleClass="separator-label" text="|" />
-                    <Label text="Archive:" />
-                    <ComboBox fx:id="cmbArchive"
-                               promptText="No archive selected"
                                prefWidth="180.0"
                                styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
@@ -100,7 +94,7 @@
                                     <Label fx:id="lblExplorerPath" styleClass="panel-header-label" text="Boxes" />
                                 </children>
                             </HBox>
-                            <ListView fx:id="lstExplorer" styleClass="pages-list" VBox.vgrow="ALWAYS" />
+                            <TreeView fx:id="treeExplorer" styleClass="pages-list" VBox.vgrow="ALWAYS" />
                         </children>
                     </VBox>
 

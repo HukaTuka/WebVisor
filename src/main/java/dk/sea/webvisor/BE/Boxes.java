@@ -8,9 +8,7 @@ import java.util.List;
 public class Boxes
 {
     private final String boxId;
-    private final int archiveId;
     private final String client;
-    private final String archive;
     private final List<Files> pages = new ArrayList<>();
     private final List<Document> documents = new ArrayList<>();
     private int documentCount = 0;
@@ -18,25 +16,13 @@ public class Boxes
 
     public Boxes(String boxId)
     {
-        this(boxId, 0, "", "");
+        this(boxId, "");
     }
 
     public Boxes(String boxId, String client)
     {
-        this(boxId, 0, client, "");
-    }
-
-    public Boxes(String boxId, String client, String archive)
-    {
-        this(boxId, 0, client, archive);
-    }
-
-    public Boxes(String boxId, int archiveId, String client, String archive)
-    {
         this.boxId = boxId;
-        this.archiveId = archiveId;
         this.client = client == null ? "" : client;
-        this.archive = archive == null ? "" : archive;
     }
 
     public String getBoxId()
@@ -47,16 +33,6 @@ public class Boxes
     public String getClient()
     {
         return client;
-    }
-
-    public String getArchive()
-    {
-        return archive;
-    }
-
-    public int getArchiveId()
-    {
-        return archiveId;
     }
 
     public List<Files> getPages()
@@ -105,7 +81,6 @@ public class Boxes
     public String toString()
     {
         String owner = client == null || client.isBlank() ? "No client" : client;
-        String archiveText = archive == null || archive.isBlank() ? "No archive" : archive;
-        return owner + " / " + archiveText + " / " + boxId + " (" + documentCount + " docs, " + fileCount + " files)";
+        return owner + " / " + boxId + " (" + documentCount + " docs, " + fileCount + " files)";
     }
 }
