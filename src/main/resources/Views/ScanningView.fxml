@@ -2,41 +2,41 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.ComboBox?>
 <AnchorPane prefHeight="650.0" prefWidth="880.0" styleClass="root-pane" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dk.sea.webvisor.GUI.Controllers.ScanningController">
     <children>
         <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="scanning-toolbar">
                 <padding>
-                    <Insets bottom="10.0" left="16.0" right="16.0" top="10.0"/>
+                    <Insets bottom="10.0" left="16.0" right="16.0" top="10.0" />
                 </padding>
                 <children>
-                    <Label minWidth="190.0" prefWidth="190.0" maxWidth="190.0" styleClass="title-label" text="Scanning Session" />
+                    <Label maxWidth="190.0" minWidth="190.0" prefWidth="190.0" styleClass="title-label" text="Scanning Session" />
                     <HBox prefWidth="18.0" />
-                    <Button fx:id="btnStart" minWidth="130.0" prefWidth="130.0" maxWidth="130.0" onAction="#onStartScanning" styleClass="primary-button" text="▶  Start Scanning" />
-                    <Button fx:id="btnSlideView" text="⧉ Slide View" onAction="#onOpenSlideView" styleClass="secondary-button" minWidth="100.0"/>
-                    <Button fx:id="btnStop" minWidth="80.0" prefWidth="80.0" maxWidth="80.0" disable="true" onAction="#onStopScanning" styleClass="danger-button" text="■  Stop" />
+                    <Button fx:id="btnStart" maxWidth="130.0" minWidth="130.0" onAction="#onStartScanning" prefWidth="130.0" styleClass="primary-button" text="▶  Start Scanning" />
+                    <Button fx:id="btnSlideView" minWidth="100.0" onAction="#onOpenSlideView" styleClass="secondary-button" text="⧉ Slide View" />
+                    <Button fx:id="btnStop" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onStopScanning" prefWidth="80.0" styleClass="danger-button" text="■  Stop" />
                     <Label styleClass="separator-label" text="|" />
                     <Label fx:id="lblTotalScans" minWidth="110.0" styleClass="page-info-label" text="Total Scans: 0" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnRotateLeft" minWidth="80.0" prefWidth="80.0" maxWidth="80.0" disable="true" onAction="#onRotateLeft" styleClass="secondary-button" text="↺ Left" />
-                    <Button fx:id="btnRotateRight" minWidth="80.0" prefWidth="80.0" maxWidth="80.0" disable="true" onAction="#onRotateRight" styleClass="secondary-button" text="↻ Right" />
+                    <Button fx:id="btnRotateLeft" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onRotateLeft" prefWidth="80.0" styleClass="secondary-button" text="↺ Left" />
+                    <Button fx:id="btnRotateRight" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onRotateRight" prefWidth="80.0" styleClass="secondary-button" text="↻ Right" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnDelete" minWidth="90.0" prefWidth="90.0" maxWidth="90.0" disable="true" onAction="#onDelete" styleClass="secondary-button" text="🗑 Delete" />
-                    <Button fx:id="btnSplit" text="✂ Split" onAction="#onSplitDocument" styleClass="secondary-button" minWidth="80.0"/>
+                    <Button fx:id="btnDelete" disable="true" maxWidth="90.0" minWidth="90.0" onAction="#onDelete" prefWidth="90.0" styleClass="secondary-button" text="🗑 Delete" />
+                    <Button fx:id="btnSplit" minWidth="80.0" onAction="#onSplitDocument" styleClass="secondary-button" text="✂ Split" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnPrev" minWidth="44.0" prefWidth="44.0" maxWidth="44.0" disable="true" onAction="#onPrev" styleClass="secondary-button" text="◀" />
+                    <Button fx:id="btnPrev" disable="true" maxWidth="44.0" minWidth="44.0" onAction="#onPrev" prefWidth="44.0" styleClass="secondary-button" text="◀" />
                     <Label fx:id="lblPageInfo" minWidth="90.0" styleClass="page-info-label" text="Page 0 / 0" />
-                    <Button fx:id="btnNext" minWidth="44.0" prefWidth="44.0" maxWidth="44.0" disable="true" onAction="#onNext" styleClass="secondary-button" text="▶" />
+                    <Button fx:id="btnNext" disable="true" maxWidth="44.0" minWidth="44.0" onAction="#onNext" prefWidth="44.0" styleClass="secondary-button" text="▶" />
                 </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="status-bar">
@@ -45,39 +45,18 @@
                 </padding>
                 <children>
                     <Label text="Client:" />
-                    <ComboBox fx:id="cmbClient"
-                               promptText="No client selected"
-                               prefWidth="180.0"
-                               styleClass="combo-box-default" />
+                    <ComboBox fx:id="cmbClient" prefWidth="180.0" promptText="No client selected" styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
                     <Label text="Archive:" />
-                    <ComboBox fx:id="cmbArchive"
-                               promptText="No archive selected"
-                               prefWidth="180.0"
-                               styleClass="combo-box-default" />
+                    <ComboBox fx:id="cmbArchive" prefWidth="180.0" promptText="No archive selected" styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
                     <Label text="Profile:" />
-                    <ComboBox fx:id="cmbProfile"
-                              promptText="No profile selected"
-                              prefWidth="180.0"
-                              styleClass="combo-box-default" />
+                    <ComboBox fx:id="cmbProfile" prefWidth="180.0" promptText="No profile selected" styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnExportSingle"
-                            text="⬇ Single-Page Export"
-                            onAction="#onExportSinglePage"
-                            styleClass="secondary-button"
-                            disable="true" />
-                    <Button fx:id="btnExportMulti"
-                            text="⬇ Multi-Page Export"
-                            onAction="#onExportMultiPage"
-                            styleClass="secondary-button"
-                            disable="true"/>
-                    <Label styleClass="separator-label" text="|"/>
-                    <Button fx:id="btnMetadata"
-                            text="📋 Metadata"
-                            onAction="#onOpenMetadata"
-                            styleClass="secondary-button"
-                            disable="true"/>
+                    <Button fx:id="btnExportSingle" disable="true" onAction="#onExportSinglePage" styleClass="secondary-button" text="⬇ Single-Page Export" />
+                    <Button fx:id="btnExportMulti" disable="true" onAction="#onExportMultiPage" styleClass="secondary-button" text="⬇ Multi-Page Export" />
+                    <Label styleClass="separator-label" text="|" />
+                    <Button fx:id="btnMetadata" disable="true" onAction="#onOpenMetadata" styleClass="secondary-button" text="📋 Metadata" />
                 </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="status-bar">
@@ -95,7 +74,7 @@
 
             <HBox spacing="0.0" VBox.vgrow="ALWAYS">
                 <children>
-                    <VBox minWidth="320.0" prefWidth="320.0" maxWidth="320.0" spacing="8.0" styleClass="page-list-panel">
+                    <VBox maxWidth="320.0" minWidth="320.0" prefWidth="320.0" spacing="8.0" styleClass="page-list-panel">
                         <padding>
                             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                         </padding>
@@ -106,7 +85,7 @@
                                     <Label fx:id="lblExplorerPath" styleClass="panel-header-label" text="Boxes" />
                                 </children>
                             </HBox>
-                            <ListView fx:id="lstExplorer" styleClass="pages-list" VBox.vgrow="ALWAYS" />
+                            <TreeView fx:id="treeExplorer" styleClass="pages-list" VBox.vgrow="ALWAYS" />
                         </children>
                     </VBox>
 

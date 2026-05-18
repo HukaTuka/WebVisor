@@ -210,22 +210,22 @@ public class ArchiveService
     private void hydrateBox(Boxes box) throws SQLException
     {
         List<Document> documents = documentsDAO.getDocumentsByBox(box.getBoxId());
+
+        List<Files> allPages = new ArrayList<>();
+
         for (Document document : documents)
         {
-            Optional<Integer> documentId = documentsDAO.getDocumentId(box.getBoxId(), document.getDocumentNumber());
-            if (documentId.isEmpty())
-            {
-                continue;
-            }
+            int documentId = document.getId();
+            List<Files> pages = filesDAO.getFilesByDocument(documentId);
 
-            for (Files page : filesDAO.getFilesByDocument(documentId.get()))
+            for (Files page : pages)
             {
-                document.addPage(page);
+                document.addPage(page);   // Couples page to a document
+                allPages.add(page);       // Collects all pages to a box
             }
         }
 
-        List<Files> pages = filesDAO.getFilesByBox(box.getBoxId());
-        box.replaceContent(pages, documents);
+        box.replaceContent(allPages, documents);
     }
     /**
      * Inserts a manual document split after the page at splitIndex
@@ -242,7 +242,7 @@ public class ArchiveService
 
         // Rebuild documents with the manual split point
         List<Document> rebuilt = new ArrayList<>();
-        Document current = new Document(rebuilt.size() + 1);
+        Document current = new Document(0, rebuilt.size() + 1);
         rebuilt.add(current);
 
         for (int i = 0; i < pages.size(); i++)
@@ -255,7 +255,7 @@ public class ArchiveService
 
             if ((isSplitPoint || isBarcode) && i < pages.size() - 1)
             {
-                current = new Document(rebuilt.size() + 1);
+                current = new Document(0,rebuilt.size() + 1);
                 rebuilt.add(current);
             }
         }

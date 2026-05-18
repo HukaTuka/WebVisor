@@ -4,3 +4,4 @@ package dk.sea.webvisor.GUI;
 // when another class is added to the Model folder
 public class Test {
 }
+

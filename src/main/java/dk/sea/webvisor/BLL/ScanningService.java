@@ -1,66 +1,33 @@
 package dk.sea.webvisor.BLL;
 
-// Project Imports
 import dk.sea.webvisor.BE.Document;
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.Util.BarcodeDetector;
 import dk.sea.webvisor.DAL.API.TiffApiClient;
 
-// Java Imports
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * BLL service that owns the lifecycle of a scanning session.
- *
- * <p>Responsibilities:
- * <ul>
- *   <li>Delegates HTTP calls to {@link TiffApiClient}.</li>
- *   <li>Runs barcode detection on every returned image.</li>
- *   <li>Maintains the ordered list of {@link Files} objects for the
- *       current session.</li>
- *   <li>Exposes a simple {@link #fetchAndAppendNext()} method that the GUI
- *       controller calls from a background thread.</li>
- * </ul>
- *
- * <p><strong>Thread-safety</strong>: {@code pages} is wrapped in a
- * synchronised list so the controller may safely read it from the JavaFX
- * Application Thread while the polling task writes from a background thread.
- */
 public class ScanningService
 {
-    private final TiffApiClient      apiClient;
-    private final List<Files>        pages;
-    private final AtomicInteger      pageCounter;
-    // document tracking
+    private final TiffApiClient apiClient;
+    private final List<Files> pages;
+    private final AtomicInteger pageCounter;
+
     private final List<Document> documents = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger documentCounter = new AtomicInteger(0);
+
     private boolean startNewDocumentOnNextPage = false;
 
     public ScanningService()
     {
-        this.apiClient    = new TiffApiClient();
-        this.pages        = Collections.synchronizedList(new ArrayList<>());
-        this.pageCounter  = new AtomicInteger(0);
+        this.apiClient   = new TiffApiClient();
+        this.pages       = Collections.synchronizedList(new ArrayList<>());
+        this.pageCounter = new AtomicInteger(0);
     }
 
-    /**
-     * Calls the TIFF API once, analyses each returned image for barcodes,
-     * wraps them in {@link Files} objects, appends them to the session,
-     * and returns only the newly added pages.
-     *
-     * <p>Call this from a background thread – it performs a blocking HTTP
-     * request.
-     *
-     * @return newly added pages (never {@code null}, may be empty)
-     * @throws IOException if the API call or ZIP parsing fails
-     */
     public List<Files> fetchAndAppendNext() throws IOException {
         List<BufferedImage> images = apiClient.fetchRandomPage();
         List<Files> newPages = new ArrayList<>();
@@ -72,19 +39,16 @@ public class ScanningService
             newPages.add(page);
 
             if (documents.isEmpty()) {
-                documents.add(new Document(documentCounter.incrementAndGet()));
+                documents.add(new Document(0, documentCounter.incrementAndGet()));
             }
 
-            // If previous page was a barcode, this page starts a new document
             if (startNewDocumentOnNextPage) {
-                documents.add(new Document(documentCounter.incrementAndGet()));
+                documents.add(new Document(0, documentCounter.incrementAndGet()));
                 startNewDocumentOnNextPage = false;
             }
 
-            // Always include the current page in the active document
             documents.get(documents.size() - 1).addPage(page);
 
-            // Barcode signals a document split  start a fresh document
             if (barcode) {
                 startNewDocumentOnNextPage = true;
             }
@@ -93,9 +57,6 @@ public class ScanningService
         return newPages;
     }
 
-    /**
-     * Returns an unmodifiable snapshot of all pages collected in this session.
-     */
     public List<Files> getAllPages()
     {
         synchronized (pages)
@@ -104,9 +65,6 @@ public class ScanningService
         }
     }
 
-    /**
-     Resets the session: clears all pages and resets the page counter. Call this before starting a fresh scan.
-     */
     public void clearSession() {
         synchronized (pages) { pages.clear(); }
         synchronized (documents) { documents.clear(); }
@@ -132,20 +90,12 @@ public class ScanningService
         }
     }
 
-    /**
-     Deletes one page from the current session and rebuilds document grouping.
-
-     @param pageIndex index in current page order
-     @return true if deleted, false if index was invalid
-     */
     public boolean deletePageAt(int pageIndex)
     {
         synchronized (pages)
         {
             if (pageIndex < 0 || pageIndex >= pages.size())
-            {
                 return false;
-            }
 
             pages.remove(pageIndex);
             rebuildDocumentsFromPages();
@@ -157,52 +107,37 @@ public class ScanningService
     {
         synchronized (pages)
         {
-            if (fromIndex < 0 || fromIndex >= pages.size() || toIndex < 0 || toIndex >= pages.size())
-            {
+            if (fromIndex < 0 || fromIndex >= pages.size() ||
+                    toIndex   < 0 || toIndex   >= pages.size())
                 return false;
-            }
 
             if (fromIndex == toIndex)
-            {
                 return true;
-            }
 
             Files movedPage = pages.remove(fromIndex);
             pages.add(toIndex, movedPage);
+
             reorderPagesWithinExistingDocuments();
             return true;
         }
     }
 
-    /**
-     * Moves the page at {@code pageIndex} into the document at
-     * {@code targetDocumentIndex}. The page is removed from its current
-     * document and appended to the target. If the source document becomes
-     * empty it is removed and remaining documents are renumbered.
-     *
-     * @return true if the move was applied, false if indices were invalid or
-     *         the page is already in the target document
-     */
     public boolean movePageToDocument(int pageIndex, int targetDocumentIndex)
     {
         synchronized (pages)
         {
             if (pageIndex < 0 || pageIndex >= pages.size())
-            {
                 return false;
-            }
 
             synchronized (documents)
             {
                 if (targetDocumentIndex < 0 || targetDocumentIndex >= documents.size())
-                {
                     return false;
-                }
 
                 Files pageToMove = pages.get(pageIndex);
 
-                // Find source document
                 int sourceDocumentIndex = -1;
+
                 outer:
                 for (int i = 0; i < documents.size(); i++)
                 {
@@ -217,32 +152,34 @@ public class ScanningService
                 }
 
                 if (sourceDocumentIndex == targetDocumentIndex)
-                {
-                    return false; // already in target document
-                }
+                    return false;
 
-                // Build page buckets per document, removing the page from its source
                 List<List<Files>> buckets = new ArrayList<>();
+
                 for (Document d : documents)
                 {
                     List<Files> bucket = new ArrayList<>();
                     for (Files p : d.getPages())
                     {
-                        if (p != pageToMove) bucket.add(p);
+                        if (p != pageToMove)
+                            bucket.add(p);
                     }
                     buckets.add(bucket);
                 }
 
-                // Append page to target bucket
                 buckets.get(targetDocumentIndex).add(pageToMove);
 
-                // Drop empty buckets and rebuild documents
                 List<Document> finalDocs = new ArrayList<>();
+
                 for (List<Files> bucket : buckets)
                 {
                     if (bucket.isEmpty()) continue;
-                    Document d = new Document(finalDocs.size() + 1);
-                    for (Files p : bucket) d.addPage(p);
+
+                    Document d = new Document(0, finalDocs.size() + 1);
+
+                    for (Files p : bucket)
+                        d.addPage(p);
+
                     finalDocs.add(d);
                 }
 
@@ -250,9 +187,10 @@ public class ScanningService
                 documents.addAll(finalDocs);
                 documentCounter.set(finalDocs.size());
 
-                // Reorder flat pages list to match document order
                 List<Files> reordered = new ArrayList<>();
-                for (Document d : finalDocs) reordered.addAll(d.getPages());
+                for (Document d : finalDocs)
+                    reordered.addAll(d.getPages());
+
                 pages.clear();
                 pages.addAll(reordered);
 
@@ -267,6 +205,7 @@ public class ScanningService
     private void reorderPagesWithinExistingDocuments()
     {
         Map<Files, Integer> documentByPage = new IdentityHashMap<>();
+
         synchronized (documents)
         {
             for (int docIndex = 0; docIndex < documents.size(); docIndex++)
@@ -285,21 +224,19 @@ public class ScanningService
         }
 
         List<Document> rebuilt = new ArrayList<>();
+
         synchronized (documents)
         {
             for (int i = 0; i < documents.size(); i++)
             {
-                rebuilt.add(new Document(i + 1));
+                rebuilt.add(new Document(0, i + 1));
             }
         }
 
         for (Files page : pages)
         {
             int targetDocIndex = documentByPage.getOrDefault(page, 0);
-            if (targetDocIndex < 0 || targetDocIndex >= rebuilt.size())
-            {
-                targetDocIndex = 0;
-            }
+
             rebuilt.get(targetDocIndex).addPage(page);
         }
 
@@ -310,7 +247,8 @@ public class ScanningService
         }
 
         documentCounter.set(rebuilt.size());
-        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+        startNewDocumentOnNextPage =
+                !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
     }
 
     private void rebuildDocumentsFromPages()
@@ -322,13 +260,12 @@ public class ScanningService
         {
             if (current == null)
             {
-                current = new Document(rebuilt.size() + 1);
+                current = new Document(0, rebuilt.size() + 1);
                 rebuilt.add(current);
             }
 
             current.addPage(page);
 
-            // Barcode closes the current document; next page starts a new one.
             if (page.isBarcode())
             {
                 current = null;
@@ -342,30 +279,21 @@ public class ScanningService
         }
 
         documentCounter.set(rebuilt.size());
-        startNewDocumentOnNextPage = !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+        startNewDocumentOnNextPage =
+                !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
     }
 
-    /** Returns the total number of pages collected so far. */
     public int getPageCount()
     {
         return pageCounter.get();
     }
 
-    /**
-     * Inserts a manual document split after the page at the given index.
-     * All pages from 0..splitIndex go into the current document,
-     * pages from splitIndex+1 onward start a new document.
-     * @param pageIndex the index of the last page in the current document
-     * @return true if the split was applied, false if the index was invalid
-     */
     public boolean splitDocumentAt(int pageIndex)
     {
         synchronized (pages)
         {
             if (pageIndex < 0 || pageIndex >= pages.size() - 1)
-            {
                 return false;
-            }
 
             rebuildDocumentsWithManualSplit(pageIndex);
             return true;
@@ -374,9 +302,9 @@ public class ScanningService
 
     private void rebuildDocumentsWithManualSplit(int splitAfterIndex)
     {
-        // Kald kun fra synchronized(pages)-blok, så pages er stabil
         List<Document> rebuilt = new ArrayList<>();
-        Document current = new Document(1);
+
+        Document current = new Document(0, 1);
         rebuilt.add(current);
 
         for (int i = 0; i < pages.size(); i++)
@@ -388,17 +316,17 @@ public class ScanningService
             {
                 if (i < pages.size() - 1)
                 {
-                    current = new Document(rebuilt.size() + 1);
+                    current = new Document(0, rebuilt.size() + 1);
                     rebuilt.add(current);
                 }
             }
         }
 
-        // Opdater documents mens vi stadig holder pages-låsen
         documents.clear();
         documents.addAll(rebuilt);
         documentCounter.set(rebuilt.size());
-        startNewDocumentOnNextPage = !pages.isEmpty()
-                && pages.get(pages.size() - 1).isBarcode();
+
+        startNewDocumentOnNextPage =
+                !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
     }
 }

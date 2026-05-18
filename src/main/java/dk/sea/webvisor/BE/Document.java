@@ -6,10 +6,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class Document {
+    private int id;
     private final int documentNumber;
     private final List<Files> pages = new ArrayList<>();
 
-    public Document(int documentNumber) {
+    public Document(int id, int documentNumber) {
+        this.id = id;
         this.documentNumber = documentNumber;
     }
 
@@ -29,4 +31,6 @@ public class Document {
     public String toString() {
         return "Document " + documentNumber + " (" + pages.size() + " page(s))";
     }
+
+    public int getId() {return id;}
 }

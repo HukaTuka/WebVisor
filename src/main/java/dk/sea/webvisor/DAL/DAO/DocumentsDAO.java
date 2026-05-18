@@ -97,7 +97,11 @@ public class DocumentsDAO implements DocumentsInterface
             {
                 while (rs.next())
                 {
-                    documents.add(new Document(rs.getInt("DocumentNumber")));
+                    documents.add(new Document(
+                            rs.getInt("ID"),
+                            rs.getInt("DocumentNumber")
+                    ));
+
                 }
             }
         }
