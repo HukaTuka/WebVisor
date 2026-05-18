@@ -1,11 +1,13 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.*;
 import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.BLL.ScanningService;
 import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.GUI.Controllers.ScanningController;
 
+// Java Imports
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,4 +141,3 @@ public class DeleteManager {
         }
     }
 }
-

@@ -1,10 +1,12 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.ArchiveService;
+
+// Java Imports
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.ImageView;
-
 import java.sql.SQLException;
 import java.util.List;
 

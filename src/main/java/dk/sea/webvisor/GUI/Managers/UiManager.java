@@ -1,9 +1,12 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.GUI.Controllers.MetadataDialogController;
 import dk.sea.webvisor.GUI.Controllers.SlideViewController;
+
+// Java Imports
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -13,7 +16,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.io.IOException;
 import java.util.List;
 

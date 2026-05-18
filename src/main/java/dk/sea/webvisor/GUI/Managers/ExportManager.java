@@ -1,10 +1,12 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BLL.ExportService;
 import dk.sea.webvisor.BLL.Util.AuditService;
-import javafx.stage.DirectoryChooser;
 
+// Java Imports
+import javafx.stage.DirectoryChooser;
 import java.io.File;
 import java.io.IOException;
 

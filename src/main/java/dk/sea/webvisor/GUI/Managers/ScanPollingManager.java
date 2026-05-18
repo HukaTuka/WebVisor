@@ -1,8 +1,10 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BLL.ScanningService;
 
+// Java Imports
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;

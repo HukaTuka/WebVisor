@@ -1,10 +1,12 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.*;
 import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.BLL.ScanningService;
 import dk.sea.webvisor.BLL.Util.AuditService;
 
+// Java Imports
 import java.sql.SQLException;
 import java.util.List;
 

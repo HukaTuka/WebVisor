@@ -1,9 +1,11 @@
 package dk.sea.webvisor.GUI.Managers;
 
+// Project Imports
 import dk.sea.webvisor.BE.Files;
+
+// Java Imports
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-
 import java.util.List;
 
 public class PageNavigationManager {
