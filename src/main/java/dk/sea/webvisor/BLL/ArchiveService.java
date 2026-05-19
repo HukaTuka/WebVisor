@@ -146,7 +146,8 @@ public class ArchiveService
             boxesDAO.createBox(box.getBoxId(), existingClient.get().getId(), box.getArchiveId());
         }
 
-        // Delete only documents (not files) and re-link them
+        // Break FK links first, then rebuild documents and re-link files.
+        filesDAO.clearDocumentLinksByBox(box.getBoxId());
         documentsDAO.deleteDocumentsByBox(box.getBoxId());
 
         for (Document document : box.getDocuments())

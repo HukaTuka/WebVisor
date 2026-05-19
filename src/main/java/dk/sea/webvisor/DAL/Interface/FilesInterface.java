@@ -17,5 +17,6 @@ public interface FilesInterface
     BufferedImage getFileImageById(int fileId) throws SQLException;
     void deleteFile(int fileId) throws SQLException;
     void deleteFilesByBox(String boxId) throws SQLException;
+    void clearDocumentLinksByBox(String boxId) throws SQLException;
     void updateFileDocument(int fileId, int documentId) throws SQLException;
 }

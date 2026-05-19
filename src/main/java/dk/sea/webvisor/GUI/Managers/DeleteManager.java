@@ -136,7 +136,7 @@ public class DeleteManager {
         if (sessionManager.getSelectedBox() != null) {
             explorerTreeManager.expandBox(sessionManager.getSelectedBox());
             if (sessionManager.getSelectedDocument() != null) {
-                explorerTreeManager.expandDocument(sessionManager.getSelectedDocument());
+                explorerTreeManager.expandDocument(sessionManager.getSelectedBox(), sessionManager.getSelectedDocument());
             }
         }
     }

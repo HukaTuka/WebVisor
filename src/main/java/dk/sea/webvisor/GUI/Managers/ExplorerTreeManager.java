@@ -80,6 +80,12 @@ public class ExplorerTreeManager {
         }
 
         for (Document doc : selectedBox.getDocuments()) {
+            if (doc == selectedDocument) {
+                return doc;
+            }
+            if (doc.getId() > 0 && selectedDocument.getId() > 0 && doc.getId() == selectedDocument.getId()) {
+                return doc;
+            }
             if (doc.getDocumentNumber() == selectedDocument.getDocumentNumber()) {
                 return doc;
             }
@@ -151,8 +157,12 @@ public class ExplorerTreeManager {
         treeView.getSelectionModel().select(node);
     }
 
-    public void expandDocument(Document document) {
-        TreeItem<Object> documentNode = findDocumentNode(document.getDocumentNumber());
+    public void expandDocument(Boxes selectedBox, Document document) {
+        if (selectedBox == null || document == null) {
+            return;
+        }
+
+        TreeItem<Object> documentNode = findDocumentNode(selectedBox.getBoxId(), document);
         if (documentNode == null) {
             return;
         }
@@ -289,13 +299,23 @@ public class ExplorerTreeManager {
         return null;
     }
 
-    private TreeItem<Object> findDocumentNode(int documentNumber) {
+    private TreeItem<Object> findDocumentNode(String boxId, Document targetDocument) {
         if (treeView.getRoot() == null) {
             return null;
         }
-        for (TreeItem<Object> boxNode : treeView.getRoot().getChildren()) {
-            for (TreeItem<Object> docNode : boxNode.getChildren()) {
-                if (docNode.getValue() instanceof Document doc && doc.getDocumentNumber() == documentNumber) {
+        TreeItem<Object> boxNode = findBoxNode(boxId);
+        if (boxNode == null) {
+            return null;
+        }
+        for (TreeItem<Object> docNode : boxNode.getChildren()) {
+            if (docNode.getValue() instanceof Document doc) {
+                if (doc == targetDocument) {
+                    return docNode;
+                }
+                if (doc.getId() > 0 && targetDocument.getId() > 0 && doc.getId() == targetDocument.getId()) {
+                    return docNode;
+                }
+                if (doc.getDocumentNumber() == targetDocument.getDocumentNumber()) {
                     return docNode;
                 }
             }

@@ -83,7 +83,7 @@ public class ScanningSessionManager {
         selectedDocument = explorerTreeManager.resolveSelectedDocument(selectedBox, document);
         if (selectedDocument == null) return false;
 
-        explorerTreeManager.expandDocument(selectedDocument);
+        explorerTreeManager.expandDocument(selectedBox, selectedDocument);
         level = ScanningController.Level.FILES;
         return true;
     }

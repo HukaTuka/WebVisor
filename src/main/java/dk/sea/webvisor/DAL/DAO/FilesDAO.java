@@ -235,6 +235,19 @@ public class FilesDAO implements FilesInterface
         }
     }
 
+    @Override
+    public void clearDocumentLinksByBox(String boxId) throws SQLException
+    {
+        String sql = "UPDATE dbo.Files SET DocumentID = NULL WHERE BoxID = ?";
+
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setString(1, boxId);
+            statement.executeUpdate();
+        }
+    }
+
     private Files createPageMetadataFromResultSet(ResultSet rs) throws SQLException
     {
         return new Files(

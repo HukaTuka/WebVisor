@@ -350,7 +350,7 @@ public class ScanningController
             }
             explorerTreeManager.expandBox(sessionManager.getSelectedBox());
             if (sessionManager.getSelectedDocument() != null) {
-                explorerTreeManager.expandDocument(sessionManager.getSelectedDocument());
+                explorerTreeManager.expandDocument(sessionManager.getSelectedBox(), sessionManager.getSelectedDocument());
             }
         }
         updateUI();
