@@ -97,7 +97,8 @@ public class ScanningController
         pageViewerManager = new PageViewerManager(archiveService, uiManager);
         navigation = new PageNavigationManager(imgPage, lblPageInfo, pageViewerManager);
         polling = new ScanPollingManager(scanningService);
-        exporter = new ExportManager(exportService, uiManager, audit);
+        // ArchiveService is passed so ExportManager can load lazy images from the database
+        exporter = new ExportManager(exportService, archiveService, uiManager, audit);
         splitter = new BoxSplitManager(archiveService, scanningService, uiManager, audit);
         deleteManager = new DeleteManager(archiveService, scanningService, uiManager, audit);
         explorerTreeManager = new ExplorerTreeManager(treeExplorer, uiManager, this::onTreeSelectionChanged);
@@ -208,10 +209,14 @@ public class ScanningController
             uiManager.error("Open a box first.");
             return;
         }
-        if (cmbProfile.getValue() == null) {
-            uiManager.error("Select profile first.");
+
+        Profile selectedProfile = cmbProfile.getValue();
+        if (selectedProfile == null) {
+            uiManager.error("Select a profile first.");
             return;
         }
+
+        int defaultRotation = selectedProfile.getDefaultRotation();
 
         sessionManager.prepareStartScanning(scanningService);
         updateUI();
@@ -219,12 +224,22 @@ public class ScanningController
         polling.start(newPages -> Platform.runLater(() -> {
             if (!sessionManager.isRunning()) return;
 
+            if (defaultRotation != 0)
+            {
+                for (Files page : newPages)
+                {
+                    page.setRotationDegrees(defaultRotation);
+                }
+            }
+
             sessionManager.appendNewPages(newPages, navigation, scanningService, explorerTreeManager);
             uiManager.info("Page received.");
             updateUI();
         }));
 
-        audit.log("Started Scan", "Started scanning");
+        audit.log("Started Scan", "Started scanning box: " + sessionManager.getSelectedBox().getBoxId()
+                + " | Profile: " + selectedProfile.getName()
+                + " | Default rotation: " + defaultRotation + "\u00b0");
     }
 
     @FXML
@@ -242,7 +257,7 @@ public class ScanningController
     }
 
     @FXML private void onExportSinglePage() { if (sessionManager.getSelectedBox() != null) exporter.exportSingle(sessionManager.getSelectedBox()); }
-    @FXML private void onExportMultiPage() { if (sessionManager.getSelectedBox() != null) exporter.exportMulti(sessionManager.getSelectedBox()); }
+    @FXML private void onExportMultiPage()  { if (sessionManager.getSelectedBox() != null) exporter.exportMulti(sessionManager.getSelectedBox()); }
 
     @FXML
     private void onSplitDocument() {
@@ -319,7 +334,7 @@ public class ScanningController
 
     private void reorderPage(Files source, Files target) {
         int from = explorerTreeManager.findPageIndex(sessionManager.getScannedPages(), source);
-        int to = explorerTreeManager.findPageIndex(sessionManager.getScannedPages(), target);
+        int to   = explorerTreeManager.findPageIndex(sessionManager.getScannedPages(), target);
         if (from < 0 || to < 0) return;
 
         scanningService.movePage(from, to);
@@ -344,7 +359,6 @@ public class ScanningController
     private void showBoxes() {
         sessionManager.setLevel(Level.BOXES);
         lblExplorerPath.setText("Boxes");
-
         explorerTreeManager.showFilteredBoxes(allBoxes, cmbClient.getValue(), cmbArchive.getValue());
     }
 
