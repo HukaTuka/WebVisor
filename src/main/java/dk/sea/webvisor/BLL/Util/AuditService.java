@@ -10,18 +10,17 @@ import javafx.collections.ObservableList;
 import java.io.IOException;
 import java.sql.SQLException;
 
-/**
- * Application-wide audit trail service (singleton).
- *
- * Writes every log entry to the database via AuditDAO, and keeps
- * an in-memory ObservableList so any bound TableView updates live.
- *
- * Usage:
- *   AuditService.getInstance().log("CREATE_USER", "Created user: john.doe");
+/*
+ Application-wide audit trail service (singleton).
+
+ Writes every log entry to the database via AuditDAO, and keeps
+ an in-memory ObservableList so any bound TableView updates live.
+
+ Usage:
+ AuditService.getInstance().log("CREATE_USER", "Created user: john.doe");
  */
 public class AuditService
 {
-    // Singleton
 
     private static AuditService instance;
 
@@ -46,35 +45,33 @@ public class AuditService
         return instance;
     }
 
-    // ── State ─────────────────────────────────────────────────────────────────
 
     private final ObservableList<AuditEntry> entries = FXCollections.observableArrayList();
     private AuditDAO auditDAO;
     private String   currentUser = "anonymous";
 
-    // ── Public API ────────────────────────────────────────────────────────────
 
-    /**
-     * Sets the currently logged-in user. Call immediately after a successful
-     * login so all subsequent entries are attributed correctly.
+    /*
+     Sets the currently logged-in user. Call immediately after a successful
+     login so all subsequent entries are attributed correctly.
      */
     public void setCurrentUser(String username)
     {
         this.currentUser = (username != null && !username.isBlank()) ? username : "anonymous";
     }
 
-    /**
-     * Resets the current user back to "anonymous". Call on logout.
+    /*
+     Resets the current user back to "anonymous". Call on logout.
      */
     public void clearCurrentUser()
     {
         this.currentUser = "anonymous";
     }
 
-    /**
-     * Logs an action performed by the current user.
-     * Writes to the database and updates the in-memory list.
-     *
+    /*
+     Logs an action performed by the current user.
+     Writes to the database and updates the in-memory list.
+
      * @param action  Short action identifier, e.g. "CREATE_USER".
      * @param details Human-readable description of what happened.
      */
@@ -97,10 +94,9 @@ public class AuditService
 
     }
 
-    /**
-     * Loads the full audit history from the database into the observable list.
-     * Call this when opening the audit log view so it shows all historical entries,
-     * not just those from the current session.
+    /*
+     Loads the full audit history from the database into the observable list.
+     Call this when opening the audit log view.
      */
     public void loadFromDatabase()
     {
@@ -118,11 +114,11 @@ public class AuditService
 
     public String getCurrentUser()
     {
-        return currentUser; // use whatever your existing field name is
+        return currentUser;
     }
 
-    /**
-     * Returns the live observable list — bind a TableView to this directly.
+    /*
+     Returns the live observable list — bind a TableView to this directly.
      */
     public ObservableList<AuditEntry> getEntries()
     {

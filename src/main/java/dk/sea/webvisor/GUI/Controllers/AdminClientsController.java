@@ -224,8 +224,7 @@ public class AdminClientsController
             String archiveName = txtArchiveName.getText() == null ? "" : txtArchiveName.getText().trim();
             archiveAdminService.createArchive(archiveName, created);
 
-            audit.log("CREATE_CLIENT", "Created client: \"" + created.getName()
-                    + "\" with archive \"" + archiveName + "\"");
+
             refreshClients();
             clearForm();
             showStatus("Client \"" + created.getName() + "\" and archive \"" + archiveName + "\" created.", "status-success");
@@ -258,8 +257,7 @@ public class AdminClientsController
             String newName = txtName.getText() == null ? "" : txtName.getText().trim();
 
             clientService.updateClient(editingClient.getId(), newName);
-            audit.log("UPDATE_CLIENT", "Updated client ID " + editingClient.getId()
-                    + " | name: \"" + oldName + "\" -> \"" + newName + "\"");
+
             refreshClients();
             clearForm();
             showStatus("Client updated.", "status-success");
@@ -292,8 +290,7 @@ public class AdminClientsController
         try
         {
             Archive createdArchive = archiveAdminService.createArchive(archiveName, client);
-            audit.log("CREATE_ARCHIVE", "Created archive \"" + createdArchive.getName()
-                    + "\" for client \"" + client.getName() + "\"");
+
             refreshClients();
             showStatus("Archive \"" + createdArchive.getName() + "\" created.", "status-success");
         }
@@ -332,8 +329,7 @@ public class AdminClientsController
         try
         {
             archiveAdminService.deleteArchive(archive.getId());
-            audit.log("DELETE_ARCHIVE", "Deleted archive \"" + archive.getName()
-                    + "\" from client \"" + client.getName() + "\"");
+
             refreshClients();
             showStatus("Archive \"" + archive.getName() + "\" deleted.", "status-success");
         }
@@ -385,8 +381,7 @@ public class AdminClientsController
         try
         {
             archiveAdminService.updateArchive(selectedArchive.getId(), newNameResult.get(), client);
-            audit.log("RENAME_ARCHIVE", "Renamed archive \"" + selectedArchive.getName()
-                    + "\" for client \"" + client.getName() + "\"");
+
             refreshClients();
             showStatus("Archive updated.", "status-success");
         }
@@ -426,7 +421,6 @@ public class AdminClientsController
             }
 
             clientService.deleteClient(client.getId());
-            audit.log("DELETE_CLIENT", "Deleted client: \"" + client.getName() + "\" (ID: " + client.getId() + ")");
 
             if (editingClient != null && editingClient.getId() == client.getId())
             {

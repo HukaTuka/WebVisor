@@ -185,9 +185,6 @@ public class AdminMetadataController
 
             MetadataField created = metadataFieldService.createField(txtName.getText(), selectedType);
 
-            audit.log("CREATE_METADATA_FIELD",
-                    "Created metadata field: \"" + created.getName()
-                            + "\" | type: " + created.getFieldType().getDisplayName());
 
             refreshFields();
             clearForm();
@@ -217,10 +214,6 @@ public class AdminMetadataController
             String oldName = editingField.getName();
             metadataFieldService.updateField(editingField.getId(), txtName.getText(), selectedType);
 
-            audit.log("UPDATE_METADATA_FIELD",
-                    "Updated metadata field ID " + editingField.getId()
-                            + " | name: \"" + oldName + "\" -> \"" + txtName.getText().trim() + "\""
-                            + " | type: " + selectedType.getDisplayName());
 
             refreshFields();
             clearForm();
@@ -255,9 +248,6 @@ public class AdminMetadataController
         {
             metadataFieldService.deleteField(field.getId());
 
-            audit.log("DELETE_METADATA_FIELD",
-                    "Deleted metadata field: \"" + field.getName()
-                            + "\" (ID: " + field.getId() + ")");
 
             if (editingField != null && editingField.getId() == field.getId())
             {

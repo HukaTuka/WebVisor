@@ -224,7 +224,7 @@ public class ScanningController
             updateUI();
         }));
 
-        audit.log("SCAN_START", "Started scanning");
+        audit.log("Started Scan", "Started scanning");
     }
 
     @FXML

@@ -148,7 +148,6 @@ public class MetadataDialogController
                 );
             }
 
-            audit.log("METADATA_SAVED", "Saved metadata for box: " + boxId);
             showStatus("Metadata saved successfully.", "status-success");
         }
         catch (IllegalArgumentException e)

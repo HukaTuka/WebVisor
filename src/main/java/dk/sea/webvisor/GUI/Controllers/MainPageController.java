@@ -57,50 +57,45 @@ public class MainPageController
     @FXML
     private void onOpenAdminUsers()
     {
-        audit.log("NAVIGATE", "Opened Admin Users view");
         openView("/Views/AdminUsersView.fxml");
     }
 
     @FXML
     private void onOpenHome()
     {
-        audit.log("NAVIGATE", "Navigated to Home");
         showHome();
     }
 
     @FXML
     private void onOpenScanning()
     {
-        audit.log("NAVIGATE", "Opened Scanning view");
         openView("/Views/ScanningView.fxml");
     }
 
     @FXML
-    private void onOpenAuditLog() {
-            audit.log("NAVIGATE", "Opened Audit Log window");
+    private void onOpenAuditLog()
+    {
             openView("/Views/AuditLogView.fxml");
-
     }
 
     @FXML
-    private void onOpenAdminProfiles() {
-        audit.log("NAVIGATE", "Opened Admin Profiles view");
+    private void onOpenAdminProfiles()
+    {
         openView("/Views/AdminProfilesView.fxml");
     }
 
     @FXML
     private void onOpenAdminClients()
     {
-        audit.log("NAVIGATE", "Opened Admin Clients/Archives view");
         openView("/Views/AdminClientsView.fxml");
     }
 
     @FXML
     private void onOpenAdminMetadata()
     {
-        audit.log("NAVIGATE", "Opened Admin Metadata Fields view");
         openView("/Views/AdminMetadataView.fxml");
     }
+
     private void openView(String fxmlPath)
     {
         try
@@ -128,7 +123,6 @@ public class MainPageController
     @FXML
     private void onLogout(ActionEvent actionEvent)
     {
-        audit.log("LOGOUT", "User logged out");
         audit.clearCurrentUser();
 
         try

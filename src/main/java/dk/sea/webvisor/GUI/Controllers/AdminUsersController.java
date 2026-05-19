@@ -254,8 +254,6 @@ public class AdminUsersController
                             .map(Profile::getName)
                                     .collect(Collectors.joining(","));
 
-            audit.log("CREATE_USER", "Created new user: " + created.getUsername()
-                    + " | Role: " + created.getRole().getDisplayName() + " | Profile" + (profileNames.isEmpty() ? "none" : profileNames));
 
             refreshUsers();
             clearForm();
@@ -304,10 +302,7 @@ public class AdminUsersController
                     .map(Profile::getName)
                     .collect(Collectors.joining(", "));
 
-            audit.log("UPDATE_USER", "Updated user ID " + editingUser.getId()
-                    + " | Username: " + oldUsername + " -> " + newUsername
-                    + " | Role: " + oldRole + " -> " + newRole
-                    + (txtPassword.getText().isBlank() ? "" : " | Password changed"));
+
 
             refreshUsers();
             clearForm();
@@ -343,8 +338,6 @@ public class AdminUsersController
             profileUserService.removeAllProfilesFromUser(user.getId());
             userService.deleteUser(user.getId());
 
-            audit.log("DELETE_USER", "Deleted user: " + user.getUsername()
-                    + " (ID: " + user.getId() + ")");
 
             if (editingUser != null && editingUser.getId() == user.getId())
             {

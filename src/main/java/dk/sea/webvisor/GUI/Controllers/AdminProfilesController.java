@@ -202,10 +202,7 @@ public class AdminProfilesController
                     parseRotation()
             );
 
-            audit.log("CREATE_PROFILE",
-                    "Created profile: \"" + created.getName()
-                            + "\" | rotation: " + created.getDefaultRotation()
-                            + "° | split on barcode: " + created.isSplitOnBarcode());
+
 
             refreshProfiles();
             clearForm();
@@ -237,11 +234,6 @@ public class AdminProfilesController
                     newRotation
             );
 
-            audit.log("UPDATE_PROFILE",
-                    "Updated profile ID " + editingProfile.getId()
-                            + " | name: \"" + oldName + "\" -> \"" + txtName.getText().trim() + "\""
-                            + " | rotation: " + oldRotation + "° -> " + Profile.normaliseRotation(newRotation) + "°"
-                            + " | split on barcode: " + oldSplit + " -> " + chkSplitOnBarcode.isSelected());
 
             refreshProfiles();
             clearForm();
@@ -282,10 +274,6 @@ public class AdminProfilesController
                     return;
                 }
 
-                audit.log("DELETE_PROFILE_WARNED",
-                        "Deletion of profile \"" + profile.getName()
-                                + "\" (ID: " + profile.getId()
-                                + ") confirmed despite being assigned to: " + userList);
             }
             else
             {
@@ -304,9 +292,6 @@ public class AdminProfilesController
 
             profileService.deleteProfile(profile.getId());
 
-            audit.log("DELETE_PROFILE",
-                    "Deleted profile: \"" + profile.getName()
-                            + "\" (ID: " + profile.getId() + ")");
 
             if (editingProfile != null && editingProfile.getId() == profile.getId())
             {
