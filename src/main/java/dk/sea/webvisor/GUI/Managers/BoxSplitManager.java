@@ -40,7 +40,7 @@ public class BoxSplitManager {
             audit.log("Pages were split", "Document split at page " + index);
 
         } catch (SQLException e) {
-            uiManager.error("Split failed: " + e.getMessage());
+            uiManager.error("Split failed");
         }
     }
 }
