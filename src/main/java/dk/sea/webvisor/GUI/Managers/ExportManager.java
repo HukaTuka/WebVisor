@@ -30,7 +30,7 @@ public class ExportManager {
             try {
                 int count = exportService.exportSinglePage(box.getDocuments(), dir, box.getBoxId());
                 uiManager.success("Exported " + count + " pages.");
-                audit.log("EXPORT_SINGLE", "Exported " + count);
+                audit.log("Export single", "Exported " + count);
 
             } catch (IOException e) {
                 uiManager.error("Export failed: " + e.getMessage());
@@ -49,7 +49,7 @@ public class ExportManager {
             try {
                 int count = exportService.exportMultiPage(box.getDocuments(), dir, box.getBoxId());
                 uiManager.success("Exported " + count + " documents.");
-                audit.log("EXPORT_MULTI", "Exported " + count);
+                audit.log("Exported as multi page", "Exported " + count);
 
             } catch (IOException e) {
                 uiManager.error("Export failed: " + e.getMessage());

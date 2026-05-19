@@ -37,7 +37,7 @@ public class BoxSplitManager {
         try {
             archiveService.splitDocumentAt(box, index);
             after.run();
-            audit.log("SPLIT", "Document split at page " + index);
+            audit.log("Pages were split", "Document split at page " + index);
 
         } catch (SQLException e) {
             uiManager.error("Split failed: " + e.getMessage());

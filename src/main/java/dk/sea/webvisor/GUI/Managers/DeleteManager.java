@@ -65,7 +65,7 @@ public class DeleteManager {
     private void deleteBox(Boxes box, Runnable onRefresh) throws SQLException {
         archiveService.deleteBox(box.getBoxId());
         uiManager.success("Box deleted: " + box.getBoxId());
-        audit.log("BOX_DELETE", "Deleted box: " + box.getBoxId());
+        audit.log("Box deleted", "Deleted box: " + box.getBoxId());
         onRefresh.run();
     }
 
@@ -96,7 +96,7 @@ public class DeleteManager {
         scannedPages.addAll(remaining);
 
         uiManager.success("Document deleted.");
-        audit.log("DOC_DELETE", "Deleted document " + doc);
+        audit.log("Document deleted", "Deleted document " + doc);
         onRefresh.run();
     }
 
@@ -124,7 +124,7 @@ public class DeleteManager {
         archiveService.updatePageOrder(box.getBoxId(), scannedPages);
 
         uiManager.success("Page deleted: " + page.getReferenceId());
-        audit.log("PAGE_DELETE", "Deleted page: " + page.getReferenceId());
+        audit.log("Page delted", "Deleted page: " + page.getReferenceId());
 
         onRefresh.run();
     }
