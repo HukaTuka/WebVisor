@@ -85,7 +85,7 @@ public class ExportService
         List<Files> contentPages = new ArrayList<>();
         for (Files page : document.getPages())
         {
-            if (!page.isBarcode() && page.getImage() != null)
+            if (page.getImage() != null)
             {
                 contentPages.add(page);
             }
