@@ -52,7 +52,6 @@ public class Profile {
     @Override
     public String toString()
     {
-        return name + "  (rotation: " + defaultRotation
-                + "°, split on barcode: " + (splitOnBarcode ? "yes" : "no") + ")";
+        return name + "  (rotation: " + defaultRotation + "\u00b0)";
     }
 }

@@ -13,7 +13,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -31,13 +30,11 @@ public class AdminProfilesController
 {
     @FXML private TableView<Profile>            tblProfiles;
     @FXML private TableColumn<Profile, String>  colName;
-    @FXML private TableColumn<Profile, Boolean> colSplitOnBarcode;
     @FXML private TableColumn<Profile, Integer> colDefaultRotation;
     @FXML private TableColumn<Profile, Void>    colActions;
     @FXML private TextField txtSearch;
     @FXML private Label    lblFormHeading;
     @FXML private TextField txtName;
-    @FXML private CheckBox  chkSplitOnBarcode;
     @FXML private TextField txtRotation;
     @FXML private Button    btnSave;
     @FXML private Button    btnCancel;
@@ -48,7 +45,6 @@ public class AdminProfilesController
     private final ObservableList<Profile> allProfiles = FXCollections.observableArrayList();
     private FilteredList<Profile>         filteredProfiles;
 
-    /** Non-null while an edit is in progress; null means "create" mode. */
     private Profile editingProfile = null;
 
     public AdminProfilesController()
@@ -63,12 +59,10 @@ public class AdminProfilesController
         }
     }
 
-
     @FXML
     private void initialize()
     {
         setCancelVisible(false);
-
         setupColumns();
         setupDoubleClick();
         refreshProfiles();
@@ -78,17 +72,6 @@ public class AdminProfilesController
     {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        colSplitOnBarcode.setCellValueFactory(new PropertyValueFactory<>("splitOnBarcode"));
-        colSplitOnBarcode.setCellFactory(col -> new TableCell<>()
-        {
-            @Override
-            protected void updateItem(Boolean value, boolean empty)
-            {
-                super.updateItem(value, empty);
-                setText(empty || value == null ? null : (value ? "Yes" : "No"));
-            }
-        });
-
         colDefaultRotation.setCellValueFactory(new PropertyValueFactory<>("defaultRotation"));
         colDefaultRotation.setCellFactory(col -> new TableCell<>()
         {
@@ -96,11 +79,10 @@ public class AdminProfilesController
             protected void updateItem(Integer value, boolean empty)
             {
                 super.updateItem(value, empty);
-                setText(empty || value == null ? null : value + "°");
+                setText(empty || value == null ? null : value + "\u00b0");
             }
         });
 
-        // Inline Edit / Delete buttons
         colActions.setCellFactory(col -> new TableCell<>()
         {
             private final Button btnEdit   = new Button("Edit");
@@ -137,8 +119,7 @@ public class AdminProfilesController
     {
         tblProfiles.setOnMouseClicked(event ->
         {
-            if (event.getButton() == MouseButton.PRIMARY
-                    && event.getClickCount() == 2)
+            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2)
             {
                 Profile selected = tblProfiles.getSelectionModel().getSelectedItem();
                 if (selected != null)
@@ -198,11 +179,11 @@ public class AdminProfilesController
         {
             Profile created = profileService.createProfile(
                     txtName.getText(),
-                    chkSplitOnBarcode.isSelected(),
                     parseRotation()
             );
 
-
+            audit.log("Created profile", "Created profile: " + created.getName()
+                    + " | Rotation: " + created.getDefaultRotation() + "\u00b0");
 
             refreshProfiles();
             clearForm();
@@ -222,18 +203,13 @@ public class AdminProfilesController
     {
         try
         {
-            String  oldName     = editingProfile.getName();
-            int     oldRotation = editingProfile.getDefaultRotation();
-            boolean oldSplit    = editingProfile.isSplitOnBarcode();
-            int     newRotation = parseRotation();
-
             profileService.updateProfile(
                     editingProfile.getId(),
                     txtName.getText(),
-                    chkSplitOnBarcode.isSelected(),
-                    newRotation
+                    parseRotation()
             );
 
+            audit.log("UPDATE_PROFILE", "Updated profile: " + editingProfile.getName());
 
             refreshProfiles();
             clearForm();
@@ -273,7 +249,6 @@ public class AdminProfilesController
                     showStatus("Deletion cancelled.", "status-info");
                     return;
                 }
-
             }
             else
             {
@@ -292,6 +267,7 @@ public class AdminProfilesController
 
             profileService.deleteProfile(profile.getId());
 
+            audit.log("Deleted profile", "Deleted profile: " + profile.getName());
 
             if (editingProfile != null && editingProfile.getId() == profile.getId())
             {
@@ -315,7 +291,6 @@ public class AdminProfilesController
     {
         editingProfile = profile;
         txtName.setText(profile.getName());
-        chkSplitOnBarcode.setSelected(profile.isSplitOnBarcode());
         txtRotation.setText(String.valueOf(profile.getDefaultRotation()));
 
         lblFormHeading.setText("Edit Profile: " + profile.getName());
@@ -329,7 +304,6 @@ public class AdminProfilesController
     {
         editingProfile = null;
         txtName.clear();
-        chkSplitOnBarcode.setSelected(true);
         txtRotation.setText("0");
 
         lblFormHeading.setText("Create New Profile");
@@ -361,12 +335,6 @@ public class AdminProfilesController
         }
     }
 
-    /**
-     * Parses the rotation text field. Accepts any integer normalisation to
-     * [0, 359] is handled by the service layer.
-     *
-     * @throws IllegalArgumentException if the field is not a valid integer.
-     */
     private int parseRotation()
     {
         String raw = txtRotation.getText() == null ? "" : txtRotation.getText().trim();

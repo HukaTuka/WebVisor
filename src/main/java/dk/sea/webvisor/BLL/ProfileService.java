@@ -21,32 +21,31 @@ public class ProfileService
 
     /**
      * Validates the supplied fields and persists a new profile.
+     * Profiles always split on barcode; this is not configurable.
      *
      * @param name            Display name for the profile (must not be blank).
-     * @param splitOnBarcode  Whether a barcode page triggers a document split.
      * @param rotationDegrees Default page rotation in degrees (any integer,
      *                        normalised to [0, 359] internally).
      * @return the saved {@link Profile} with its database-assigned ID.
      * @throws IllegalArgumentException if validation fails.
      * @throws SQLException             if the database operation fails.
      */
-    public Profile createProfile(String name, boolean splitOnBarcode, int rotationDegrees)
-            throws SQLException
+    public Profile createProfile(String name, int rotationDegrees) throws SQLException
     {
         validateName(name);
         int normalised = Profile.normaliseRotation(rotationDegrees);
-        Profile profile = new Profile(0, name.trim(), splitOnBarcode, normalised);
+        Profile profile = new Profile(0, name.trim(), true, normalised);
         return profileDAO.createProfile(profile);
     }
 
     /**
      * Updates an existing profile identified by {@code profileId}.
+     * Profiles always split on barcode; this is not configurable.
      *
      * @throws IllegalArgumentException if validation fails or the ID is invalid.
      * @throws SQLException             if the database operation fails.
      */
-    public void updateProfile(int profileId, String name, boolean splitOnBarcode, int rotationDegrees)
-            throws SQLException
+    public void updateProfile(int profileId, String name, int rotationDegrees) throws SQLException
     {
         if (profileId <= 0)
         {
@@ -55,7 +54,7 @@ public class ProfileService
 
         validateName(name);
         int normalised = Profile.normaliseRotation(rotationDegrees);
-        Profile profile = new Profile(profileId, name.trim(), splitOnBarcode, normalised);
+        Profile profile = new Profile(profileId, name.trim(), true, normalised);
         profileDAO.updateProfile(profile);
     }
 
