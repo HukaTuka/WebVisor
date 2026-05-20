@@ -26,16 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ArchiveService
-{
+public class ArchiveService {
     private final BoxesInterface boxesDAO;
     private final ClientsInterface clientsDAO;
     private final ArchivesInterface archivesDAO;
     private final DocumentsInterface documentsDAO;
     private final FilesInterface filesDAO;
 
-    public ArchiveService() throws IOException
-    {
+    public ArchiveService() throws IOException {
         this.boxesDAO = new BoxesDAO();
         this.clientsDAO = new ClientsDAO();
         this.archivesDAO = new ArchivesDAO();
@@ -43,43 +41,35 @@ public class ArchiveService
         this.filesDAO = new FilesDAO();
     }
 
-    public List<Boxes> getAllBoxesWithContent() throws SQLException
-    {
+    public List<Boxes> getAllBoxesWithContent() throws SQLException {
         List<Boxes> boxes = new ArrayList<>(boxesDAO.getAllBoxes());
 
-        for (Boxes box : boxes)
-        {
+        for (Boxes box : boxes) {
             hydrateBox(box);
         }
 
         return boxes;
     }
 
-    public List<Boxes> getAllBoxes() throws SQLException
-    {
+    public List<Boxes> getAllBoxes() throws SQLException {
         return new ArrayList<>(boxesDAO.getAllBoxes());
     }
 
-    public List<Client> getAllClients() throws SQLException
-    {
+    public List<Client> getAllClients() throws SQLException {
         return new ArrayList<>(clientsDAO.getAllClients());
     }
 
-    public List<Archive> getAllArchives() throws SQLException
-    {
+    public List<Archive> getAllArchives() throws SQLException {
         return new ArrayList<>(archivesDAO.getAllArchives());
     }
 
-    public List<Archive> getArchivesByClient(int clientId) throws SQLException
-    {
+    public List<Archive> getArchivesByClient(int clientId) throws SQLException {
         return new ArrayList<>(archivesDAO.getArchivesByClient(clientId));
     }
 
-    public Boxes loadBoxContent(String boxId) throws SQLException
-    {
+    public Boxes loadBoxContent(String boxId) throws SQLException {
         Optional<Boxes> maybeBox = boxesDAO.getBoxById(boxId);
-        if (maybeBox.isEmpty())
-        {
+        if (maybeBox.isEmpty()) {
             throw new SQLException("Box not found: " + boxId);
         }
 
@@ -88,23 +78,19 @@ public class ArchiveService
         return box;
     }
 
-    public Boxes createBox(String boxId, String client, String archive) throws SQLException
-    {
+    public Boxes createBox(String boxId, String client, String archive) throws SQLException {
         Optional<Boxes> existing = boxesDAO.getBoxById(boxId);
-        if (existing.isPresent())
-        {
+        if (existing.isPresent()) {
             return existing.get();
         }
 
         String clientName = client == null ? "" : client.trim();
-        if (clientName.isBlank())
-        {
+        if (clientName.isBlank()) {
             throw new IllegalArgumentException("Client is required.");
         }
 
         String archiveName = archive == null ? "" : archive.trim();
-        if (archiveName.isBlank())
-        {
+        if (archiveName.isBlank()) {
             throw new IllegalArgumentException("Archive is required.");
         }
 
@@ -114,8 +100,7 @@ public class ArchiveService
                 : clientsDAO.createClient(clientName);
 
         Optional<Archive> existingArchive = archivesDAO.getArchiveByClientAndName(resolved.getId(), archiveName);
-        if (existingArchive.isEmpty())
-        {
+        if (existingArchive.isEmpty()) {
             throw new IllegalArgumentException("Archive does not exist for selected client.");
         }
 
@@ -124,24 +109,19 @@ public class ArchiveService
         return new Boxes(persisted.getBoxId(), selectedArchive.getId(), resolved.getName(), selectedArchive.getName());
     }
 
-    public void saveBoxSnapshot(Boxes box) throws SQLException
-    {
-        if (box == null)
-        {
+    public void saveBoxSnapshot(Boxes box) throws SQLException {
+        if (box == null) {
             throw new IllegalArgumentException("Box is required.");
         }
 
         Optional<Boxes> existing = boxesDAO.getBoxById(box.getBoxId());
-        if (existing.isEmpty())
-        {
-            if (box.getArchiveId() <= 0)
-            {
+        if (existing.isEmpty()) {
+            if (box.getArchiveId() <= 0) {
                 throw new IllegalArgumentException("Archive is required for box persistence.");
             }
 
             Optional<Client> existingClient = clientsDAO.getClientByName(box.getClient());
-            if (existingClient.isEmpty())
-            {
+            if (existingClient.isEmpty()) {
                 throw new IllegalArgumentException("Client not found: " + box.getClient());
             }
             boxesDAO.createBox(box.getBoxId(), existingClient.get().getId(), box.getArchiveId());
@@ -150,41 +130,31 @@ public class ArchiveService
         filesDAO.clearDocumentLinksByBox(box.getBoxId());
         documentsDAO.deleteDocumentsByBox(box.getBoxId());
 
-        for (Document document : box.getDocuments())
-        {
+        for (Document document : box.getDocuments()) {
             int documentId = documentsDAO.createDocument(box.getBoxId(), document.getDocumentNumber());
 
-            if (document.getStatus() != DocumentStatus.IN_PROGRESS)
-            {
+            if (document.getStatus() != DocumentStatus.IN_PROGRESS) {
                 documentsDAO.updateDocumentStatus(documentId, document.getStatus());
             }
 
-            for (Files page : document.getPages())
-            {
-                if (page.getId() > 0)
-                {
+            for (Files page : document.getPages()) {
+                if (page.getId() > 0) {
                     filesDAO.updateFileDocument(page.getId(), documentId);
-                }
-                else if (page.getImage() != null)
-                {
+                } else if (page.getImage() != null) {
                     filesDAO.createFile(box.getBoxId(), documentId, page);
                 }
             }
         }
     }
 
-    public BufferedImage loadFileImage(int fileId) throws SQLException
-    {
+    public BufferedImage loadFileImage(int fileId) throws SQLException {
         return filesDAO.getFileImageById(fileId);
     }
 
-    public void updatePageOrder(String boxId, List<Files> orderedPages) throws SQLException
-    {
+    public void updatePageOrder(String boxId, List<Files> orderedPages) throws SQLException {
         List<Integer> fileIds = new ArrayList<>();
-        for (Files page : orderedPages)
-        {
-            if (page.getId() > 0)
-            {
+        for (Files page : orderedPages) {
+            if (page.getId() > 0) {
                 fileIds.add(page.getId());
             }
         }
@@ -192,21 +162,17 @@ public class ArchiveService
         filesDAO.updatePageOrder(boxId, fileIds);
     }
 
-    public void deleteBox(String boxId) throws SQLException
-    {
+    public void deleteBox(String boxId) throws SQLException {
         boxesDAO.deleteBox(boxId);
     }
 
-    public void deleteFileById(int fileId) throws SQLException
-    {
+    public void deleteFileById(int fileId) throws SQLException {
         filesDAO.deleteFile(fileId);
     }
 
-    public void deleteDocumentByNumber(String boxId, int documentNumber) throws SQLException
-    {
+    public void deleteDocumentByNumber(String boxId, int documentNumber) throws SQLException {
         Optional<Integer> documentId = documentsDAO.getDocumentId(boxId, documentNumber);
-        if (documentId.isPresent())
-        {
+        if (documentId.isPresent()) {
             documentsDAO.deleteDocument(documentId.get());
         }
     }
@@ -218,24 +184,20 @@ public class ArchiveService
      * @param status     the new status to apply.
      * @throws SQLException if the database operation fails.
      */
-    public void updateDocumentStatus(int documentId, DocumentStatus status) throws SQLException
-    {
+    public void updateDocumentStatus(int documentId, DocumentStatus status) throws SQLException {
         documentsDAO.updateDocumentStatus(documentId, status);
     }
 
-    private void hydrateBox(Boxes box) throws SQLException
-    {
+    private void hydrateBox(Boxes box) throws SQLException {
         List<Document> documents = documentsDAO.getDocumentsByBox(box.getBoxId());
 
         List<Files> allPages = new ArrayList<>();
 
-        for (Document document : documents)
-        {
+        for (Document document : documents) {
             int documentId = document.getId();
             List<Files> pages = filesDAO.getFilesByDocument(documentId);
 
-            for (Files page : pages)
-            {
+            for (Files page : pages) {
                 document.addPage(page);
                 allPages.add(page);
             }
@@ -244,39 +206,4 @@ public class ArchiveService
         box.replaceContent(allPages, documents);
     }
 
-    /**
-     * Inserts a manual document split after the page at splitIndex
-     * within the given box, then saves the result to the database.
-     */
-    public void splitDocumentAt(Boxes box, int splitIndex) throws SQLException
-    {
-        List<Files> pages = new ArrayList<>(box.getPages());
-
-        if (splitIndex < 0 || splitIndex >= pages.size() - 1)
-        {
-            throw new IllegalArgumentException("Cannot split at this position.");
-        }
-
-        List<Document> rebuilt = new ArrayList<>();
-        Document current = new Document(0, rebuilt.size() + 1);
-        rebuilt.add(current);
-
-        for (int i = 0; i < pages.size(); i++)
-        {
-            Files page = pages.get(i);
-            current.addPage(page);
-
-            boolean isSplitPoint = (i == splitIndex);
-            boolean isBarcode    = page.isBarcode();
-
-            if ((isSplitPoint || isBarcode) && i < pages.size() - 1)
-            {
-                current = new Document(0, rebuilt.size() + 1);
-                rebuilt.add(current);
-            }
-        }
-
-        box.replaceContent(pages, rebuilt);
-        saveBoxSnapshot(box);
-    }
 }

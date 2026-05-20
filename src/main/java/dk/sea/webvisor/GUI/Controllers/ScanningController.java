@@ -350,17 +350,19 @@ public class ScanningController
             return;
         }
 
-        splitter.split(sessionManager.getSelectedBox(), sessionManager.getScannedPages(),
-                navigation.getIndex(), () ->
+        splitter.split(
+                sessionManager.getSelectedBox(),
+                sessionManager.getScannedPages(),
+                navigation.getIndex(),
+                sessionManager,
+                () ->
                 {
-                    sessionManager.getScannedPages().clear();
-                    sessionManager.getScannedPages().addAll(sessionManager.getSelectedBox().getPages());
-                    scanningService.loadSessionPages(sessionManager.getScannedPages());
                     showBoxes();
                     explorerTreeManager.expandBox(sessionManager.getSelectedBox());
                     sessionManager.resetToDocumentsLevel();
                     updateUI();
-                });
+                }
+        );
     }
 
     @FXML
