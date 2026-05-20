@@ -9,6 +9,7 @@ public class Document {
     private int id;
     private final int documentNumber;
     private final List<Files> pages = new ArrayList<>();
+    private DocumentStatus status = DocumentStatus.IN_PROGRESS;
 
     public Document(int id, int documentNumber) {
         this.id = id;
@@ -27,10 +28,29 @@ public class Document {
         return documentNumber;
     }
 
-    @Override
-    public String toString() {
-        return "Document " + documentNumber + " (" + pages.size() + " page(s))";
+    public int getId()
+    {
+        return id;
     }
 
-    public int getId() {return id;}
+    public DocumentStatus getStatus()
+    {
+        return status;
+    }
+
+    public void setStatus(DocumentStatus status)
+    {
+        this.status = status == null ? DocumentStatus.IN_PROGRESS : status;
+    }
+
+    @Override
+    public String toString()
+    {
+        String label = "Document " + documentNumber + " (" + pages.size() + " page(s))";
+        if (status != DocumentStatus.IN_PROGRESS)
+        {
+            label += " [" + status.getDisplayName() + "]";
+        }
+        return label;
+    }
 }

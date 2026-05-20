@@ -4,6 +4,7 @@ package dk.sea.webvisor.BLL;
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Client;
 import dk.sea.webvisor.BE.Document;
+import dk.sea.webvisor.BE.DocumentStatus;
 import dk.sea.webvisor.BE.Files;
 import dk.sea.webvisor.BE.Archive;
 import dk.sea.webvisor.DAL.DAO.ArchivesDAO;
@@ -146,26 +147,28 @@ public class ArchiveService
             boxesDAO.createBox(box.getBoxId(), existingClient.get().getId(), box.getArchiveId());
         }
 
-        // Break FK links first, then rebuild documents and re-link files.
         filesDAO.clearDocumentLinksByBox(box.getBoxId());
         documentsDAO.deleteDocumentsByBox(box.getBoxId());
 
         for (Document document : box.getDocuments())
         {
             int documentId = documentsDAO.createDocument(box.getBoxId(), document.getDocumentNumber());
+
+            if (document.getStatus() != DocumentStatus.IN_PROGRESS)
+            {
+                documentsDAO.updateDocumentStatus(documentId, document.getStatus());
+            }
+
             for (Files page : document.getPages())
             {
                 if (page.getId() > 0)
                 {
-                    // Page already exists in DB — just update its DocumentID link
                     filesDAO.updateFileDocument(page.getId(), documentId);
                 }
                 else if (page.getImage() != null)
                 {
-                    // New page with image data — insert it
                     filesDAO.createFile(box.getBoxId(), documentId, page);
                 }
-                // If id <= 0 and image is null, skip — nothing to save
             }
         }
     }
@@ -208,6 +211,18 @@ public class ArchiveService
         }
     }
 
+    /**
+     * Updates the status of a document in the database.
+     *
+     * @param documentId the database ID of the document to update.
+     * @param status     the new status to apply.
+     * @throws SQLException if the database operation fails.
+     */
+    public void updateDocumentStatus(int documentId, DocumentStatus status) throws SQLException
+    {
+        documentsDAO.updateDocumentStatus(documentId, status);
+    }
+
     private void hydrateBox(Boxes box) throws SQLException
     {
         List<Document> documents = documentsDAO.getDocumentsByBox(box.getBoxId());
@@ -221,13 +236,14 @@ public class ArchiveService
 
             for (Files page : pages)
             {
-                document.addPage(page);   // Couples page to a document
-                allPages.add(page);       // Collects all pages to a box
+                document.addPage(page);
+                allPages.add(page);
             }
         }
 
         box.replaceContent(allPages, documents);
     }
+
     /**
      * Inserts a manual document split after the page at splitIndex
      * within the given box, then saves the result to the database.
@@ -241,7 +257,6 @@ public class ArchiveService
             throw new IllegalArgumentException("Cannot split at this position.");
         }
 
-        // Rebuild documents with the manual split point
         List<Document> rebuilt = new ArrayList<>();
         Document current = new Document(0, rebuilt.size() + 1);
         rebuilt.add(current);
@@ -256,7 +271,7 @@ public class ArchiveService
 
             if ((isSplitPoint || isBarcode) && i < pages.size() - 1)
             {
-                current = new Document(0,rebuilt.size() + 1);
+                current = new Document(0, rebuilt.size() + 1);
                 rebuilt.add(current);
             }
         }

@@ -94,6 +94,8 @@ create table dbo.Documents
     DocumentNumber int                                          not null
         constraint CK_Documents_DocumentNumber_Positive
             check ([DocumentNumber] > 0),
+    Status         varchar(30)                                  not null
+        constraint DF_Documents_Status default 'IN_PROGRESS',
     CreatedAt      datetime2
         constraint DF_Documents_CreatedAt default sysdatetime() not null,
     constraint UQ_Documents_Box_DocumentNumber

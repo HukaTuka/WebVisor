@@ -2,6 +2,7 @@ package dk.sea.webvisor.DAL.Interface;
 
 // Project Imports
 import dk.sea.webvisor.BE.Document;
+import dk.sea.webvisor.BE.DocumentStatus;
 
 // Java Imports
 import java.sql.SQLException;
@@ -15,4 +16,5 @@ public interface DocumentsInterface
     List<Document> getDocumentsByBox(String boxId) throws SQLException;
     void deleteDocument(int documentId) throws SQLException;
     void deleteDocumentsByBox(String boxId) throws SQLException;
+    void updateDocumentStatus(int documentId, DocumentStatus status) throws SQLException;
 }

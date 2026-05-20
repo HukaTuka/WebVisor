@@ -2,6 +2,7 @@ package dk.sea.webvisor.DAL.DAO;
 
 // Project Imports
 import dk.sea.webvisor.BE.Document;
+import dk.sea.webvisor.BE.DocumentStatus;
 import dk.sea.webvisor.DAL.DBConnector.DBConnector;
 import dk.sea.webvisor.DAL.Interface.DocumentsInterface;
 
@@ -80,7 +81,7 @@ public class DocumentsDAO implements DocumentsInterface
     public List<Document> getDocumentsByBox(String boxId) throws SQLException
     {
         String sql = """
-                SELECT ID, DocumentNumber
+                SELECT ID, DocumentNumber, Status
                 FROM dbo.Documents
                 WHERE BoxID = ?
                 ORDER BY DocumentNumber
@@ -97,11 +98,12 @@ public class DocumentsDAO implements DocumentsInterface
             {
                 while (rs.next())
                 {
-                    documents.add(new Document(
+                    Document document = new Document(
                             rs.getInt("ID"),
                             rs.getInt("DocumentNumber")
-                    ));
-
+                    );
+                    document.setStatus(DocumentStatus.fromString(rs.getString("Status")));
+                    documents.add(document);
                 }
             }
         }
@@ -131,6 +133,24 @@ public class DocumentsDAO implements DocumentsInterface
              PreparedStatement statement = connection.prepareStatement(sql))
         {
             statement.setString(1, boxId);
+            statement.executeUpdate();
+        }
+    }
+
+    @Override
+    public void updateDocumentStatus(int documentId, DocumentStatus status) throws SQLException
+    {
+        String sql = """
+                UPDATE dbo.Documents
+                SET Status = ?
+                WHERE ID = ?
+                """;
+
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setString(1, status.name());
+            statement.setInt(2, documentId);
             statement.executeUpdate();
         }
     }

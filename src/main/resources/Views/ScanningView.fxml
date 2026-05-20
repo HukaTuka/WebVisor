@@ -22,21 +22,21 @@
                 <children>
                     <Label maxWidth="190.0" minWidth="190.0" prefWidth="190.0" styleClass="title-label" text="Scanning Session" />
                     <HBox prefWidth="18.0" />
-                    <Button fx:id="btnStart" maxWidth="130.0" minWidth="130.0" onAction="#onStartScanning" prefWidth="130.0" styleClass="primary-button" text="▶  Start Scanning" />
-                    <Button fx:id="btnSlideView" minWidth="100.0" onAction="#onOpenSlideView" styleClass="secondary-button" text="⧉ Slide View" />
-                    <Button fx:id="btnStop" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onStopScanning" prefWidth="80.0" styleClass="danger-button" text="■  Stop" />
+                    <Button fx:id="btnStart" maxWidth="130.0" minWidth="130.0" onAction="#onStartScanning" prefWidth="130.0" styleClass="primary-button" text="&#9654;  Start Scanning" />
+                    <Button fx:id="btnSlideView" minWidth="100.0" onAction="#onOpenSlideView" styleClass="secondary-button" text="&#10063; Slide View" />
+                    <Button fx:id="btnStop" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onStopScanning" prefWidth="80.0" styleClass="danger-button" text="&#9632;  Stop" />
                     <Label styleClass="separator-label" text="|" />
                     <Label fx:id="lblTotalScans" minWidth="110.0" styleClass="page-info-label" text="Total Scans: 0" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnRotateLeft" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onRotateLeft" prefWidth="80.0" styleClass="secondary-button" text="↺ Left" />
-                    <Button fx:id="btnRotateRight" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onRotateRight" prefWidth="80.0" styleClass="secondary-button" text="↻ Right" />
+                    <Button fx:id="btnRotateLeft" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onRotateLeft" prefWidth="80.0" styleClass="secondary-button" text="&#8634; Left" />
+                    <Button fx:id="btnRotateRight" disable="true" maxWidth="80.0" minWidth="80.0" onAction="#onRotateRight" prefWidth="80.0" styleClass="secondary-button" text="&#8635; Right" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnDelete" disable="true" maxWidth="90.0" minWidth="90.0" onAction="#onDelete" prefWidth="90.0" styleClass="secondary-button" text="🗑 Delete" />
-                    <Button fx:id="btnSplit" minWidth="80.0" onAction="#onSplitDocument" styleClass="secondary-button" text="✂ Split" />
+                    <Button fx:id="btnDelete" disable="true" maxWidth="90.0" minWidth="90.0" onAction="#onDelete" prefWidth="90.0" styleClass="secondary-button" text="&#128465; Delete" />
+                    <Button fx:id="btnSplit" minWidth="80.0" onAction="#onSplitDocument" styleClass="secondary-button" text="&#9986; Split" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnPrev" disable="true" maxWidth="44.0" minWidth="44.0" onAction="#onPrev" prefWidth="44.0" styleClass="secondary-button" text="◀" />
+                    <Button fx:id="btnPrev" disable="true" maxWidth="44.0" minWidth="44.0" onAction="#onPrev" prefWidth="44.0" styleClass="secondary-button" text="&#9664;" />
                     <Label fx:id="lblPageInfo" minWidth="90.0" styleClass="page-info-label" text="Page 0 / 0" />
-                    <Button fx:id="btnNext" disable="true" maxWidth="44.0" minWidth="44.0" onAction="#onNext" prefWidth="44.0" styleClass="secondary-button" text="▶" />
+                    <Button fx:id="btnNext" disable="true" maxWidth="44.0" minWidth="44.0" onAction="#onNext" prefWidth="44.0" styleClass="secondary-button" text="&#9654;" />
                 </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="status-bar">
@@ -53,10 +53,15 @@
                     <Label text="Profile:" />
                     <ComboBox fx:id="cmbProfile" prefWidth="180.0" promptText="No profile selected" styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnExportSingle" disable="true" onAction="#onExportSinglePage" styleClass="secondary-button" text="⬇ Single-Page Export" />
-                    <Button fx:id="btnExportMulti" disable="true" onAction="#onExportMultiPage" styleClass="secondary-button" text="⬇ Multi-Page Export" />
+                    <Label text="Session Rotation:" />
+                    <ComboBox fx:id="cmbSessionRotation" prefWidth="80.0" styleClass="combo-box-default" />
                     <Label styleClass="separator-label" text="|" />
-                    <Button fx:id="btnMetadata" disable="true" onAction="#onOpenMetadata" styleClass="secondary-button" text="📋 Metadata" />
+                    <Button fx:id="btnExportSingle" disable="true" onAction="#onExportSinglePage" styleClass="secondary-button" text="&#11015; Single-Page Export" />
+                    <Button fx:id="btnExportMulti" disable="true" onAction="#onExportMultiPage" styleClass="secondary-button" text="&#11015; Multi-Page Export" />
+                    <Label styleClass="separator-label" text="|" />
+                    <Button fx:id="btnMetadata" disable="true" onAction="#onOpenMetadata" styleClass="secondary-button" text="&#128203; Metadata" />
+                    <Label styleClass="separator-label" text="|" />
+                    <Button fx:id="btnMarkQA" disable="true" onAction="#onMarkWaitingForQA" styleClass="secondary-button" text="&#9203; Waiting for QA" />
                 </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="status-bar">
@@ -81,7 +86,7 @@
                         <children>
                             <HBox alignment="CENTER_LEFT" spacing="10.0">
                                 <children>
-                                    <Button fx:id="btnBack" disable="true" onAction="#onBack" styleClass="secondary-button" text="← Back" />
+                                    <Button fx:id="btnBack" disable="true" onAction="#onBack" styleClass="secondary-button" text="&#8592; Back" />
                                     <Label fx:id="lblExplorerPath" styleClass="panel-header-label" text="Boxes" />
                                 </children>
                             </HBox>
