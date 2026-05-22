@@ -30,7 +30,6 @@ public class BoxSplitManager {
     public void split(Boxes box,
                       List<Files> pages,
                       int index,
-                      ScanningSessionManager session,
                       Runnable after)
     {
         if (index < 0 || index >= pages.size() - 1)
@@ -41,35 +40,60 @@ public class BoxSplitManager {
 
         try
         {
-            splitDocumentAt(box, index);
+            rebuildAndPersistSplit(box, index);
+            reloadIntoSession(box, pages);
 
-            Boxes reloaded = archiveService.loadBoxContent(box.getBoxId());
-            box.replaceContent(reloaded.getPages(), reloaded.getDocuments());
+            audit.log("SPLIT_DOCUMENT", "Document split at page index "
+                    + index + " in box " + box.getBoxId());
+
+            after.run();
+        }
+        catch (SQLException e)
+        {
+            uiManager.error("Split failed: ");
+        }
+    }
+
+    public void movePageToDocument(Boxes box,
+                                   List<Files> pages,
+                                   Files page,
+                                   Document targetDoc,
+                                   Runnable after)
+    {
+        int pageIndex = findPageIndex(pages, page);
+        int docIndex  = findDocumentIndex(box.getDocuments(), targetDoc);
+
+        if (pageIndex < 0) { uiManager.error("Could not find page.");             return; }
+        if (docIndex  < 0) { uiManager.error("Could not find target document."); return; }
+
+        try
+        {
+            scanningService.movePageToDocument(pageIndex, docIndex);
 
             pages.clear();
-            pages.addAll(box.getPages());
-            scanningService.loadSessionPages(pages);
+            pages.addAll(scanningService.getAllPages());
+            box.replaceContent(pages, scanningService.getDocuments());
 
-            audit.log("SPLIT_DOCUMENT", "Document split at page index " + index
+            if (page.getId() > 0)
+            {
+                persistPageMove(box.getBoxId(), page.getId(), targetDoc.getDocumentNumber());
+            }
+
+            audit.log("MOVE_PAGE", "Moved page " + page.getReferenceId()
+                    + " to document " + targetDoc.getDocumentNumber()
                     + " in box " + box.getBoxId());
 
             after.run();
         }
         catch (SQLException e)
         {
-            uiManager.error("Split failed: " + e.getMessage());
+            uiManager.error("Could not move page: " + e.getMessage());
         }
     }
 
-    private void splitDocumentAt(Boxes box, int splitIndex) throws SQLException
+    private void rebuildAndPersistSplit(Boxes box, int splitIndex) throws SQLException
     {
-        List<Files> pages = new ArrayList<>(box.getPages());
-
-        if (splitIndex < 0 || splitIndex >= pages.size() - 1)
-        {
-            throw new IllegalArgumentException("Cannot split at this position.");
-        }
-
+        List<Files>    pages    = new ArrayList<>(box.getPages());
         List<Document> existing = box.getDocuments();
         List<Document> rebuilt  = new ArrayList<>();
 
@@ -82,11 +106,9 @@ public class BoxSplitManager {
             Files page = pages.get(i);
             current.addPage(page);
 
-            boolean manualSplit  = (i == splitIndex);
-            boolean barcodeSplit = page.isBarcode();
-            boolean docBoundary  = isDocumentBoundary(existing, pages, i);
-
-            boolean shouldSplit  = manualSplit || barcodeSplit || docBoundary;
+            boolean shouldSplit = (i == splitIndex)
+                    || page.isBarcode()
+                    || isDocumentBoundary(existing, pages, i);
 
             if (shouldSplit && i < pages.size() - 1)
             {
@@ -99,27 +121,76 @@ public class BoxSplitManager {
         archiveService.saveBoxSnapshot(box);
     }
 
-    private boolean isDocumentBoundary(List<Document> documents, List<Files> pages, int pageIndex)
+    private boolean isDocumentBoundary(List<Document> documents,
+                                       List<Files> pages,
+                                       int pageIndex)
     {
         if (pageIndex >= pages.size() - 1) return false;
 
-        Files currentPage = pages.get(pageIndex);
-        Files nextPage    = pages.get(pageIndex + 1);
+        Files current = pages.get(pageIndex);
+        Files next    = pages.get(pageIndex + 1);
 
         for (Document doc : documents)
         {
             List<Files> docPages = doc.getPages();
             if (docPages.isEmpty()) continue;
 
-            Files lastPageOfDoc = docPages.get(docPages.size() - 1);
-
-            if (isSamePage(lastPageOfDoc, currentPage) && !isSamePage(lastPageOfDoc, nextPage))
+            Files last = docPages.get(docPages.size() - 1);
+            if (isSamePage(last, current) && !isSamePage(last, next))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private void persistPageMove(String boxId, int fileId, int toDocumentNumber)
+            throws SQLException
+    {
+        java.util.Optional<Integer> toDocId =
+                archiveService.getDocumentId(boxId, toDocumentNumber);
+
+        if (toDocId.isEmpty())
+        {
+            throw new SQLException("Target document not found: " + toDocumentNumber);
+        }
+
+        archiveService.updateFileDocument(fileId, toDocId.get());
+    }
+
+    private void reloadIntoSession(Boxes box, List<Files> pages) throws SQLException
+    {
+        Boxes reloaded = archiveService.loadBoxContent(box.getBoxId());
+        box.replaceContent(reloaded.getPages(), reloaded.getDocuments());
+        pages.clear();
+        pages.addAll(box.getPages());
+        scanningService.loadSessionPages(pages);
+    }
+
+    private int findPageIndex(List<Files> pages, Files page)
+    {
+        if (page.getId() > 0)
+        {
+            for (int i = 0; i < pages.size(); i++)
+            {
+                if (pages.get(i).getId() == page.getId()) return i;
+            }
+        }
+        return pages.indexOf(page);
+    }
+
+    private int findDocumentIndex(List<Document> documents, Document target)
+    {
+        for (int i = 0; i < documents.size(); i++)
+        {
+            Document doc = documents.get(i);
+            if (doc == target) return i;
+            if (doc.getId() > 0 && target.getId() > 0
+                    && doc.getId() == target.getId()) return i;
+            if (doc.getDocumentNumber() == target.getDocumentNumber()) return i;
+        }
+        return -1;
     }
 
     private boolean isSamePage(Files a, Files b)

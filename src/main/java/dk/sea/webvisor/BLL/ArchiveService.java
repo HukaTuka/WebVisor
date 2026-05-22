@@ -63,8 +63,14 @@ public class ArchiveService {
         return new ArrayList<>(archivesDAO.getAllArchives());
     }
 
-    public List<Archive> getArchivesByClient(int clientId) throws SQLException {
-        return new ArrayList<>(archivesDAO.getArchivesByClient(clientId));
+    public Optional<Integer> getDocumentId(String boxId, int documentNumber) throws SQLException
+    {
+        return documentsDAO.getDocumentId(boxId, documentNumber);
+    }
+
+    public void updateFileDocument(int fileId, int documentId) throws SQLException
+    {
+        filesDAO.updateFileDocument(fileId, documentId);
     }
 
     public Boxes loadBoxContent(String boxId) throws SQLException {

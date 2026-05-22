@@ -197,7 +197,24 @@ public class ScanningController
                 sessionManager::isRunning,
                 this::reorderPage,
                 this::openFile,
-                this::handleSelection
+                this::handleSelection,
+                this::movePageToDocument
+        );
+    }
+
+    private void movePageToDocument(Files page, Document targetDoc)
+    {
+        if (sessionManager.getSelectedBox() == null) return;
+
+        splitter.movePageToDocument(
+                sessionManager.getSelectedBox(),
+                sessionManager.getScannedPages(),
+                page,
+                targetDoc,
+                () -> {
+                    explorerTreeManager.expandBoxPreservingState(sessionManager.getSelectedBox());
+                    updateUI();
+                }
         );
     }
 
@@ -354,7 +371,6 @@ public class ScanningController
                 sessionManager.getSelectedBox(),
                 sessionManager.getScannedPages(),
                 navigation.getIndex(),
-                sessionManager,
                 () ->
                 {
                     showBoxes();

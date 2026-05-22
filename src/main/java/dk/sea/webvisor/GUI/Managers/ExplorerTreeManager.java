@@ -143,14 +143,57 @@ public class ExplorerTreeManager {
         treeView.setShowRoot(false);
     }
 
-    public void expandBox(Boxes box) {
+    public void expandBoxPreservingState(Boxes box)
+    {
+        TreeItem<Object> boxNode = findBoxNode(box.getBoxId());
+        if (boxNode == null)
+        {
+            expandBox(box);
+            return;
+        }
+
+        // Remember which document numbers were expanded before rebuild
+        java.util.Set<Integer> expandedDocNumbers = new java.util.HashSet<>();
+        for (TreeItem<Object> child : boxNode.getChildren())
+        {
+            if (child.isExpanded() && child.getValue() instanceof Document doc)
+            {
+                expandedDocNumbers.add(doc.getDocumentNumber());
+            }
+        }
+
+        // Rebuild the box  as normal
+        boxNode.getChildren().clear();
+        for (Document document : box.getDocuments())
+        {
+            TreeItem<Object> docNode = new TreeItem<>(document);
+
+            // Re-expand and re-populate documents that were open before
+            if (expandedDocNumbers.contains(document.getDocumentNumber()))
+            {
+                for (Files file : document.getPages())
+                {
+                    docNode.getChildren().add(new TreeItem<>(file));
+                }
+                docNode.setExpanded(true);
+            }
+
+            boxNode.getChildren().add(docNode);
+        }
+
+        boxNode.setExpanded(true);
+    }
+    public void expandBox(Boxes box)
+    {
         TreeItem<Object> node = findBoxNode(box.getBoxId());
-        if (node == null) {
+        if (node == null)
+        {
             return;
         }
 
         node.getChildren().clear();
-        for (Document document : box.getDocuments()) {
+        for (Document document : box.getDocuments())
+        {
             node.getChildren().add(new TreeItem<>(document));
         }
         node.setExpanded(true);
@@ -185,16 +228,17 @@ public class ExplorerTreeManager {
             BooleanSupplier runningSupplier,
             BiConsumer<Files, Files> onReorder,
             Consumer<Files> onSingleFileClick,
-            Runnable onDoubleClick
-    ) {
+            Runnable onDoubleClick,
+            BiConsumer<Files, Document> onMoveToDocument)
+    {
         AtomicReference<Files> draggedPage = new AtomicReference<>();
 
-        treeView.setCellFactory(tree -> new TreeCell<>() {
+        treeView.setCellFactory(tree -> new TreeCell<>()
+        {
             {
                 setOnDragDetected(ev -> {
-                    if (levelSupplier.get() == ScanningController.Level.FILES &&
-                            getItem() instanceof Files file &&
-                            !runningSupplier.getAsBoolean()) {
+                    if (getItem() instanceof Files file && !runningSupplier.getAsBoolean())
+                    {
                         draggedPage.set(file);
                         Dragboard db = startDragAndDrop(TransferMode.MOVE);
                         ClipboardContent cc = new ClipboardContent();
@@ -205,53 +249,72 @@ public class ExplorerTreeManager {
                 });
 
                 setOnDragOver(ev -> {
-                    if (draggedPage.get() != null &&
-                            getItem() instanceof Files target &&
-                            draggedPage.get() != target) {
-                        ev.acceptTransferModes(TransferMode.MOVE);
+                    if (draggedPage.get() != null)
+                    {
+                        if (getItem() instanceof Files target && draggedPage.get() != target)
+                        {
+                            ev.acceptTransferModes(TransferMode.MOVE);
+                            setStyle("-fx-background-color: derive(-fx-control-inner-background, -10%);");
+                        }
+                        else if (getItem() instanceof Document)
+                        {
+                            ev.acceptTransferModes(TransferMode.MOVE);
+                            setStyle("-fx-background-color: derive(-fx-control-inner-background, -10%);");
+                        }
+                        else
+                        {
+                            setStyle("");
+                        }
                     }
                 });
 
+                setOnDragExited(ev -> setStyle(""));
+
                 setOnDragDropped(ev -> {
-                    if (draggedPage.get() != null && getItem() instanceof Files target) {
-                        onReorder.accept(draggedPage.get(), target);
+                    setStyle("");
+                    if (draggedPage.get() != null)
+                    {
+                        if (getItem() instanceof Files target)
+                        {
+                            onReorder.accept(draggedPage.get(), target);
+                        }
+                        else if (getItem() instanceof Document targetDoc)
+                        {
+                            onMoveToDocument.accept(draggedPage.get(), targetDoc);
+                        }
                     }
                     ev.setDropCompleted(true);
                 });
 
-                setOnDragDone(ev -> draggedPage.set(null));
+                setOnDragDone(ev -> {
+                    setStyle("");
+                    draggedPage.set(null);
+                });
             }
 
             @Override
-            protected void updateItem(Object item, boolean empty) {
+            protected void updateItem(Object item, boolean empty)
+            {
                 super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    return;
-                }
-
-                if (item instanceof Boxes box) {
+                if (empty || item == null) { setText(null); return; }
+                if (item instanceof Boxes box)
                     setText(box.getBoxId() + " (" + box.getDocumentCount() + " docs, " + box.getFileCount() + " files)");
-                } else if (item instanceof Document document) {
-                    setText(document.toString());
-                } else if (item instanceof Files file) {
+                else if (item instanceof Document doc)
+                    setText(doc.toString());
+                else if (item instanceof Files file)
                     setText(file.isBarcode() ? file.getReferenceId() + " [BARCODE]" : file.getReferenceId());
-                }
             }
         });
 
         treeView.setOnMouseClicked(ev -> {
             if (ev.getButton() != MouseButton.PRIMARY) return;
-
             Object selected = getSelectedValue();
-            if (ev.getClickCount() == 1 && selected instanceof Files file) {
+            if (ev.getClickCount() == 1 && selected instanceof Files file)
+            {
                 onSingleFileClick.accept(file);
                 return;
             }
-            if (ev.getClickCount() == 2) {
-                onDoubleClick.run();
-            }
+            if (ev.getClickCount() == 2) onDoubleClick.run();
         });
     }
 
