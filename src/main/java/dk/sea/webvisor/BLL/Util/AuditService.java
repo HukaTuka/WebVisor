@@ -21,35 +21,18 @@ import java.sql.SQLException;
  */
 public class AuditService
 {
-
-    private static AuditService instance;
-
-    private AuditService()
-    {
-        try
-        {
-            auditDAO = new AuditDAO();
-        }
-        catch (IOException e)
-        {
-            System.err.println("[AuditService] Could not initialise AuditDAO: " + e.getMessage());
-        }
-    }
-
-    public static AuditService getInstance()
-    {
-        if (instance == null)
-        {
-            instance = new AuditService();
-        }
-        return instance;
-    }
-
-
     private final ObservableList<AuditEntry> entries = FXCollections.observableArrayList();
     private AuditDAO auditDAO;
     private String   currentUser = "anonymous";
 
+    public AuditService()
+    {
+        try {
+            auditDAO = new AuditDAO();
+        } catch (IOException e) {
+            System.err.println("AuditService Could not initialise AuditDAO: " + e.getMessage());
+        }
+    }
 
     /*
      Sets the currently logged-in user. Call immediately after a successful

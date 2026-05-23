@@ -27,7 +27,7 @@ public class LoginController
     private Label lblStatus;
 
     private final UserService userService;
-    private final AuditService audit = AuditService.getInstance();
+    private AuditService audit;
 
     public LoginController()
     {
@@ -44,15 +44,12 @@ public class LoginController
     @FXML
     private void onLogin()
     {
-        String username = txtUsername.getText();
-
         try
         {
             User user = userService.login(txtUsername.getText(), txtPassword.getText());
 
-            // ── Audit: successful login ───────────────────────────────────────
             audit.setCurrentUser(user.getUsername());
-            audit.log("Login", "User logged in successfully. Role: " + user.getRole().getDisplayName());
+            audit.log("Login", "User logged in. Role: " + user.getRole().getDisplayName());
 
             openMainPage(user);
         }
@@ -80,7 +77,7 @@ public class LoginController
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/MainPageView.fxml"));
             Parent mainPageRoot = loader.load();
             MainPageController mainPageController = loader.getController();
-            mainPageController.setUser(user);
+            mainPageController.setUser(user, audit);
 
             Scene currentScene = txtUsername.getScene();
             if (currentScene == null)

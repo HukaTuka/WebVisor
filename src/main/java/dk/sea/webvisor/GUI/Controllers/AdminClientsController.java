@@ -51,7 +51,7 @@ public class AdminClientsController
 
     private final ClientService clientService;
     private final ArchiveAdminService archiveAdminService;
-    private final AuditService audit = AuditService.getInstance();
+    private AuditService audit;
     private final ObservableList<Client> allClients = FXCollections.observableArrayList();
     private final Map<Integer, List<Archive>> archivesByClient = new HashMap<>();
     private FilteredList<Client> filteredClients;

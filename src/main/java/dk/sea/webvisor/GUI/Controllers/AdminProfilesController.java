@@ -40,7 +40,7 @@ public class AdminProfilesController
     @FXML private Button    btnCancel;
     @FXML private Label lblStatus;
     private final ProfileService profileService;
-    private final AuditService   audit = AuditService.getInstance();
+    private AuditService audit;
 
     private final ObservableList<Profile> allProfiles = FXCollections.observableArrayList();
     private FilteredList<Profile>         filteredProfiles;

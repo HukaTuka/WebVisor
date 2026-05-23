@@ -4,6 +4,7 @@ package dk.sea.webvisor.GUI.Controllers;
 import dk.sea.webvisor.BE.*;
 import dk.sea.webvisor.BLL.*;
 import dk.sea.webvisor.BLL.Util.AuditService;
+import dk.sea.webvisor.DAL.Interface.AuditAware;
 import dk.sea.webvisor.GUI.Managers.BoxSplitManager;
 import dk.sea.webvisor.GUI.Managers.DeleteManager;
 import dk.sea.webvisor.GUI.Managers.ExportManager;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ScanningController
+public class ScanningController implements AuditAware
 {
     public enum Level { BOXES, DOCUMENTS, FILES }
     private static final Client NO_CLIENT_OPTION = new Client(-1, "No client selected");
@@ -51,7 +52,7 @@ public class ScanningController
     private UserService userService;
     private BoxMetadataService boxMetadataService;
 
-    private final AuditService audit = AuditService.getInstance();
+    private AuditService audit;
     private UiManager uiManager;
     private PageNavigationManager navigation;
     private PageViewerManager pageViewerManager;
@@ -65,9 +66,9 @@ public class ScanningController
     private final List<Archive> allArchives = new ArrayList<>();
     private ScanningSessionManager sessionManager;
 
-    @FXML
-    private void initialize()
-    {
+    @Override
+    public void setAudit(AuditService audit){
+        this.audit = audit;
         initServices();
         initHelpers();
         loadInitialDropdowns();
@@ -75,6 +76,7 @@ public class ScanningController
         showBoxes();
         updateUI();
     }
+
 
     private void initServices()
     {

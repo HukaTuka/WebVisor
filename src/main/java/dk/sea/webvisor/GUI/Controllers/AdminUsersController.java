@@ -45,7 +45,7 @@ public class AdminUsersController
     private final UserService  userService;
     private final ProfileUserService profileUserService;
     private final ProfileService profileService;
-    private final AuditService audit = AuditService.getInstance();
+    private AuditService audit;
 
     private final ObservableList<User> allUsers = FXCollections.observableArrayList();
     private final ObservableList<Profile> allProfiles = FXCollections.observableArrayList();

@@ -5,6 +5,7 @@ import dk.sea.webvisor.BE.AuditEntry;
 import dk.sea.webvisor.BLL.Util.AuditService;
 
 // Java Imports
+import dk.sea.webvisor.DAL.Interface.AuditAware;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,7 +16,7 @@ import javafx.scene.control.*;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 
-public class AuditLogController
+public class AuditLogController implements AuditAware
 {
     @FXML private TableView<AuditEntry> tblAuditLog;
     @FXML private TableColumn<AuditEntry, String> colTimestamp;
@@ -29,23 +30,28 @@ public class AuditLogController
     @FXML private DatePicker dpFilterTo;
     @FXML private Label lblEntryCount;
 
-    private final AuditService auditService = AuditService.getInstance();
+    private AuditService audit;
 
     private FilteredList<AuditEntry> filteredEntries;
 
-    @FXML
-    private void initialize()
-    {
-        setupColumns();
+    @Override
+    public void setAudit(AuditService audit) {
+        this.audit = audit;
 
         // Load full history from DB, then wrap in a FilteredList for live filtering
-        auditService.loadFromDatabase();
-        filteredEntries = new FilteredList<>(auditService.getEntries(), e -> true);
+        this.audit.loadFromDatabase();
+        filteredEntries = new FilteredList<>(this.audit.getEntries(), e -> true);
         tblAuditLog.setItems(filteredEntries);
 
         populateActionCombo();
         filterListener();
         updateEntryCount();
+    }
+
+    @FXML
+    private void initialize()
+    {
+        setupColumns();
     }
 
     @FXML
@@ -101,7 +107,7 @@ public class AuditLogController
     {
         // Build the list of unique action names from whatever is already loaded
         ObservableList<String> actions = FXCollections.observableArrayList(
-                auditService.getEntries().stream()
+                audit.getEntries().stream()
                         .map(AuditEntry::getAction)
                         .distinct()
                         .sorted()
@@ -144,7 +150,7 @@ public class AuditLogController
     private void updateEntryCount()
     {
         int shown = filteredEntries.size();
-        int total = auditService.getEntries().size();
+        int total = audit.getEntries().size();
 
         if (shown == total)
         {

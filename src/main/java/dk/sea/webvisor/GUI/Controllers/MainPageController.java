@@ -6,6 +6,7 @@ import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.BE.UserRole;
 
 // Java Imports
+import dk.sea.webvisor.DAL.Interface.AuditAware;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,7 +27,7 @@ public class MainPageController
     @FXML
     private VBox userMenu;
 
-    private final AuditService audit = AuditService.getInstance();
+    private AuditService audit;
 
     @FXML
     private void initialize()
@@ -34,8 +35,10 @@ public class MainPageController
         showHome();
     }
 
-    public void setUser(User user)
+    public void setUser(User user, AuditService audit)
     {
+        this.audit = audit;
+
         // Hide menus first
         setVisible(adminMenu, false);
         setVisible(userMenu, false);
@@ -100,7 +103,9 @@ public class MainPageController
     {
         try
         {
-            Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            injectAudit(loader.getController());
             contentArea.getChildren().setAll(root);
         }
         catch (IOException e)
@@ -147,6 +152,12 @@ public class MainPageController
         catch (IOException e)
         {
             throw new IllegalStateException("Could not open login view.", e);
+        }
+    }
+
+    private void injectAudit(Object controller){
+        if (controller instanceof AuditAware a) {
+            a.setAudit(audit);
         }
     }
 }
