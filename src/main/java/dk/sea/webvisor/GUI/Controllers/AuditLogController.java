@@ -10,24 +10,24 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 public class AuditLogController
 {
-    @FXML private TableView<AuditEntry>        tblAuditLog;
+    @FXML private TableView<AuditEntry> tblAuditLog;
     @FXML private TableColumn<AuditEntry, String> colTimestamp;
     @FXML private TableColumn<AuditEntry, String> colUsername;
     @FXML private TableColumn<AuditEntry, String> colAction;
     @FXML private TableColumn<AuditEntry, String> colDetails;
 
-    @FXML private TextField         txtFilterUsername;
-    @FXML private ComboBox<String>  cmbFilterAction;
-    @FXML private Label             lblEntryCount;
+    @FXML private TextField txtFilterUsername;
+    @FXML private ComboBox<String> cmbFilterAction;
+    @FXML private DatePicker dpFilterFrom;
+    @FXML private DatePicker dpFilterTo;
+    @FXML private Label lblEntryCount;
 
     private final AuditService auditService = AuditService.getInstance();
 
@@ -44,6 +44,7 @@ public class AuditLogController
         tblAuditLog.setItems(filteredEntries);
 
         populateActionCombo();
+        filterListener();
         updateEntryCount();
     }
 
@@ -58,6 +59,8 @@ public class AuditLogController
     {
         txtFilterUsername.clear();
         cmbFilterAction.getSelectionModel().clearSelection();
+        dpFilterFrom.setValue(null);
+        dpFilterTo.setValue(null);
         applyFilters();
     }
 
@@ -78,6 +81,22 @@ public class AuditLogController
                 new SimpleStringProperty(data.getValue().getDetails()));
     }
 
+    //"listens" to the search filter and then filters without the need for an apply button
+    private void filterListener()
+    {
+        txtFilterUsername.textProperty().addListener((obs, o, n) -> applyFilters());
+        cmbFilterAction.valueProperty().addListener((obs, o, n) -> applyFilters());
+
+        if (dpFilterFrom != null) {
+            dpFilterFrom.valueProperty().addListener((obs, o, n) -> applyFilters());
+        }
+
+        if (dpFilterTo != null)
+        {
+            dpFilterTo.valueProperty().addListener((obs, o, n) -> applyFilters());
+        }
+    }
+
     private void populateActionCombo()
     {
         // Build the list of unique action names from whatever is already loaded
@@ -94,7 +113,9 @@ public class AuditLogController
     private void applyFilters()
     {
         String usernameFilter = txtFilterUsername.getText().trim().toLowerCase();
-        String actionFilter   = cmbFilterAction.getSelectionModel().getSelectedItem();
+        String actionFilter = cmbFilterAction.getSelectionModel().getSelectedItem();
+        LocalDate from = dpFilterFrom.getValue();
+        LocalDate to = dpFilterTo.getValue();
 
         filteredEntries.setPredicate(entry ->
         {
@@ -104,7 +125,17 @@ public class AuditLogController
             boolean matchesAction = actionFilter == null || actionFilter.isBlank()
                     || entry.getAction().equalsIgnoreCase(actionFilter);
 
-            return matchesUsername && matchesAction;
+            boolean afterFrom = true;
+            boolean beforeTo = true;
+
+            if (entry.getTimestamp() != null)
+            {
+                LocalDate entryDate = entry.getTimestamp().toLocalDate();
+                afterFrom = (from == null) || !entryDate.isBefore(from);
+                beforeTo = (to == null) || !entryDate.isAfter(to);
+            }
+
+            return matchesUsername && matchesAction && afterFrom && beforeTo;
         });
 
         updateEntryCount();

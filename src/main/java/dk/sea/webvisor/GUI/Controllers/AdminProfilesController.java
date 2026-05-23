@@ -182,8 +182,7 @@ public class AdminProfilesController
                     parseRotation()
             );
 
-            audit.log("Created profile", "Created profile: " + created.getName()
-                    + " | Rotation: " + created.getDefaultRotation() + "\u00b0");
+
 
             refreshProfiles();
             clearForm();
@@ -209,7 +208,6 @@ public class AdminProfilesController
                     parseRotation()
             );
 
-            audit.log("UPDATE_PROFILE", "Updated profile: " + editingProfile.getName());
 
             refreshProfiles();
             clearForm();
@@ -267,7 +265,6 @@ public class AdminProfilesController
 
             profileService.deleteProfile(profile.getId());
 
-            audit.log("Deleted profile", "Deleted profile: " + profile.getName());
 
             if (editingProfile != null && editingProfile.getId() == profile.getId())
             {

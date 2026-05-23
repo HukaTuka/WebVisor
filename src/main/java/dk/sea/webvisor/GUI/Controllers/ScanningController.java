@@ -317,7 +317,7 @@ public class ScanningController
             updateUI();
         }));
 
-        audit.log("SCAN_STARTED", "Started scanning box: " + sessionManager.getSelectedBox().getBoxId()
+        audit.log("Scan started", "Started scanning box: " + sessionManager.getSelectedBox().getBoxId()
                 + " | Profile: " + selectedProfile.getName()
                 + " | Session rotation: " + cmbSessionRotation.getValue() + "\u00b0");
     }
@@ -345,7 +345,7 @@ public class ScanningController
             scanningService.loadSessionPages(sessionManager.getScannedPages());
             explorerTreeManager.expandBox(sessionManager.getSelectedBox());
 
-            audit.log("SCAN_STOPPED", "Stopped scanning box: " + sessionManager.getSelectedBox().getBoxId());
+            audit.log("Scan stopped", "Stopped scanning box: " + sessionManager.getSelectedBox().getBoxId());
         }
         catch (SQLException e)
         {
@@ -441,7 +441,7 @@ public class ScanningController
             }
 
             uiManager.success("Document " + docToMark.getDocumentNumber() + " marked as Waiting for QA.");
-            audit.log("MARK_WAITING_FOR_QA", "Document " + docToMark.getDocumentNumber()
+            audit.log("Box marked for QA", "Document " + docToMark.getDocumentNumber()
                     + " in box " + sessionManager.getSelectedBox().getBoxId() + " marked as Waiting for QA.");
         }
         catch (SQLException e)

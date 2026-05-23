@@ -52,7 +52,7 @@ public class LoginController
 
             // ── Audit: successful login ───────────────────────────────────────
             audit.setCurrentUser(user.getUsername());
-            audit.log("LOGIN", "User logged in successfully. Role: " + user.getRole().getDisplayName());
+            audit.log("Login", "User logged in successfully. Role: " + user.getRole().getDisplayName());
 
             openMainPage(user);
         }

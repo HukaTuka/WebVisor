@@ -10,6 +10,7 @@
         <?import javafx.scene.layout.HBox?>
         <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.DatePicker?>
 <AnchorPane prefHeight="650.0" prefWidth="900.0" styleClass="root-pane"
             xmlns="http://javafx.com/javafx/24.0.1"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -39,6 +40,14 @@
                                   prefWidth="180.0"
                                   styleClass="filter-field"
                                   onAction="#onFilterChanged" />
+
+                        <DatePicker fx:id="dpFilterFrom"
+                                    promptText="From date"
+                                    prefWidth="150.0" />
+
+                        <DatePicker fx:id="dpFilterTo"
+                                    promptText="To date"
+                                    prefWidth="150.0" />
 
                         <Button text="Clear Filters"
                                 styleClass="sidebar-nav-button"

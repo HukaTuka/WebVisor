@@ -124,7 +124,7 @@ public class DeleteManager {
         archiveService.updatePageOrder(box.getBoxId(), scannedPages);
 
         uiManager.success("Page deleted: " + page.getReferenceId());
-        audit.log("Page delted", "Deleted page: " + page.getReferenceId());
+        audit.log("Page deleted", "Deleted page: " + page.getReferenceId());
 
         onRefresh.run();
     }

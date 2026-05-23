@@ -43,7 +43,7 @@ public class BoxSplitManager {
             rebuildAndPersistSplit(box, index);
             reloadIntoSession(box, pages);
 
-            audit.log("SPLIT_DOCUMENT", "Document split at page index "
+            audit.log("Split document manually", "Document split at page index "
                     + index + " in box " + box.getBoxId());
 
             after.run();
@@ -79,7 +79,7 @@ public class BoxSplitManager {
                 persistPageMove(box.getBoxId(), page.getId(), targetDoc.getDocumentNumber());
             }
 
-            audit.log("MOVE_PAGE", "Moved page " + page.getReferenceId()
+            audit.log("Page was moved", "Moved page " + page.getReferenceId()
                     + " to document " + targetDoc.getDocumentNumber()
                     + " in box " + box.getBoxId());
 
