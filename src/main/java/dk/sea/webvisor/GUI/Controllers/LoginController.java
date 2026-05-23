@@ -27,7 +27,7 @@ public class LoginController
     private Label lblStatus;
 
     private final UserService userService;
-    private AuditService audit;
+    private final AuditService audit = new AuditService();
 
     public LoginController()
     {

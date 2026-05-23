@@ -42,7 +42,7 @@ public class AdminMetadataController
     @FXML private Label       lblStatus;
 
     private final MetadataFieldService metadataFieldService;
-    private AuditService audit;
+    private final AuditService audit = new AuditService();
 
     private final ObservableList<MetadataField> allFields = FXCollections.observableArrayList();
     private FilteredList<MetadataField> filteredFields;

@@ -30,7 +30,7 @@ public class MetadataDialogController
 
     private final MetadataFieldService metadataFieldService;
     private final BoxMetadataService boxMetadataService;
-    private AuditService audit;
+    private final AuditService audit = new AuditService();
 
     private String boxId;
     private List<BoxMetadataEntry> entries;
