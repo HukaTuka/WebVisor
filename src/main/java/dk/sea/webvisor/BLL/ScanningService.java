@@ -18,6 +18,8 @@ public class ScanningService
 
     private final List<Document> documents = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger documentCounter = new AtomicInteger(0);
+    private final List<Files> pendingBuffer = new ArrayList<>();
+    private boolean firstBarcodeReceived = false;
 
     private boolean startNewDocumentOnNextPage = false;
 
@@ -35,25 +37,29 @@ public class ScanningService
         for (BufferedImage image : images) {
             boolean barcode = BarcodeDetector.isBarcode(image);
             Files page = new Files(pageCounter.incrementAndGet(), image, barcode);
-            pages.add(page);
-            newPages.add(page);
 
-            if (documents.isEmpty()) {
-                documents.add(new Document(0, documentCounter.incrementAndGet()));
+            //we make it so the scan starts with a barcode in the first document, it clears all the images that were buffered
+            if (!firstBarcodeReceived) {
+                if(barcode){
+                    firstBarcodeReceived = true;
+                    pendingBuffer.clear();
+                    //reset the page counter to 1 so we start with scan 1
+                    pageCounter.set(0);
+                    page = new Files(pageCounter.incrementAndGet(), image, barcode);
+                    pages.add(page);
+                    newPages.add(page);
+                } else {
+                    pendingBuffer.add(page);
+                }
+            } else {
+                if (barcode) {
+                    documents.add(new Document(0, documentCounter.incrementAndGet()));
+                }
+                pages.add(page);
+                newPages.add(page);
             }
-
-            if (startNewDocumentOnNextPage) {
-                documents.add(new Document(0, documentCounter.incrementAndGet()));
-                startNewDocumentOnNextPage = false;
-            }
-
-            documents.get(documents.size() - 1).addPage(page);
-
-            if (barcode) {
-                startNewDocumentOnNextPage = true;
-            }
+            rebuildDocumentsFromPages();
         }
-
         return newPages;
     }
 
@@ -71,6 +77,8 @@ public class ScanningService
         pageCounter.set(0);
         documentCounter.set(0);
         startNewDocumentOnNextPage = false;
+        firstBarcodeReceived = false;
+        pendingBuffer.clear();
     }
 
     public List<Document> getDocuments() {
@@ -258,18 +266,13 @@ public class ScanningService
 
         for (Files page : pages)
         {
-            if (current == null)
+            if (current == null || page.isBarcode())
             {
                 current = new Document(0, rebuilt.size() + 1);
                 rebuilt.add(current);
             }
 
             current.addPage(page);
-
-            if (page.isBarcode())
-            {
-                current = null;
-            }
         }
 
         synchronized (documents)
@@ -279,8 +282,7 @@ public class ScanningService
         }
 
         documentCounter.set(rebuilt.size());
-        startNewDocumentOnNextPage =
-                !pages.isEmpty() && pages.get(pages.size() - 1).isBarcode();
+        startNewDocumentOnNextPage = false;
     }
 
     public int getPageCount()

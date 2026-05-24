@@ -183,6 +183,12 @@ public class ArchiveService {
         }
     }
 
+    //deletes all files in the box when a new scan starts, might not be needed for weblager
+    public void deleteAllContentsForBox(String boxId) throws SQLException {
+        filesDAO.deleteFilesByBox(boxId);
+        documentsDAO.deleteDocumentsByBox(boxId);
+    }
+
     /**
      * Updates the status of a document in the database.
      *

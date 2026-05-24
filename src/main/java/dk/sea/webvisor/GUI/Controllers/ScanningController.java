@@ -298,7 +298,14 @@ public class ScanningController implements AuditAware
             return;
         }
 
-        sessionManager.prepareStartScanning(scanningService);
+
+        try {
+            sessionManager.prepareStartScanning(scanningService, archiveService);
+        } catch (SQLException e) {
+            uiManager.error("Could not clear box before scanning" + e.getMessage());
+            return;
+        }
+
         updateUI();
 
         polling.start(newPages -> Platform.runLater(() ->

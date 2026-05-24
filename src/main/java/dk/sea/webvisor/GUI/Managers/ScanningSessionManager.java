@@ -88,8 +88,13 @@ public class ScanningSessionManager {
         return true;
     }
 
-    public void prepareStartScanning(ScanningService scanningService) {
+    public void prepareStartScanning(ScanningService scanningService, ArchiveService archiveService) throws SQLException {
         running = true;
+
+        if (selectedBox != null) {
+            archiveService.deleteAllContentsForBox(selectedBox.getBoxId());
+        }
+
         scannedPages.clear();
         scanningService.clearSession();
         selectedDocument = null;
