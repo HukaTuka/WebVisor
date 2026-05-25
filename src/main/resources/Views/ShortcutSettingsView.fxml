@@ -39,17 +39,14 @@
         <Label styleClass="panel-header-label" text="Page Navigation &amp; Rotation" />
         <GridPane hgap="16.0" vgap="8.0">
             <children>
-                <Label GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="page-info-label" text="A" />
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="page-info-label" text="A / ←" />
                 <Label GridPane.columnIndex="1" GridPane.rowIndex="0" text="Previous page" />
-
-                <Label GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="page-info-label" text="D" />
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="page-info-label" text="D / →" />
                 <Label GridPane.columnIndex="1" GridPane.rowIndex="1" text="Next page" />
-
-                <Label GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="page-info-label" text="Q" />
-                <Label GridPane.columnIndex="1" GridPane.rowIndex="2" text="Rotate left" />
-
-                <Label GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="page-info-label" text="E" />
-                <Label GridPane.columnIndex="1" GridPane.rowIndex="3" text="Rotate right" />
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="page-info-label" text="Q" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="4" text="Rotate left" />
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="page-info-label" text="E" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="5" text="Rotate right" />
             </children>
         </GridPane>
 
@@ -72,7 +69,7 @@
         </GridPane>
 
         <Separator />
-        <Label styleClass="status-info" text="Note: Shortcuts are disabled while typing in input fields." />
+        <Label styleClass="status-info" text="Note: Shortcuts are disabled while typing in input fields. In selection fields, use Tab to move and Enter to confirm and continue." />
     </children>
 </VBox>
 

@@ -76,7 +76,17 @@ public class ShortcutManager {
             event.consume();
             return;
         }
+        if (code == KeyCode.LEFT) {
+            onPrev.run();
+            event.consume();
+            return;
+        }
         if (code == KeyCode.D) {
+            onNext.run();
+            event.consume();
+            return;
+        }
+        if (code == KeyCode.RIGHT) {
             onNext.run();
             event.consume();
             return;

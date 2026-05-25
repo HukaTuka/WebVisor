@@ -23,6 +23,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -77,6 +79,7 @@ public class ScanningController implements AuditAware
         initServices();
         initHelpers();
         loadInitialDropdowns();
+        setupSelectionFieldKeyboardUX();
         setupTreeView();
         setupShortcuts();
         showBoxes();
@@ -195,6 +198,46 @@ public class ScanningController implements AuditAware
                 this::handleSelection,
                 this::movePageToDocument
         );
+    }
+
+    private void setupSelectionFieldKeyboardUX() {
+        configureSelectionCombo(cmbClient, cmbArchive);
+        configureSelectionCombo(cmbArchive, cmbProfile);
+        configureSelectionCombo(cmbProfile, cmbSessionRotation);
+        configureSelectionCombo(cmbSessionRotation, txtBoxId);
+    }
+
+    private void configureSelectionCombo(ComboBox<?> combo, Control nextControl) {
+        if (combo == null) {
+            return;
+        }
+
+        combo.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.DOWN) {
+                if (!combo.isShowing()) {
+                    combo.show();
+                    if (combo.getSelectionModel().getSelectedIndex() < 0 && !combo.getItems().isEmpty()) {
+                        combo.getSelectionModel().selectFirst();
+                    }
+                    event.consume();
+                    return;
+                }
+
+                if (combo.getSelectionModel().getSelectedIndex() < 0 && !combo.getItems().isEmpty()) {
+                    combo.getSelectionModel().selectFirst();
+                    event.consume();
+                    return;
+                }
+            }
+
+            if (event.getCode() == KeyCode.ENTER) {
+                combo.hide();
+                if (nextControl != null) {
+                    Platform.runLater(nextControl::requestFocus);
+                }
+                event.consume();
+            }
+        });
     }
 
     private void setupShortcuts()

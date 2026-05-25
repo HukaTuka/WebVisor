@@ -28,8 +28,9 @@
                             <Region maxWidth="-Infinity" prefHeight="25.0" prefWidth="114.0" HBox.hgrow="ALWAYS" />
                             <Button fx:id="btnStart" minWidth="121.0" onAction="#onStartScanning" prefHeight="25.0" prefWidth="121.0" styleClass="primary-button" text="▶ Start (F1)" />
                             <Button fx:id="btnStop" disable="true" minWidth="124.0" onAction="#onStopScanning" prefHeight="25.0" prefWidth="124.0" styleClass="danger-button" text="■ Stop (F2)" />
+                            <Label styleClass="separator-label" text="|" />
                             <Button fx:id="btnSlideView" minWidth="120.0" onAction="#onOpenSlideView" prefHeight="25.0" prefWidth="134.0" styleClass="secondary-button" text="⧉ Slide (V)" />
-                            <Button fx:id="btnSettings" minWidth="135.0" onAction="#onOpenShortcutSettings" prefHeight="25.0" prefWidth="150.0" styleClass="secondary-button" text="Settings (F10)" />
+                            <Button fx:id="btnSettings" minWidth="135.0" onAction="#onOpenShortcutSettings" prefHeight="25.0" prefWidth="146.0" styleClass="secondary-button" text="Settings (F10)" />
                             <Label fx:id="lblTotalScans" minWidth="126.0" prefHeight="17.0" prefWidth="126.0" styleClass="page-info-label" text="Total Scans: 0" />
                         </children>
                     </HBox>
@@ -85,14 +86,12 @@
                     <Button fx:id="btnMarkQA" disable="true" onAction="#onMarkWaitingForQA" styleClass="secondary-button" text="⏳ Waiting for QA" />
                 </children>
             </HBox>
-            <HBox fx:id="rejectionBanner" alignment="CENTER_LEFT" spacing="8.0"
-                  visible="false" managed="false"
-                  style="-fx-background-color: #fdf0f0; -fx-border-color: #d73a49; -fx-border-width: 1 0 1 0;">
+            <HBox fx:id="rejectionBanner" alignment="CENTER_LEFT" managed="false" spacing="8.0" style="-fx-background-color: #fdf0f0; -fx-border-color: #d73a49; -fx-border-width: 1 0 1 0;" visible="false">
                 <padding>
-                    <Insets top="6.0" right="16.0" bottom="6.0" left="16.0"/>
+                    <Insets bottom="6.0" left="16.0" right="16.0" top="6.0" />
                 </padding>
-                <Label text="⚠ Rejected:" styleClass="status-error" style="-fx-font-weight: bold;"/>
-                <Label fx:id="lblRejectionNote" styleClass="status-error" wrapText="true" HBox.hgrow="ALWAYS"/>
+                <Label style="-fx-font-weight: bold;" styleClass="status-error" text="⚠ Rejected:" />
+                <Label fx:id="lblRejectionNote" styleClass="status-error" wrapText="true" HBox.hgrow="ALWAYS" />
             </HBox>
 
             <HBox spacing="0.0" VBox.vgrow="ALWAYS">
