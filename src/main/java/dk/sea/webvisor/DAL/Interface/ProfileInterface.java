@@ -15,4 +15,5 @@ public interface ProfileInterface {
     List<Profile> getAllProfiles() throws SQLException;
     List<Integer> getUserIdsAssignedToProfile(int profileId) throws SQLException;
     List<String> getUsernamesAssignedToProfile(int profileId) throws SQLException;
+    List<Profile> getProfilesByClient(int clientId) throws SQLException;
 }

@@ -1,7 +1,9 @@
 package dk.sea.webvisor.GUI.Controllers;
 
 // Project Imports
+import dk.sea.webvisor.BE.Client;
 import dk.sea.webvisor.BE.Profile;
+import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.BLL.ProfileService;
 import dk.sea.webvisor.BLL.Util.AuditService;
 
@@ -10,19 +12,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +35,9 @@ public class AdminProfilesController
     @FXML private Button    btnSave;
     @FXML private Button    btnCancel;
     @FXML private Label lblStatus;
+    @FXML private ComboBox<Client> cmbClient;
+    private final ArchiveService archiveService;
+
     private final ProfileService profileService;
     private final AuditService audit = new AuditService();
 
@@ -49,9 +48,11 @@ public class AdminProfilesController
 
     public AdminProfilesController()
     {
+
         try
         {
             this.profileService = new ProfileService();
+            this.archiveService = new ArchiveService();
         }
         catch (IOException e)
         {
@@ -60,12 +61,12 @@ public class AdminProfilesController
     }
 
     @FXML
-    private void initialize()
-    {
+    private void initialize() throws SQLException {
         setCancelVisible(false);
         setupColumns();
         setupDoubleClick();
         refreshProfiles();
+        loadClients();
     }
 
     private void setupColumns()
@@ -179,7 +180,8 @@ public class AdminProfilesController
         {
             Profile created = profileService.createProfile(
                     txtName.getText(),
-                    parseRotation()
+                    parseRotation(),
+                    getSelectedClientId()
             );
 
 
@@ -205,7 +207,8 @@ public class AdminProfilesController
             profileService.updateProfile(
                     editingProfile.getId(),
                     txtName.getText(),
-                    parseRotation()
+                    parseRotation(),
+                    getSelectedClientId()
             );
 
 
@@ -292,6 +295,10 @@ public class AdminProfilesController
 
         lblFormHeading.setText("Edit Profile: " + profile.getName());
         btnSave.setText("Save Changes");
+        cmbClient.getItems().stream()
+                        .filter(c -> c.getId() == profile.getId())
+                                .findFirst()
+                                        .ifPresent(cmbClient::setValue);
         setCancelVisible(true);
 
         showStatus("Editing profile: " + profile.getName(), "status-info");
@@ -305,6 +312,7 @@ public class AdminProfilesController
 
         lblFormHeading.setText("Create New Profile");
         btnSave.setText("Create Profile");
+        cmbClient.getSelectionModel().selectFirst();
         setCancelVisible(false);
 
         tblProfiles.getSelectionModel().clearSelection();
@@ -350,6 +358,20 @@ public class AdminProfilesController
             throw new IllegalArgumentException(
                     "Rotation must be a whole number (e.g. 0, 90, 180, 270).");
         }
+    }
+
+    private void loadClients() throws SQLException {
+        Client noClient = new Client(-1, "No client");
+        List<Client> clients = new ArrayList<>();
+        clients.add(noClient);
+        clients.addAll(archiveService.getAllClients());
+        cmbClient.setItems(FXCollections.observableArrayList(clients));
+        cmbClient.setValue(noClient);
+    }
+
+    private int getSelectedClientId() {
+        Client selected = cmbClient.getValue();
+        return selected != null && selected.getId() > 0 ? selected.getId() : 0;
     }
 
     private void setCancelVisible(boolean visible)

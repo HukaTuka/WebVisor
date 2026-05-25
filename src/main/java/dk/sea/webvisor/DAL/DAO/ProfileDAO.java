@@ -23,8 +23,8 @@ public class ProfileDAO implements ProfileInterface
     public Profile createProfile(Profile profile) throws SQLException
     {
         String sql = """
-                INSERT INTO dbo.Profiles (Name, SplitOnBarcode, DefaultRotation)
-                VALUES (?, ?, ?)
+                INSERT INTO dbo.Profiles (Name, SplitOnBarcode, DefaultRotation, ClientID)
+                VALUES (?, ?, ?, ?)
                 """;
 
         try (Connection connection = DBConnector.getConnection();
@@ -33,6 +33,10 @@ public class ProfileDAO implements ProfileInterface
             statement.setString(1, profile.getName());
             statement.setBoolean(2, profile.isSplitOnBarcode());
             statement.setInt(3, profile.getDefaultRotation());
+            if (profile.getClientId() > 0)
+                statement.setInt(4, profile.getClientId());
+            else
+                statement.setNull(4, Types.INTEGER);
             statement.executeUpdate();
 
             try (ResultSet keys = statement.getGeneratedKeys())
@@ -44,7 +48,8 @@ public class ProfileDAO implements ProfileInterface
                             generatedId,
                             profile.getName(),
                             profile.isSplitOnBarcode(),
-                            profile.getDefaultRotation()
+                            profile.getDefaultRotation(),
+                            profile.getClientId()
                     );
                 }
             }
@@ -60,7 +65,8 @@ public class ProfileDAO implements ProfileInterface
                 UPDATE dbo.Profiles
                 SET Name            = ?,
                     SplitOnBarcode  = ?,
-                    DefaultRotation = ?
+                    DefaultRotation = ?,
+                    ClientID = ?
                 WHERE ID = ?
                 """;
 
@@ -70,7 +76,11 @@ public class ProfileDAO implements ProfileInterface
             statement.setString(1, profile.getName());
             statement.setBoolean(2, profile.isSplitOnBarcode());
             statement.setInt(3, profile.getDefaultRotation());
-            statement.setInt(4, profile.getId());
+            if (profile.getClientId() > 0)
+                statement.setInt(4, profile.getClientId());
+            else
+                statement.setNull(4, Types.INTEGER);
+            statement.setInt(5, profile.getId());
             statement.executeUpdate();
         }
     }
@@ -117,7 +127,7 @@ public class ProfileDAO implements ProfileInterface
     public List<Profile> getAllProfiles() throws SQLException
     {
         String sql = """
-                SELECT ID, Name, SplitOnBarcode, DefaultRotation
+                SELECT ID, Name, SplitOnBarcode, DefaultRotation, ISNULL(ClientID, 0) AS ClientID
                 FROM dbo.Profiles
                 ORDER BY Name
                 """;
@@ -188,13 +198,37 @@ public class ProfileDAO implements ProfileInterface
         return names;
     }
 
+    @Override
+    public List<Profile> getProfilesByClient(int clientId) throws SQLException
+    {
+        String sql = """
+            SELECT ID, Name, SplitOnBarcode, DefaultRotation, ISNULL(ClientID, 0) AS ClientID
+            FROM dbo.Profiles
+            WHERE ClientID = ?
+            ORDER BY Name
+            """;
+
+        List<Profile> profiles = new ArrayList<>();
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setInt(1, clientId);
+            try (ResultSet rs = statement.executeQuery())
+            {
+                while (rs.next()) profiles.add(mapRow(rs));
+            }
+        }
+        return profiles;
+    }
+
     private Profile mapRow(ResultSet rs) throws SQLException
     {
         return new Profile(
                 rs.getInt("ID"),
                 rs.getString("Name"),
                 rs.getBoolean("SplitOnBarcode"),
-                rs.getInt("DefaultRotation")
+                rs.getInt("DefaultRotation"),
+                rs.getInt("ClientID")
         );
     }
 }

@@ -30,11 +30,11 @@ public class ProfileService
      * @throws IllegalArgumentException if validation fails.
      * @throws SQLException             if the database operation fails.
      */
-    public Profile createProfile(String name, int rotationDegrees) throws SQLException
+    public Profile createProfile(String name, int rotationDegrees, int clientId) throws SQLException
     {
         validateName(name);
         int normalised = Profile.normaliseRotation(rotationDegrees);
-        Profile profile = new Profile(0, name.trim(), true, normalised);
+        Profile profile = new Profile(0, name.trim(), true, normalised, clientId);
         return profileDAO.createProfile(profile);
     }
 
@@ -45,7 +45,7 @@ public class ProfileService
      * @throws IllegalArgumentException if validation fails or the ID is invalid.
      * @throws SQLException             if the database operation fails.
      */
-    public void updateProfile(int profileId, String name, int rotationDegrees) throws SQLException
+    public void updateProfile(int profileId, String name, int rotationDegrees, int clientId) throws SQLException
     {
         if (profileId <= 0)
         {
@@ -54,7 +54,7 @@ public class ProfileService
 
         validateName(name);
         int normalised = Profile.normaliseRotation(rotationDegrees);
-        Profile profile = new Profile(profileId, name.trim(), true, normalised);
+        Profile profile = new Profile(profileId, name.trim(), true, normalised, clientId);
         profileDAO.updateProfile(profile);
     }
 
@@ -105,5 +105,10 @@ public class ProfileService
         {
             throw new IllegalArgumentException("Profile name must not exceed 100 characters.");
         }
+    }
+
+    public List<Profile> getProfilesByClient(int clientId) throws SQLException
+    {
+        return profileDAO.getProfilesByClient(clientId);
     }
 }

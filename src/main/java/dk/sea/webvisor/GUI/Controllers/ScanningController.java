@@ -151,21 +151,7 @@ public class ScanningController implements AuditAware
             cmbArchive.setItems(FXCollections.observableArrayList());
             cmbArchive.setDisable(true);
 
-            List<Profile> profilesForDropdown = new ArrayList<>(profileService.getAllProfiles());
-            String currentUsername = audit.getCurrentUser();
-            if (currentUsername != null && !currentUsername.isBlank())
-            {
-                Optional<User> currentUser = userService.getUserByUsername(currentUsername);
-                if (currentUser.isPresent() && currentUser.get().getRole() != UserRole.UserAdmin)
-                {
-                    List<Profile> assignedProfiles = profileUserService.getProfilesForUser(currentUser.get().getId());
-                    if (!assignedProfiles.isEmpty())
-                    {
-                        profilesForDropdown = assignedProfiles;
-                    }
-                }
-            }
-            cmbProfile.setItems(FXCollections.observableArrayList(profilesForDropdown));
+            refreshProfilesForClient(cmbClient.getValue());
         }
         catch (SQLException e)
         {
@@ -176,6 +162,7 @@ public class ScanningController implements AuditAware
         {
             sessionManager.clearSelectionAndPages(navigation, scanningService);
             explorerTreeManager.refreshArchivesForClient(cmbArchive, allArchives, val);
+            refreshProfilesForClient(val);
             showBoxes();
             updateUI();
         });
@@ -686,6 +673,44 @@ public class ScanningController implements AuditAware
         catch (Exception e)
         {
             uiManager.error("Could not create box: " + e.getMessage());
+        }
+    }
+
+    private void refreshProfilesForClient(Client client)
+    {
+        try
+        {
+            List<Profile> profiles;
+
+            if (client == null || client.getId() < 0)
+            {
+                // No client selected — show all profiles
+                profiles = new ArrayList<>(profileService.getAllProfiles());
+            }
+            else
+            {
+                profiles = new ArrayList<>(profileService.getProfilesByClient(client.getId()));
+            }
+
+            // Still filter by user if not admin
+            String currentUsername = audit.getCurrentUser();
+            if (currentUsername != null && !currentUsername.isBlank())
+            {
+                Optional<User> currentUser = userService.getUserByUsername(currentUsername);
+                if (currentUser.isPresent() && currentUser.get().getRole() != UserRole.UserAdmin)
+                {
+                    List<Profile> assignedToUser = profileUserService.getProfilesForUser(currentUser.get().getId());
+                    profiles.retainAll(assignedToUser);
+
+                }
+            }
+
+            cmbProfile.setItems(FXCollections.observableArrayList(profiles));
+            cmbProfile.setValue(null);
+        }
+        catch (SQLException e)
+        {
+            uiManager.error("Could not load profiles: " + e.getMessage());
         }
     }
 }

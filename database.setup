@@ -46,8 +46,8 @@ VALUES (4, 'jonlinnet', 'pbkdf2$65536$AlG8lMuqrB4D6RPswdI2/A==$unw2oE0fQ/Av4cYhG
 CREATE TABLE Profiles (
     ID INT PRIMARY KEY IDENTITY(1,1),
     Name VARCHAR(100) NOT NULL,
-    SplitOnBarcode BIT NOT NULL DEFAULT 1,
     DefaultRotation INT NOT NULL DEFAULT 0
+    FOREIGN KEY (ClientID) REFERENCES Clients(ID)
 );
 
 CREATE TABLE UserProfiles (

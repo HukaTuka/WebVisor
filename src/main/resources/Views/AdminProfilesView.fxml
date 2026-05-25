@@ -11,6 +11,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ComboBox?>
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -66,6 +67,12 @@
                         <TextField fx:id="txtRotation" promptText="e.g. 0, 90, 180, 270"
                                    styleClass="input-field" text="0"
                                    GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <Label text="Client:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <ComboBox fx:id="cmbClient"
+                                  promptText="No client assigned"
+                                  prefWidth="280.0"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="2"/>
                     </children>
                 </GridPane>
 

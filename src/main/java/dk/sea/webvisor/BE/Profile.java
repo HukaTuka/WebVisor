@@ -5,12 +5,19 @@ public class Profile {
     private String name;
     private boolean splitOnBarcode;
     private int defaultRotation;
+    private int clientId;
 
-    public Profile(int id, String name, boolean splitOnBarcode, int defaultRotation) {
+    public Profile(int id, String name, boolean splitOnBarcode, int defaultRotation, int clientId) {
         this.id = id;
         this.name = name;
         this.splitOnBarcode = splitOnBarcode;
         this.defaultRotation = normaliseRotation(defaultRotation);
+        this.clientId = clientId;
+    }
+
+    //keeping old constructor as to not break anything
+    public Profile(int id, String name, boolean splitOnBarcode, int defaultRotation) {
+        this(id, name, splitOnBarcode, defaultRotation, 0);
     }
 
     public int getId() {
@@ -47,6 +54,26 @@ public class Profile {
 
     public static int normaliseRotation(int degrees){
         return ((degrees % 360) + 360) % 360;
+    }
+
+    public int getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(int clientId) {
+        this.clientId = clientId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Profile other)) return false;
+        return this.id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
     }
 
     @Override
