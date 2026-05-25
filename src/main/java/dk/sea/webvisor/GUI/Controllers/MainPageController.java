@@ -54,7 +54,7 @@ public class MainPageController
             setVisible(userMenu, true);
         }
 
-        showHome();
+        onOpenScanning();
     }
 
     @FXML
