@@ -14,7 +14,9 @@ public interface DocumentsInterface
     int createDocument(String boxId, int documentNumber) throws SQLException;
     Optional<Integer> getDocumentId(String boxId, int documentNumber) throws SQLException;
     List<Document> getDocumentsByBox(String boxId) throws SQLException;
+    List<Document> getDocumentsByStatus(DocumentStatus status) throws SQLException;
     void deleteDocument(int documentId) throws SQLException;
     void deleteDocumentsByBox(String boxId) throws SQLException;
     void updateDocumentStatus(int documentId, DocumentStatus status) throws SQLException;
+    void updateRejectionNote(int documentId, String note) throws SQLException;
 }

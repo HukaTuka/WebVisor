@@ -4,7 +4,8 @@ public enum DocumentStatus
 {
     IN_PROGRESS("In Progress"),
     WAITING_FOR_QA("Waiting for QA"),
-    QA_COMPLETED("QA Completed");
+    QA_COMPLETED("QA Completed"),
+    REJECTED("Rejected");
 
     private final String displayName;
 

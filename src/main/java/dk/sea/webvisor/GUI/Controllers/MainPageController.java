@@ -26,6 +26,8 @@ public class MainPageController
     private VBox adminMenu;
     @FXML
     private VBox userMenu;
+    @FXML
+    private VBox qaMenu;
 
     private AuditService audit;
 
@@ -42,12 +44,19 @@ public class MainPageController
         // Hide menus first
         setVisible(adminMenu, false);
         setVisible(userMenu, false);
+        setVisible(qaMenu, false);
 
         // Admin gets both menus, scanner gets user menu only
         if (user.getRole() == UserRole.UserAdmin)
         {
             setVisible(adminMenu, true);
             setVisible(userMenu, true);
+            setVisible(qaMenu, true);
+
+        }
+        else if (user.getRole() == UserRole.UserQA)
+        {
+            setVisible(qaMenu, true);
         }
         else
         {
@@ -55,6 +64,12 @@ public class MainPageController
         }
 
         showHome();
+    }
+
+    @FXML
+    private void onOpenQAReview()
+    {
+        openView("/Views/QAView.fxml");
     }
 
     @FXML

@@ -20,6 +20,11 @@
                                 <Button onAction="#onOpenScanning" styleClass="sidebar-nav-button" text="Scanning" />
                             </children>
                         </VBox>
+                        <VBox fx:id="qaMenu" spacing="8.0">
+                            <children>
+                                <Button onAction="#onOpenQAReview" styleClass="sidebar-nav-button" text="QA Review"/>
+                            </children>
+                        </VBox>
                         <VBox fx:id="adminMenu" spacing="8.0">
                             <children>
                                 <Button onAction="#onOpenAdminUsers" styleClass="sidebar-nav-button" text="Manage Users" />

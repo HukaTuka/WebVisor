@@ -81,11 +81,11 @@ public class DocumentsDAO implements DocumentsInterface
     public List<Document> getDocumentsByBox(String boxId) throws SQLException
     {
         String sql = """
-                SELECT ID, DocumentNumber, Status
-                FROM dbo.Documents
-                WHERE BoxID = ?
-                ORDER BY DocumentNumber
-                """;
+            SELECT ID, DocumentNumber, Status, RejectionNote
+            FROM dbo.Documents
+            WHERE BoxID = ?
+            ORDER BY DocumentNumber
+            """;
 
         List<Document> documents = new ArrayList<>();
 
@@ -103,12 +103,70 @@ public class DocumentsDAO implements DocumentsInterface
                             rs.getInt("DocumentNumber")
                     );
                     document.setStatus(DocumentStatus.fromString(rs.getString("Status")));
+                    document.setBoxId(boxId);
+                    String note = rs.getString("RejectionNote");
+                    document.setRejectionNote(note == null ? "" : note);
                     documents.add(document);
                 }
             }
         }
 
         return documents;
+    }
+
+    @Override
+    public List<Document> getDocumentsByStatus(DocumentStatus status) throws SQLException
+    {
+        String sql = """
+            SELECT ID, BoxID, DocumentNumber, Status, RejectionNote
+            FROM dbo.Documents
+            WHERE Status = ?
+            ORDER BY BoxID, DocumentNumber
+            """;
+
+        List<Document> documents = new ArrayList<>();
+
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setString(1, status.name());
+
+            try (ResultSet rs = statement.executeQuery())
+            {
+                while (rs.next())
+                {
+                    Document document = new Document(
+                            rs.getInt("ID"),
+                            rs.getInt("DocumentNumber")
+                    );
+                    document.setStatus(DocumentStatus.fromString(rs.getString("Status")));
+                    document.setBoxId(rs.getString("BoxID"));
+                    String note = rs.getString("RejectionNote");
+                    document.setRejectionNote(note == null ? "" : note);
+                    documents.add(document);
+                }
+            }
+        }
+
+        return documents;
+    }
+
+    @Override
+    public void updateRejectionNote(int documentId, String note) throws SQLException
+    {
+        String sql = """
+            UPDATE dbo.Documents
+            SET RejectionNote = ?
+            WHERE ID = ?
+            """;
+
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setString(1, note == null ? "" : note.trim());
+            statement.setInt(2, documentId);
+            statement.executeUpdate();
+        }
     }
 
     @Override

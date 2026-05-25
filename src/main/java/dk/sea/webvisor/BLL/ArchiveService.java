@@ -218,4 +218,19 @@ public class ArchiveService {
         box.replaceContent(allPages, documents);
     }
 
+    public List<Document> getDocumentsForQA() throws SQLException
+    {
+        return documentsDAO.getDocumentsByStatus(DocumentStatus.WAITING_FOR_QA);
+    }
+
+    public List<Files> getPagesByDocument(int documentId) throws SQLException
+    {
+        return new ArrayList<>(filesDAO.getFilesByDocument(documentId));
+    }
+
+    public void updateRejectionNote(int documentId, String note) throws SQLException
+    {
+        documentsDAO.updateRejectionNote(documentId, note);
+    }
+
 }

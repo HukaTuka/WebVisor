@@ -193,21 +193,23 @@ public class UsersDAO implements UsersInterface
         return createUserObject(id, username, password, role, Timestamp);
     }
 
-    private User createUserObject(int id, String username, String password, UserRole role, LocalDateTime Timestamp)
+    private User createUserObject(int id, String username, String password, UserRole role, LocalDateTime timestamp)
     {
         if (role == UserRole.UserAdmin)
         {
-            return new UserAdmin(id, username, password, role, Timestamp);
+            return new UserAdmin(id, username, password, role, timestamp);
         }
-        return new UserScanner(id, username, password, role, Timestamp);
+        if (role == UserRole.UserQA)
+        {
+            return new UserQA(id, username, password, role, timestamp);
+        }
+        return new UserScanner(id, username, password, role, timestamp);
     }
 
     private String toDatabaseRole(UserRole role)
     {
-        if (role == UserRole.UserAdmin)
-        {
-            return "Administrator";
-        }
+        if (role == UserRole.UserAdmin) return "Administrator";
+        if (role == UserRole.UserQA) return "QA";
         return "Scanner";
     }
 
@@ -222,6 +224,10 @@ public class UsersDAO implements UsersInterface
         if (role.equals("administrator") || role.equals("admin"))
         {
             return UserRole.UserAdmin;
+        }
+        if (role.equals("qa") || role.equals("qa reviewer"))
+        {
+            return UserRole.UserQA;
         }
 
         return UserRole.UserScanner;

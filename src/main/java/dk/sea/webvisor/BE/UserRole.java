@@ -3,7 +3,8 @@ package dk.sea.webvisor.BE;
 public enum UserRole
 {
     UserScanner("Scanner"),
-    UserAdmin("Administrator");
+    UserAdmin("Administrator"),
+    UserQA("QA Reviewer");
 
     private final String displayName;
 

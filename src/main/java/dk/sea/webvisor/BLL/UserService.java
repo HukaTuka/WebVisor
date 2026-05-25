@@ -1,10 +1,7 @@
 package dk.sea.webvisor.BLL;
 
 // Project Imports
-import dk.sea.webvisor.BE.User;
-import dk.sea.webvisor.BE.UserAdmin;
-import dk.sea.webvisor.BE.UserRole;
-import dk.sea.webvisor.BE.UserScanner;
+import dk.sea.webvisor.BE.*;
 import dk.sea.webvisor.BLL.Util.PasswordHasher;
 import dk.sea.webvisor.DAL.DAO.UsersDAO;
 import dk.sea.webvisor.DAL.Interface.UsersInterface;
@@ -109,13 +106,17 @@ public class UserService
         }
     }
 
-    private User createUserObject(int id, String username, String password, UserRole role, LocalDateTime lastLogin)
+    private User createUserObject(int id, String username, String password, UserRole role, LocalDateTime timestamp)
     {
         if (role == UserRole.UserAdmin)
         {
-            return new UserAdmin(id, username.trim(), password, role, lastLogin);
+            return new UserAdmin(id, username, password, role, timestamp);
         }
-        return new UserScanner(id, username.trim(), password, role, lastLogin);
+        if (role == UserRole.UserQA)
+        {
+            return new UserQA(id, username, password, role, timestamp);
+        }
+        return new UserScanner(id, username, password, role, timestamp);
     }
 
     public Optional<User> getUserByUsername(String username) throws SQLException

@@ -10,6 +10,8 @@ public class Document {
     private final int documentNumber;
     private final List<Files> pages = new ArrayList<>();
     private DocumentStatus status = DocumentStatus.IN_PROGRESS;
+    private String boxId = "";
+    private String rejectionNote = "";
 
     public Document(int id, int documentNumber) {
         this.id = id;
@@ -41,6 +43,26 @@ public class Document {
     public void setStatus(DocumentStatus status)
     {
         this.status = status == null ? DocumentStatus.IN_PROGRESS : status;
+    }
+
+    public String getBoxId()
+    {
+        return boxId;
+    }
+
+    public void setBoxId(String boxId)
+    {
+        this.boxId = boxId == null ? "" : boxId;
+    }
+
+    public String getRejectionNote()
+    {
+        return rejectionNote;
+    }
+
+    public void setRejectionNote(String rejectionNote)
+    {
+        this.rejectionNote = rejectionNote == null ? "" : rejectionNote;
     }
 
     @Override

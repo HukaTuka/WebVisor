@@ -75,7 +75,7 @@ public class AdminUsersController
         // of the initial state before any layout pass runs.
         setCancelVisible(false);
 
-        cmbRole.setItems(FXCollections.observableArrayList("Administrator", "Scanner"));
+        cmbRole.setItems(FXCollections.observableArrayList("Administrator", "Scanner", "QA Reviewer"));
         cmbRole.getSelectionModel().select("Scanner");
 
         loadProfiles();
@@ -433,9 +433,9 @@ public class AdminUsersController
     private UserRole getSelectedRole()
     {
         String roleText = cmbRole.getSelectionModel().getSelectedItem();
-        return "Administrator".equalsIgnoreCase(roleText)
-                ? UserRole.UserAdmin
-                : UserRole.UserScanner;
+        if ("Administrator".equalsIgnoreCase(roleText)) return UserRole.UserAdmin;
+        if ("QA Reviewer".equalsIgnoreCase(roleText)) return UserRole.UserQA;
+        return UserRole.UserScanner;
     }
 
     private void setCancelVisible(boolean visible)

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="650.0" prefWidth="960.0" styleClass="root-pane" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dk.sea.webvisor.GUI.Controllers.QAController">
+    <children>
+        <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="scanning-toolbar">
+                <padding>
+                    <Insets bottom="10.0" left="16.0" right="16.0" top="10.0" />
+                </padding>
+                <Label minWidth="120.0" styleClass="title-label" text="QA Review" />
+                <Button onAction="#onRefresh" styleClass="secondary-button" text="⟳ Refresh" />
+                <Label styleClass="separator-label" text="|" />
+                <Button fx:id="btnPrev" disable="true" onAction="#onPrev" styleClass="secondary-button" text="◀ Previous" />
+                <Label fx:id="lblPageInfo" minWidth="100.0" styleClass="page-info-label" text="Page 0 / 0" />
+                <Button fx:id="btnNext" disable="true" onAction="#onNext" styleClass="secondary-button" text="Next ▶" />
+                <Label styleClass="separator-label" text="|" />
+                <Button fx:id="btnInProgress" disable="true" onAction="#onMarkInProgress" styleClass="secondary-button" text="In Progress" />
+                <Button fx:id="btnWaitingQA" disable="true" onAction="#onMarkWaitingQA" styleClass="secondary-button" text="Waiting for QA" />
+                <Button fx:id="btnQACompleted" disable="true" onAction="#onMarkQACompleted" styleClass="primary-button" text="QA Completed" />
+                <Button fx:id="btnRejected" disable="true" onAction="#onMarkRejected" styleClass="danger-button" text="Reject" />
+            </HBox>
+
+            <HBox spacing="0.0" VBox.vgrow="ALWAYS">
+
+                <VBox maxWidth="280.0" minWidth="280.0" prefWidth="280.0" spacing="8.0" styleClass="page-list-panel">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+                    <Label styleClass="panel-header-label" text="Documents Waiting for QA" />
+                    <ListView fx:id="lstDocuments" styleClass="pages-list" VBox.vgrow="ALWAYS" />
+                </VBox>
+
+                <VBox spacing="0.0" HBox.hgrow="ALWAYS">
+                    <StackPane styleClass="image-viewer-panel" VBox.vgrow="ALWAYS">
+                        <Label fx:id="lblEmpty" styleClass="empty-state-label" text="Select a document from the list to begin review." />
+                        <ImageView fx:id="imgPage" fitHeight="520.0" fitWidth="900.0" preserveRatio="true" smooth="true" />
+                    </StackPane>
+
+                    <VBox fx:id="rejectionPane" managed="false" spacing="6.0" styleClass="status-bar" visible="false">
+                        <padding>
+                            <Insets bottom="8.0" left="12.0" right="12.0" top="8.0" />
+                        </padding>
+                        <Label styleClass="panel-header-label" text="Rejection Note:" />
+                        <TextArea fx:id="txtRejectionNote" prefHeight="72.0" promptText="Enter a note explaining why this document was rejected..." wrapText="true" />
+                        <Button maxWidth="180.0" onAction="#onSaveRejectionNote" styleClass="danger-button" text="Save Rejection Note" />
+                    </VBox>
+                </VBox>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" styleClass="status-bar">
+                <padding>
+                    <Insets bottom="6.0" left="16.0" right="16.0" top="6.0" />
+                </padding>
+                <Label fx:id="lblStatus" styleClass="status-label" text="" />
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>
