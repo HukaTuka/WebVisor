@@ -129,6 +129,21 @@ public class UiManager {
         lblCurrentBox.setText(selectedBox != null ? "Current box: " + selectedBox.getBoxId() : "Current box: none");
     }
 
+    public void openShortcutSettingsDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ShortcutSettingsView.fxml"));
+            Parent root = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("Shortcut Settings");
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+        } catch (IOException e) {
+            showError("Could not open shortcut settings: " + e.getMessage());
+        }
+    }
+
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");

@@ -14,6 +14,7 @@ import dk.sea.webvisor.GUI.Managers.ScanningSessionManager;
 import dk.sea.webvisor.GUI.Managers.ExplorerTreeManager;
 import dk.sea.webvisor.GUI.Managers.UiManager;
 import dk.sea.webvisor.GUI.Managers.PageViewerManager;
+import dk.sea.webvisor.GUI.Managers.ShortcutManager;
 
 // Java Imports
 import javafx.application.Platform;
@@ -22,6 +23,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ public class ScanningController implements AuditAware
     private static final Client NO_CLIENT_OPTION = new Client(-1, "No client selected");
 
     @FXML private TextField txtBoxId;
+    @FXML private AnchorPane rootPane;
     @FXML private ComboBox<Client>   cmbClient;
     @FXML private ComboBox<Archive>  cmbArchive;
     @FXML private ComboBox<Profile>  cmbProfile;
@@ -42,6 +45,7 @@ public class ScanningController implements AuditAware
     @FXML private Button btnStart, btnStop, btnPrev, btnNext, btnRotateLeft, btnRotateRight;
     @FXML private Button btnDelete, btnSplit, btnBack, btnExportSingle, btnExportMulti;
     @FXML private Button btnMetadata, btnSlideView, btnMarkQA;
+    @FXML private Button btnSettings;
     @FXML private ImageView imgPage;
 
     private ArchiveService archiveService;
@@ -61,6 +65,7 @@ public class ScanningController implements AuditAware
     private BoxSplitManager splitter;
     private DeleteManager deleteManager;
     private ExplorerTreeManager explorerTreeManager;
+    private ShortcutManager shortcutManager;
 
     private final List<Boxes>   allBoxes    = new ArrayList<>();
     private final List<Archive> allArchives = new ArrayList<>();
@@ -73,6 +78,7 @@ public class ScanningController implements AuditAware
         initHelpers();
         loadInitialDropdowns();
         setupTreeView();
+        setupShortcuts();
         showBoxes();
         updateUI();
     }
@@ -202,6 +208,39 @@ public class ScanningController implements AuditAware
                 this::handleSelection,
                 this::movePageToDocument
         );
+    }
+
+    private void setupShortcuts()
+    {
+        shortcutManager = new ShortcutManager(
+                rootPane,
+                this::onStartScanning,
+                this::onStopScanning,
+                this::onPrev,
+                this::onNext,
+                this::onRotateLeft,
+                this::onRotateRight,
+                this::onSplitDocument,
+                () -> onDelete(new ActionEvent()),
+                this::onOpenMetadata,
+                this::onOpenSlideView,
+                this::onOpenShortcutSettings
+        );
+
+        if (rootPane.getScene() != null)
+        {
+            shortcutManager.install(rootPane.getScene());
+        }
+        else
+        {
+            rootPane.sceneProperty().addListener((obs, oldScene, newScene) ->
+            {
+                if (newScene != null)
+                {
+                    shortcutManager.install(newScene);
+                }
+            });
+        }
     }
 
     private void movePageToDocument(Files page, Document targetDoc)
@@ -410,6 +449,12 @@ public class ScanningController implements AuditAware
             return;
         }
         uiManager.openSlideView(sessionManager.getSelectedBox().getPages(), navigation.getIndex());
+    }
+
+    @FXML
+    private void onOpenShortcutSettings()
+    {
+        uiManager.openShortcutSettingsDialog();
     }
 
     /**

@@ -16,7 +16,6 @@
                         <Label styleClass="sidebar-title" text="WebVisor" />
                         <VBox fx:id="userMenu" spacing="8.0">
                             <children>
-                                <Button onAction="#onOpenHome" styleClass="sidebar-nav-button" text="Home" />
                                 <Button onAction="#onOpenScanning" styleClass="sidebar-nav-button" text="Scanning" />
                             </children>
                         </VBox>

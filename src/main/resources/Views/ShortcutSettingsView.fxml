@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="10.0" styleClass="root-pane" xmlns="http://javafx.com/javafx/24.0.1">
+    <padding>
+        <Insets top="18.0" right="18.0" bottom="18.0" left="18.0"/>
+    </padding>
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="8.0">
+            <children>
+                <Label styleClass="panel-header-label" text="Keyboard Shortcuts" />
+                <Region HBox.hgrow="ALWAYS" />
+            </children>
+        </HBox>
+        <Separator />
+
+        <Label styleClass="panel-header-label" text="Primary Scan Controls" />
+        <GridPane hgap="16.0" vgap="8.0">
+            <children>
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="page-info-label" text="F1" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="0" text="Start scanning" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="page-info-label" text="F2" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="1" text="Stop scanning" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="page-info-label" text="V" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="2" text="Open Slide View" />
+            </children>
+        </GridPane>
+
+        <Separator />
+        <Label styleClass="panel-header-label" text="Page Navigation &amp; Rotation" />
+        <GridPane hgap="16.0" vgap="8.0">
+            <children>
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="page-info-label" text="A" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="0" text="Previous page" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="page-info-label" text="D" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="1" text="Next page" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="page-info-label" text="Q" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="2" text="Rotate left" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="page-info-label" text="E" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="3" text="Rotate right" />
+            </children>
+        </GridPane>
+
+        <Separator />
+        <Label styleClass="panel-header-label" text="Actions" />
+        <GridPane hgap="16.0" vgap="8.0">
+            <children>
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="page-info-label" text="M" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="0" text="Open metadata" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="page-info-label" text="Ctrl+S" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="1" text="Split document" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="page-info-label" text="Ctrl+Delete" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="2" text="Delete selected item" />
+
+                <Label GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="page-info-label" text="F10" />
+                <Label GridPane.columnIndex="1" GridPane.rowIndex="3" text="Open this shortcut guide" />
+            </children>
+        </GridPane>
+
+        <Separator />
+        <Label styleClass="status-info" text="Note: Shortcuts are disabled while typing in input fields." />
+    </children>
+</VBox>
+
