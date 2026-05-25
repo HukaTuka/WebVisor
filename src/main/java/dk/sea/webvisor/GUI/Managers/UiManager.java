@@ -3,6 +3,7 @@ package dk.sea.webvisor.GUI.Managers;
 // Project Imports
 import dk.sea.webvisor.BE.Boxes;
 import dk.sea.webvisor.BE.Files;
+import dk.sea.webvisor.BLL.ArchiveService;
 import dk.sea.webvisor.GUI.Controllers.MetadataDialogController;
 import dk.sea.webvisor.GUI.Controllers.SlideViewController;
 
@@ -17,9 +18,11 @@ import javafx.scene.control.Label;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 public class UiManager {
+
     public record UiState(
             boolean running,
             boolean hasPage,
@@ -31,24 +34,20 @@ public class UiManager {
     ) {}
 
     private final Label statusLabel;
+    private final ArchiveService archiveService;
 
-    public UiManager(Label statusLabel) {
+    public UiManager(Label statusLabel, ArchiveService archiveService)
+    {
         this.statusLabel = statusLabel;
+        this.archiveService = archiveService;
     }
 
-    public void info(String msg) {
-        setStatus(msg, "status-info");
-    }
+    public void info(String msg)    { setStatus(msg, "status-info");    }
+    public void success(String msg) { setStatus(msg, "status-success"); }
+    public void error(String msg)   { setStatus(msg, "status-error");   }
 
-    public void success(String msg) {
-        setStatus(msg, "status-success");
-    }
-
-    public void error(String msg) {
-        setStatus(msg, "status-error");
-    }
-
-    private void setStatus(String msg, String style) {
+    private void setStatus(String msg, String style)
+    {
         Platform.runLater(() -> {
             statusLabel.getStyleClass().removeAll("status-info", "status-success", "status-error");
             statusLabel.getStyleClass().add(style);
@@ -68,31 +67,24 @@ public class UiManager {
             Button btnDelete,
             Button btnBack,
             Button btnExportSingle,
-            Button btnExportPdf
-    ) {
-        boolean hasPage = state.hasPage();
-        boolean hasSelectedBox = state.hasSelectedBox();
-        boolean hasSelectedItem = state.hasSelectedItem();
-        boolean hasDocuments = state.hasDocuments();
-        int currentIndex = state.currentIndex();
-        int totalPages = state.totalPages();
-        boolean running = state.running();
+            Button btnExportPdf)
+    {
+        btnPrev.setDisable(!state.hasPage());
+        btnNext.setDisable(!state.hasPage());
+        btnRotateLeft.setDisable(!state.hasPage());
+        btnRotateRight.setDisable(!state.hasPage());
+        btnSplit.setDisable(!state.hasPage() || state.currentIndex() >= state.totalPages() - 1);
 
-        btnPrev.setDisable(!hasPage);
-        btnNext.setDisable(!hasPage);
-        btnRotateLeft.setDisable(!hasPage);
-        btnRotateRight.setDisable(!hasPage);
-        btnSplit.setDisable(!hasPage || currentIndex >= totalPages - 1);
-
-        btnStart.setDisable(running || !hasSelectedBox);
-        btnStop.setDisable(!running);
-        btnDelete.setDisable(running || !hasSelectedItem);
-        btnBack.setDisable(!hasSelectedItem);
-        btnExportSingle.setDisable(!hasSelectedBox || !hasDocuments);
-        btnExportPdf.setDisable(!hasSelectedBox || !hasDocuments);
+        btnStart.setDisable(state.running() || !state.hasSelectedBox());
+        btnStop.setDisable(!state.running());
+        btnDelete.setDisable(state.running() || !state.hasSelectedItem());
+        btnBack.setDisable(!state.hasSelectedItem());
+        btnExportSingle.setDisable(!state.hasSelectedBox() || !state.hasDocuments());
+        btnExportPdf.setDisable(!state.hasSelectedBox() || !state.hasDocuments());
     }
 
-    public void openMetadataDialog(String boxId) {
+    public void openMetadataDialog(String boxId)
+    {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/MetadataDialogView.fxml"));
             Parent root = loader.load();
@@ -108,32 +100,58 @@ public class UiManager {
         }
     }
 
-    public void openSlideView(List<Files> pages, int startIndex) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/SlideView.fxml"));
-            Parent root = loader.load();
-            SlideViewController controller = loader.getController();
-            controller.setPages(pages, Math.max(0, startIndex));
-            Stage stage = new Stage();
-            stage.setTitle("Slide View");
-            stage.initModality(Modality.NONE);
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            showError("Could not open slide view: " + e.getMessage());
-        }
+    public void openSlideView(List<Files> pages, int startIndex)
+    {
+        setStatus("Loading images for slide view...", "status-info");
+
+        Thread t = new Thread(() ->
+        {
+            try
+            {
+                for (Files page : pages)
+                {
+                    if (page.getImage() == null && page.getId() > 0)
+                    {
+                        page.setImage(archiveService.loadFileImage(page.getId()));
+                    }
+                }
+
+                Platform.runLater(() ->
+                {
+                    try
+                    {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/SlideView.fxml"));
+                        Parent root = loader.load();
+                        SlideViewController controller = loader.getController();
+                        controller.setPages(pages, Math.max(0, startIndex));
+                        Stage stage = new Stage();
+                        stage.setTitle("Slide View");
+                        stage.initModality(Modality.NONE);
+                        stage.setScene(new Scene(root));
+                        stage.show();
+                        setStatus("", "status-info");
+                    }
+                    catch (IOException e)
+                    {
+                        showError("Could not open slide view: " + e.getMessage());
+                    }
+                });
+            }
+            catch (SQLException e)
+            {
+                Platform.runLater(() -> showError("Could not load images: " + e.getMessage()));
+            }
+        });
+
+        t.setDaemon(true);
+        t.start();
     }
 
-    public void updateScanningSummary(Label lblTotalScans, Label lblCurrentBox, int totalScans, Boxes selectedBox) {
-        lblTotalScans.setText("Total Scans: " + totalScans);
-        lblCurrentBox.setText(selectedBox != null ? "Current box: " + selectedBox.getBoxId() : "Current box: none");
-    }
-
-    public void openShortcutSettingsDialog() {
+    public void openShortcutSettingsDialog()
+    {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ShortcutSettingsView.fxml"));
             Parent root = loader.load();
-
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.setTitle("Shortcut Settings");
@@ -144,7 +162,16 @@ public class UiManager {
         }
     }
 
-    private void showError(String message) {
+    public void updateScanningSummary(Label lblTotalScans, Label lblCurrentBox, int totalScans, Boxes selectedBox)
+    {
+        lblTotalScans.setText("Total Scans: " + totalScans);
+        lblCurrentBox.setText(selectedBox != null
+                ? "Current box: " + selectedBox.getBoxId()
+                : "Current box: none");
+    }
+
+    private void showError(String message)
+    {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(null);
@@ -152,4 +179,3 @@ public class UiManager {
         alert.showAndWait();
     }
 }
-

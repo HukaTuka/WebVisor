@@ -112,7 +112,7 @@ public class ScanningController implements AuditAware
 
     private void initHelpers()
     {
-        uiManager         = new UiManager(lblStatus);
+        uiManager = new UiManager(lblStatus, archiveService);
         pageViewerManager = new PageViewerManager(archiveService, uiManager);
         navigation        = new PageNavigationManager(imgPage, lblPageInfo, pageViewerManager);
         polling           = new ScanPollingManager(scanningService);
