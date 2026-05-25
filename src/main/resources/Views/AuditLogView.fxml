@@ -50,8 +50,10 @@
                                     prefWidth="150.0" />
 
                         <Button text="Clear Filters"
-                                styleClass="sidebar-nav-button"
                                 onAction="#onClearFilters" />
+
+                        <Button text="Export to Excel"
+                                onAction="#onExportToExcel" />
 
                         <HBox HBox.hgrow="ALWAYS" />
 

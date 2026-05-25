@@ -4,6 +4,12 @@ package dk.sea.webvisor.GUI.Controllers;
 import dk.sea.webvisor.BE.AuditEntry;
 import dk.sea.webvisor.BLL.Util.AuditService;
 
+// Apache Imports
+import javafx.stage.Stage;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 // Java Imports
 import dk.sea.webvisor.DAL.Interface.AuditAware;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,6 +18,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+
+import javafx.stage.FileChooser;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import java.util.stream.Collectors;
 import java.time.LocalDate;
@@ -159,6 +170,66 @@ public class AuditLogController implements AuditAware
         else
         {
             lblEntryCount.setText(shown + " of " + total + " entries");
+        }
+    }
+
+    @FXML
+    private void onExportToExcel() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Audit Log");
+        fileChooser.setInitialFileName("AuditLog.xlsx");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+
+        Stage stage = (Stage) tblAuditLog.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+        if (file == null) return;
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Audit Log");
+
+            //Header style
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontName("Arial");
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            //Header row
+            Row header = sheet.createRow(0);
+            String[] columns = {"Timestamp", "Username", "Action", "Details"};
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = header.createCell(i);
+                cell.setCellValue(columns[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            //Data from the filtered entries gets put in the rows
+            int rowNum = 1;
+            for (AuditEntry entry : filteredEntries) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(entry.getFormattedTimestamp());
+                row.createCell(1).setCellValue(entry.getUsername());
+                row.createCell(2).setCellValue(entry.getAction());
+                row.createCell(3).setCellValue(entry.getDetails());
+            }
+
+            //Make the columns the right size
+            for(int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            try (FileOutputStream out = new FileOutputStream(file)){
+                workbook.write(out);
+            }
+
+            //On a success we get feedback
+            lblEntryCount.setText("exported " + filteredEntries.size() + " entries.");
+
+        } catch (IOException e) {
+            lblEntryCount.setText("Export failed: " + e.getMessage());
         }
     }
 }
