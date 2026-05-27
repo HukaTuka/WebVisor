@@ -296,13 +296,17 @@ public class ExplorerTreeManager {
             protected void updateItem(Object item, boolean empty)
             {
                 super.updateItem(item, empty);
-                if (empty || item == null) { setText(null); return; }
-                if (item instanceof Boxes box)
+                getStyleClass().removeAll("box-item-cell", "document-item-cell", "file-item-cell");
+                if (empty || item == null) {setText(null); return;}
+                if (item instanceof Boxes box) {
                     setText(box.getBoxId() + " (" + box.getDocumentCount() + " docs, " + box.getFileCount() + " files)");
-                else if (item instanceof Document doc)
+                    getStyleClass().add("box-item-cell");}
+                else if (item instanceof Document doc) {
                     setText(doc.toString());
-                else if (item instanceof Files file)
+                    getStyleClass().add("document-item-cell");}
+                else if (item instanceof Files file) {
                     setText(file.isBarcode() ? file.getReferenceId() + " [BARCODE]" : file.getReferenceId());
+                    getStyleClass().add("file-item-cell");}
             }
         });
 

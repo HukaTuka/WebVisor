@@ -185,7 +185,33 @@
     -fx-border-color: transparent;
     -fx-background-color: transparent;
 }
+/* */
+.pages-list .tree-cell {
+    -fx-background-radius: 5px;
+    -fx-padding: 4 8 4 8;
+}
 
+.pages-list .tree-cell.box-item-cell {
+    -fx-text-fill: #145c4c;
+    -fx-background-color: rgba(36, 199, 159, 0.16);
+}
+
+.pages-list .tree-cell.document-item-cell {
+    -fx-text-fill: #1f4f86;
+    -fx-background-color: rgba(68, 138, 255, 0.15);
+}
+
+.pages-list .tree-cell.file-item-cell {
+    -fx-text-fill: #6a4a1b;
+    -fx-background-color: rgba(243, 180, 73, 0.22);
+}
+
+.pages-list .tree-cell:selected.box-item-cell,
+.pages-list .tree-cell:selected.document-item-cell,
+.pages-list .tree-cell:selected.file-item-cell {
+    -fx-text-fill: white;
+    -fx-background-color: #2f8f7a;
+}
 /* Barcode rows inside scan list */
 .pages-list .list-cell.barcode-item-cell {
     -fx-font-style: italic;
