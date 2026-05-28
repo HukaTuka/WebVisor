@@ -81,7 +81,7 @@ public class AuditLogController implements AuditAware
         applyFilters();
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    //Helpers
 
     private void setupColumns()
     {
@@ -229,7 +229,7 @@ public class AuditLogController implements AuditAware
             lblEntryCount.setText("exported " + filteredEntries.size() + " entries.");
 
         } catch (IOException e) {
-            lblEntryCount.setText("Export failed: " + e.getMessage());
+            lblEntryCount.setText("Export failed: ");
         }
     }
 }

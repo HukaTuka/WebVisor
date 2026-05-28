@@ -5,16 +5,7 @@ import dk.sea.webvisor.BE.*;
 import dk.sea.webvisor.BLL.*;
 import dk.sea.webvisor.BLL.Util.AuditService;
 import dk.sea.webvisor.DAL.Interface.AuditAware;
-import dk.sea.webvisor.GUI.Managers.BoxSplitManager;
-import dk.sea.webvisor.GUI.Managers.DeleteManager;
-import dk.sea.webvisor.GUI.Managers.ExportManager;
-import dk.sea.webvisor.GUI.Managers.PageNavigationManager;
-import dk.sea.webvisor.GUI.Managers.ScanPollingManager;
-import dk.sea.webvisor.GUI.Managers.ScanningSessionManager;
-import dk.sea.webvisor.GUI.Managers.ExplorerTreeManager;
-import dk.sea.webvisor.GUI.Managers.UiManager;
-import dk.sea.webvisor.GUI.Managers.PageViewerManager;
-import dk.sea.webvisor.GUI.Managers.ShortcutManager;
+import dk.sea.webvisor.GUI.Managers.*;
 
 // Java Imports
 import javafx.application.Platform;
@@ -29,7 +20,6 @@ import javafx.scene.layout.AnchorPane;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ScanningController implements AuditAware
 {
@@ -68,6 +58,9 @@ public class ScanningController implements AuditAware
     private DeleteManager deleteManager;
     private ExplorerTreeManager explorerTreeManager;
     private ShortcutManager shortcutManager;
+    private ProfileDropdownManager profileDropdownManager;
+    private ComboBoxKeyboardManager comboBoxKeyboardManager;
+
 
     private final List<Boxes>   allBoxes    = new ArrayList<>();
     private final List<Archive> allArchives = new ArrayList<>();
@@ -79,7 +72,10 @@ public class ScanningController implements AuditAware
         initServices();
         initHelpers();
         loadInitialDropdowns();
-        setupSelectionFieldKeyboardUX();
+        comboBoxKeyboardManager.configure(cmbClient, cmbArchive);
+        comboBoxKeyboardManager.configure(cmbClient, cmbArchive);
+        comboBoxKeyboardManager.configure(cmbProfile, cmbSessionRotation);
+        comboBoxKeyboardManager.configure(cmbSessionRotation, txtBoxId);
         setupTreeView();
         setupShortcuts();
         showBoxes();
@@ -121,7 +117,10 @@ public class ScanningController implements AuditAware
         deleteManager     = new DeleteManager(archiveService, scanningService, uiManager, audit);
         explorerTreeManager = new ExplorerTreeManager(treeExplorer, uiManager, this::onTreeSelectionChanged);
         sessionManager    = new ScanningSessionManager();
+        profileDropdownManager = new ProfileDropdownManager(profileService, profileUserService, userService, audit, cmbProfile, cmbSessionRotation, uiManager);
+        comboBoxKeyboardManager = new ComboBoxKeyboardManager();
     }
+
 
     private void loadInitialDropdowns()
     {
@@ -154,7 +153,7 @@ public class ScanningController implements AuditAware
             cmbArchive.setItems(FXCollections.observableArrayList());
             cmbArchive.setDisable(true);
 
-            refreshProfilesForClient(cmbClient.getValue());
+
         }
         catch (SQLException e)
         {
@@ -165,7 +164,6 @@ public class ScanningController implements AuditAware
         {
             sessionManager.clearSelectionAndPages(navigation, scanningService);
             explorerTreeManager.refreshArchivesForClient(cmbArchive, allArchives, val);
-            refreshProfilesForClient(val);
             showBoxes();
             updateUI();
         });
@@ -177,13 +175,7 @@ public class ScanningController implements AuditAware
             updateUI();
         });
 
-        cmbProfile.valueProperty().addListener((obs, old, val) ->
-        {
-            if (val != null)
-            {
-                cmbSessionRotation.setValue(val.getDefaultRotation());
-            }
-        });
+        profileDropdownManager.setup(cmbClient, cmbSessionRotation);
 
         explorerTreeManager.refreshArchivesForClient(cmbArchive, allArchives, cmbClient.getValue());
     }
@@ -200,45 +192,6 @@ public class ScanningController implements AuditAware
         );
     }
 
-    private void setupSelectionFieldKeyboardUX() {
-        configureSelectionCombo(cmbClient, cmbArchive);
-        configureSelectionCombo(cmbArchive, cmbProfile);
-        configureSelectionCombo(cmbProfile, cmbSessionRotation);
-        configureSelectionCombo(cmbSessionRotation, txtBoxId);
-    }
-
-    private void configureSelectionCombo(ComboBox<?> combo, Control nextControl) {
-        if (combo == null) {
-            return;
-        }
-
-        combo.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.DOWN) {
-                if (!combo.isShowing()) {
-                    combo.show();
-                    if (combo.getSelectionModel().getSelectedIndex() < 0 && !combo.getItems().isEmpty()) {
-                        combo.getSelectionModel().selectFirst();
-                    }
-                    event.consume();
-                    return;
-                }
-
-                if (combo.getSelectionModel().getSelectedIndex() < 0 && !combo.getItems().isEmpty()) {
-                    combo.getSelectionModel().selectFirst();
-                    event.consume();
-                    return;
-                }
-            }
-
-            if (event.getCode() == KeyCode.ENTER) {
-                combo.hide();
-                if (nextControl != null) {
-                    Platform.runLater(nextControl::requestFocus);
-                }
-                event.consume();
-            }
-        });
-    }
 
     private void setupShortcuts()
     {
@@ -716,44 +669,6 @@ public class ScanningController implements AuditAware
         catch (Exception e)
         {
             uiManager.error("Could not create box: " + e.getMessage());
-        }
-    }
-
-    private void refreshProfilesForClient(Client client)
-    {
-        try
-        {
-            List<Profile> profiles;
-
-            if (client == null || client.getId() < 0)
-            {
-                // No client selected — show all profiles
-                profiles = new ArrayList<>(profileService.getAllProfiles());
-            }
-            else
-            {
-                profiles = new ArrayList<>(profileService.getProfilesByClient(client.getId()));
-            }
-
-            // Still filter by user if not admin
-            String currentUsername = audit.getCurrentUser();
-            if (currentUsername != null && !currentUsername.isBlank())
-            {
-                Optional<User> currentUser = userService.getUserByUsername(currentUsername);
-                if (currentUser.isPresent() && currentUser.get().getRole() != UserRole.UserAdmin)
-                {
-                    List<Profile> assignedToUser = profileUserService.getProfilesForUser(currentUser.get().getId());
-                    profiles.retainAll(assignedToUser);
-
-                }
-            }
-
-            cmbProfile.setItems(FXCollections.observableArrayList(profiles));
-            cmbProfile.setValue(null);
-        }
-        catch (SQLException e)
-        {
-            uiManager.error("Could not load profiles: " + e.getMessage());
         }
     }
 }

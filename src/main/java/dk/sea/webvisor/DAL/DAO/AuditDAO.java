@@ -18,6 +18,7 @@ public class AuditDAO implements AuditInterface
         DBConnector.getInstance();
     }
 
+
     @Override
     public void insertAuditEntry(AuditEntry entry) throws SQLException
     {
@@ -36,6 +37,7 @@ public class AuditDAO implements AuditInterface
             statement.executeUpdate();
         }
     }
+
 
     @Override
     public List<AuditEntry> getAllAuditEntries() throws SQLException
@@ -61,14 +63,14 @@ public class AuditDAO implements AuditInterface
         return entries;
     }
 
+
     private AuditEntry createAuditEntryFromResultSet(ResultSet rs) throws SQLException
     {
         String username = rs.getString("Username");
         String action   = rs.getString("Action");
         String details  = rs.getString("Details");
 
-        // Use the DB timestamp so the entry reflects what was stored,
-        // not when the object was reconstructed in Java
+        // Use the DB timestamp so the entry reflects what was stored, not when the object was reconstructed in Java
         AuditEntry entry = new AuditEntry(username, action, details);
         entry.overrideTimestamp(rs.getTimestamp("Timestamp").toLocalDateTime());
 

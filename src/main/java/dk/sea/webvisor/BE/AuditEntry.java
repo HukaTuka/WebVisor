@@ -4,9 +4,7 @@ package dk.sea.webvisor.BE;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Represents a single audit log entry recording a user action with a timestamp.
- */
+//The audit entry with username, action and timestamp of creation.
 public class AuditEntry
 {
     private static final DateTimeFormatter FORMATTER =
@@ -25,7 +23,7 @@ public class AuditEntry
         this.details   = details;
     }
 
-    // ── Getters ──────────────────────────────────────────────────────────────
+    //Getters
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public String        getUsername()  { return username;  }
@@ -37,13 +35,13 @@ public class AuditEntry
         this.timestamp = dbTimestamp;
     }
 
-    /** Returns the timestamp as a formatted string (yyyy-MM-dd HH:mm:ss). */
+    //Returns the timestamp
     public String getFormattedTimestamp()
     {
         return timestamp.format(FORMATTER);
     }
 
-    /** Returns a single log-file line for this entry. */
+    //Returns a single line log entry
     public String toLogLine()
     {
         return String.format("[%s] USER: %-20s | ACTION: %-25s | %s",

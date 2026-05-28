@@ -10,15 +10,7 @@ import javafx.collections.ObservableList;
 import java.io.IOException;
 import java.sql.SQLException;
 
-/*
- Application-wide audit trail service (singleton).
-
- Writes every log entry to the database via AuditDAO, and keeps
- an in-memory ObservableList so any bound TableView updates live.
-
- Usage:
- AuditService.getInstance().log("CREATE_USER", "Created user: john.doe");
- */
+//Audit service for creating logs through out the system using dependency injection
 public class AuditService
 {
     private final ObservableList<AuditEntry> entries = FXCollections.observableArrayList();
@@ -34,30 +26,19 @@ public class AuditService
         }
     }
 
-    /*
-     Sets the currently logged-in user. Call immediately after a successful
-     login so all subsequent entries are attributed correctly.
-     */
+    //Sets the user on log in, so that logs are made in their username
     public void setCurrentUser(String username)
     {
         this.currentUser = (username != null && !username.isBlank()) ? username : "anonymous";
     }
 
-    /*
-     Resets the current user back to "anonymous". Call on logout.
-     */
+    //Sets the user back to anonymous on log out
     public void clearCurrentUser()
     {
         this.currentUser = "anonymous";
     }
 
-    /*
-     Logs an action performed by the current user.
-     Writes to the database and updates the in-memory list.
-
-     * @param action  Short action identifier, e.g. "CREATE_USER".
-     * @param details Human-readable description of what happened.
-     */
+    //Logs the action and writes to the database
     public void log(String action, String details)
     {
         AuditEntry entry = new AuditEntry(currentUser, action, details);
@@ -71,16 +52,13 @@ public class AuditService
             }
             catch (SQLException e)
             {
-                System.err.println("[AuditService] Failed to write audit entry to DB: " + e.getMessage());
+                System.err.println("[AuditService] Failed to write audit entry to DB: ");
             }
         }
 
     }
 
-    /*
-     Loads the full audit history from the database into the observable list.
-     Call this when opening the audit log view.
-     */
+    //Loads the database into an observable list
     public void loadFromDatabase()
     {
         if (auditDAO == null) return;
@@ -91,7 +69,7 @@ public class AuditService
         }
         catch (SQLException e)
         {
-            System.err.println("[AuditService] Failed to load audit entries from DB: " + e.getMessage());
+            System.err.println("[AuditService] Failed to load audit entries from DB: ");
         }
     }
 
@@ -100,9 +78,7 @@ public class AuditService
         return currentUser;
     }
 
-    /*
-     Returns the live observable list — bind a TableView to this directly.
-     */
+    //Returns the observable list to be bound to a table view
     public ObservableList<AuditEntry> getEntries()
     {
         return entries;
