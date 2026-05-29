@@ -27,11 +27,12 @@ public class ArchivesDAO implements ArchivesInterface
     public List<Archive> getAllArchives() throws SQLException
     {
         String sql = """
-                SELECT a.ID, a.ClientID, a.Name, c.Name AS ClientName
-                FROM dbo.Archives a
-                INNER JOIN dbo.Clients c ON c.ID = a.ClientID
-                ORDER BY c.Name, a.Name
-                """;
+        SELECT a.ID, a.ClientID, a.Name, c.Name AS ClientName
+        FROM dbo.Archives a
+        INNER JOIN dbo.Clients c ON c.ID = a.ClientID
+        WHERE c.IsDeleted = 0
+        ORDER BY c.Name, a.Name
+        """;
 
         List<Archive> archives = new ArrayList<>();
         try (Connection connection = DBConnector.getConnection();
@@ -50,12 +51,12 @@ public class ArchivesDAO implements ArchivesInterface
     public List<Archive> getArchivesByClient(int clientId) throws SQLException
     {
         String sql = """
-                SELECT a.ID, a.ClientID, a.Name, c.Name AS ClientName
-                FROM dbo.Archives a
-                INNER JOIN dbo.Clients c ON c.ID = a.ClientID
-                WHERE a.ClientID = ?
-                ORDER BY a.Name
-                """;
+        SELECT a.ID, a.ClientID, a.Name, c.Name AS ClientName
+        FROM dbo.Archives a
+        INNER JOIN dbo.Clients c ON c.ID = a.ClientID
+        WHERE c.IsDeleted = 0
+        ORDER BY c.Name, a.Name
+        """;
 
         List<Archive> archives = new ArrayList<>();
         try (Connection connection = DBConnector.getConnection();
@@ -77,11 +78,12 @@ public class ArchivesDAO implements ArchivesInterface
     public Optional<Archive> getArchiveByClientAndName(int clientId, String name) throws SQLException
     {
         String sql = """
-                SELECT TOP 1 a.ID, a.ClientID, a.Name, c.Name AS ClientName
-                FROM dbo.Archives a
-                INNER JOIN dbo.Clients c ON c.ID = a.ClientID
-                WHERE a.ClientID = ? AND a.Name = ?
-                """;
+        SELECT a.ID, a.ClientID, a.Name, c.Name AS ClientName
+        FROM dbo.Archives a
+        INNER JOIN dbo.Clients c ON c.ID = a.ClientID
+        WHERE c.IsDeleted = 0
+        ORDER BY c.Name, a.Name
+        """;
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))

@@ -88,38 +88,13 @@ public class ProfileDAO implements ProfileInterface
     @Override
     public void deleteProfile(int profileId) throws SQLException
     {
-        // Remove junction rows first to avoid a foreign-key violation
-        String deleteAssignments = "DELETE FROM dbo.UserProfiles WHERE ProfileID = ?";
-        String deleteProfile     = "DELETE FROM dbo.Profiles WHERE ID = ?";
+        String sql = "UPDATE dbo.Profiles SET IsDeleted = 1 WHERE ID = ?";
 
-        try (Connection connection = DBConnector.getConnection())
+        try (Connection connection = DBConnector.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql))
         {
-            connection.setAutoCommit(false);
-            try
-            {
-                try (PreparedStatement s1 = connection.prepareStatement(deleteAssignments))
-                {
-                    s1.setInt(1, profileId);
-                    s1.executeUpdate();
-                }
-
-                try (PreparedStatement s2 = connection.prepareStatement(deleteProfile))
-                {
-                    s2.setInt(1, profileId);
-                    s2.executeUpdate();
-                }
-
-                connection.commit();
-            }
-            catch (SQLException e)
-            {
-                connection.rollback();
-                throw e;
-            }
-            finally
-            {
-                connection.setAutoCommit(true);
-            }
+            statement.setInt(1, profileId);
+            statement.executeUpdate();
         }
     }
 
@@ -127,10 +102,11 @@ public class ProfileDAO implements ProfileInterface
     public List<Profile> getAllProfiles() throws SQLException
     {
         String sql = """
-                SELECT ID, Name, SplitOnBarcode, DefaultRotation, ISNULL(ClientID, 0) AS ClientID
-                FROM dbo.Profiles
-                ORDER BY Name
-                """;
+            SELECT ID, Name, SplitOnBarcode, DefaultRotation, ISNULL(ClientID, 0) AS ClientID
+            FROM dbo.Profiles
+            WHERE IsDeleted = 0
+            ORDER BY Name
+            """;
 
         List<Profile> profiles = new ArrayList<>();
 
@@ -150,7 +126,13 @@ public class ProfileDAO implements ProfileInterface
     @Override
     public List<Integer> getUserIdsAssignedToProfile(int profileId) throws SQLException
     {
-        String sql = "SELECT UserID FROM dbo.UserProfiles WHERE ProfileID = ?";
+        String sql = """
+            SELECT up.UserID
+            FROM dbo.UserProfiles up
+            INNER JOIN dbo.Users u ON u.ID = up.UserID
+            WHERE up.ProfileID = ? AND u.IsDeleted = 0
+            """;
+
         List<Integer> ids = new ArrayList<>();
 
         try (Connection connection = DBConnector.getConnection();
@@ -173,12 +155,12 @@ public class ProfileDAO implements ProfileInterface
     public List<String> getUsernamesAssignedToProfile(int profileId) throws SQLException
     {
         String sql = """
-                SELECT u.Username
-                FROM dbo.Users u
-                INNER JOIN dbo.UserProfiles up ON u.ID = up.UserID
-                WHERE up.ProfileID = ?
-                ORDER BY u.Username
-                """;
+            SELECT u.Username
+            FROM dbo.Users u
+            INNER JOIN dbo.UserProfiles up ON u.ID = up.UserID
+            WHERE up.ProfileID = ? AND u.IsDeleted = 0
+            ORDER BY u.Username
+            """;
 
         List<String> names = new ArrayList<>();
 
@@ -204,7 +186,7 @@ public class ProfileDAO implements ProfileInterface
         String sql = """
             SELECT ID, Name, SplitOnBarcode, DefaultRotation, ISNULL(ClientID, 0) AS ClientID
             FROM dbo.Profiles
-            WHERE ClientID = ?
+            WHERE ClientID = ? AND IsDeleted = 0
             ORDER BY Name
             """;
 

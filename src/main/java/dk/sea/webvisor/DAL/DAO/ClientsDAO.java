@@ -27,10 +27,11 @@ public class ClientsDAO implements ClientsInterface
     public List<Client> getAllClients() throws SQLException
     {
         String sql = """
-                SELECT ID, Name
-                FROM dbo.Clients
-                ORDER BY Name
-                """;
+        SELECT ID, Name
+        FROM dbo.Clients
+        WHERE IsDeleted = 0
+        ORDER BY Name
+        """;
 
         List<Client> clients = new ArrayList<>();
 
@@ -54,10 +55,10 @@ public class ClientsDAO implements ClientsInterface
     public Optional<Client> getClientByName(String name) throws SQLException
     {
         String sql = """
-                SELECT TOP 1 ID, Name
-                FROM dbo.Clients
-                WHERE Name = ?
-                """;
+        SELECT TOP 1 ID, Name
+        FROM dbo.Clients
+        WHERE Name = ? AND IsDeleted = 0
+        """;
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
@@ -131,7 +132,7 @@ public class ClientsDAO implements ClientsInterface
     @Override
     public void deleteClient(int clientId) throws SQLException
     {
-        String sql = "DELETE FROM dbo.Clients WHERE ID = ?";
+        String sql = "UPDATE dbo.Clients SET IsDeleted = 1 WHERE ID = ?";
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))

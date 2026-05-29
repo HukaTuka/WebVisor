@@ -24,10 +24,10 @@ public class UsersDAO implements UsersInterface
     public Optional<User> getUserByUsername(String username) throws SQLException
     {
         String sql = """
-                SELECT TOP 1 ID, Username, Password, Role, Timestamp 
-                FROM dbo.Users
-                WHERE Username = ?
-                """;
+        SELECT TOP 1 ID, Username, Password, Role, Timestamp
+        FROM dbo.Users
+        WHERE Username = ? AND IsDeleted = 0
+        """;
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
@@ -62,10 +62,11 @@ public class UsersDAO implements UsersInterface
     public List<User> getAllUsers() throws SQLException
     {
         String sql = """
-                SELECT ID, Username, Password, Role, Timestamp
-                FROM dbo.Users
-                ORDER BY Username
-                """;
+        SELECT ID, Username, Password, Role, Timestamp
+        FROM dbo.Users
+        WHERE IsDeleted = 0
+        ORDER BY Username
+        """;
 
         List<User> users = new ArrayList<>();
 
@@ -152,7 +153,7 @@ public class UsersDAO implements UsersInterface
     @Override
     public void deleteUser(int userId) throws SQLException
     {
-        String sql = "DELETE FROM dbo.Users WHERE ID = ?";
+        String sql = "UPDATE dbo.Users SET IsDeleted = 1 WHERE ID = ?";
 
         try (Connection connection = DBConnector.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
