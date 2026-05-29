@@ -4,6 +4,7 @@ import dk.sea.webvisor.BE.Profile;
 import dk.sea.webvisor.DAL.DBConnector.DBConnector;
 import dk.sea.webvisor.DAL.Interface.ProfileUserInterface;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +14,11 @@ import java.util.List;
 
 public class ProfileUserDAO implements ProfileUserInterface {
 
+
+    public ProfileUserDAO() throws IOException
+    {
+        DBConnector.getInstance();
+    }
 
     @Override
     public void addProfileToUser(int userID, int profileID) throws SQLException
@@ -66,12 +72,12 @@ public class ProfileUserDAO implements ProfileUserInterface {
     @Override
     public List<Profile> getProfilesForUser(int userID) throws SQLException {
         String sql = """
-                SELECT p.ID, p.Name, p.SplitOnBarcode, p.DefaultRotation
-                FROM dbo.Profiles p
-                INNER JOIN dbo.UserProfiles up ON p.ID = up.ProfileID
-                WHERE up.UserID = ?
-                ORDER BY p.Name
-                """;
+            SELECT p.ID, p.Name, p.SplitOnBarcode, p.DefaultRotation, ISNULL(p.ClientID, 0) AS ClientID
+            FROM dbo.Profiles p
+            INNER JOIN dbo.UserProfiles up ON p.ID = up.ProfileID
+            WHERE up.UserID = ?
+            ORDER BY p.Name
+        """;
 
         List<Profile> profiles = new ArrayList<>();
         try (Connection connection = DBConnector.getConnection();
@@ -97,8 +103,10 @@ public class ProfileUserDAO implements ProfileUserInterface {
                 rs.getInt("ID"),
                 rs.getString("Name"),
                 rs.getBoolean("SplitOnBarcode"),
-                rs.getInt("DefaultRotation")
+                rs.getInt("DefaultRotation"),
+                rs.getInt("ClientID")
         );
     }
+
 
 }

@@ -1,161 +1,135 @@
-USE master;
-GO
-IF EXISTS(SELECT * FROM sys.databases WHERE name = 'felnie01_WebVisor')
-    BEGIN
-        DROP DATABASE felnie01_WebVisor;
-    END
+      USE master;
+        GO
+        IF EXISTS(SELECT * FROM sys.databases WHERE name = 'felnie01_WebVisor')
+            BEGIN
+                DROP DATABASE felnie01_WebVisor;
+            END
 
-CREATE DATABASE felnie01_WebVisor;
-GO
-USE felnie01_WebVisor;
-GO
+        CREATE DATABASE felnie01_WebVisor;
+        GO
+        USE felnie01_WebVisor;
+        GO
 
+        CREATE TABLE felnie01_WebVisor.dbo.Users (
+                                                     ID        int           PRIMARY KEY NOT NULL,
+                                                     Username  varchar(100),
+                                                     Password  varchar(255),
+                                                     Role      varchar(20),
+                                                     Timestamp DATETIME2     NULL,
+                                                     IsSeeded  bit           DEFAULT ((0)) NOT NULL
+        );
 
--- Create Users table
-CREATE TABLE felnie01_WebVisor.dbo.Users  (
+        CREATE TABLE felnie01_WebVisor.dbo.AuditLog (
+                                                        ID        INT          PRIMARY KEY IDENTITY(1,1),
+                                                        Timestamp DATETIME2    NOT NULL DEFAULT SYSDATETIME(),
+                                                        Username  VARCHAR(100) NOT NULL,
+                                                        Action    VARCHAR(100) NOT NULL,
+                                                        Details   VARCHAR(500) NOT NULL
+        );
 
-                                              ID int primary key not null,
-                                              Username varchar(100),
-                                              Password varchar(255),
-                                              Role varchar(20),
-                                              Timestamp DATETIME2 NULL,
-                                              IsSeeded bit default ((0)) not null
-);
+        INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+        VALUES (1,'admin','pbkdf2$65536$PPYhG4wWGCLuJA1y6Q3s+A==$s+KPL+8+7oEkpwxiM1RuCzrvWtUAi4+OvORmYmjNZGQ=','Administrator','2026-04-24 09:16:45','false')
 
-CREATE TABLE felnie01_WebVisor.dbo.AuditLog (
-                                                ID        INT           PRIMARY KEY IDENTITY(1,1),
-                                                Timestamp DATETIME2     NOT NULL DEFAULT SYSDATETIME(),
-                                                Username  VARCHAR(100)  NOT NULL,
-                                                Action    VARCHAR(100)  NOT NULL,
-                                                Details   VARCHAR(500)  NOT NULL
-);
+        INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+        VALUES (2,'rekast','pbkdf2$65536$fTLgoIad5Rb+f+osMPjvaA==$B2k5frKhuxdkyJSRVy5Ja2HVsyeYDzi/5EgLLvDrEag=','Scanner','2026-04-24 09:16:39','false')
 
+        INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+        VALUES (3,'goraser','pbkdf2$65536$LuGoX6kJQmEWA570YfbZRQ==$PAq+aiq39/CI2cYnNrj9THIF5hygsK40GVpr0Xqe5ds=','Scanner','2026-04-23 05:10:54','false')
 
-INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
-VALUES (1,'admin','pbkdf2$65536$PPYhG4wWGCLuJA1y6Q3s+A==$s+KPL+8+7oEkpwxiM1RuCzrvWtUAi4+OvORmYmjNZGQ=','Administrator','2026-04-24 09:16:45','false')
+        INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
+        VALUES (4,'jonlinnet','pbkdf2$65536$AlG8lMuqrB4D6RPswdI2/A==$unw2oE0fQ/Av4cYhGrtj+9cboNgz6JB4zIijJs33lZ4=','Scanner','2026-04-27 13:58:19.8258214','false')
 
-INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
-VALUES (2,'rekast','pbkdf2$65536$fTLgoIad5Rb+f+osMPjvaA==$B2k5frKhuxdkyJSRVy5Ja2HVsyeYDzi/5EgLLvDrEag=','Scanner','2026-04-24 09:16:39','false')
+        CREATE TABLE dbo.Clients (
+                                     ID   int          IDENTITY CONSTRAINT PK_Clients PRIMARY KEY,
+                                     Name varchar(150) NOT NULL CONSTRAINT UQ_Clients_Name UNIQUE
+        );
+        GO
 
-INSERT INTO USERS (ID,  Username, Password, Role, Timestamp, IsSeeded)
-VALUES (3, 'goraser','pbkdf2$65536$LuGoX6kJQmEWA570YfbZRQ==$PAq+aiq39/CI2cYnNrj9THIF5hygsK40GVpr0Xqe5ds=','Scanner','2026-04-23 05:10:54','false')
+        CREATE TABLE dbo.Profiles (
+                                      ID              INT PRIMARY KEY IDENTITY(1,1),
+                                      Name            VARCHAR(100) NOT NULL,
+                                      DefaultRotation INT          NOT NULL DEFAULT 0,
+                                      SplitOnBarcode  bit          NOT NULL DEFAULT ((0)),
+                                      ClientID        INT          NOT NULL DEFAULT 0,
+                                      FOREIGN KEY (ClientID) REFERENCES Clients(ID)
+        );
 
-INSERT INTO USERS (ID, Username, Password, Role, Timestamp, IsSeeded)
-VALUES (4, 'jonlinnet', 'pbkdf2$65536$AlG8lMuqrB4D6RPswdI2/A==$unw2oE0fQ/Av4cYhGrtj+9cboNgz6JB4zIijJs33lZ4=', 'Scanner','2026-04-27 13:58:19.8258214','false')
+        CREATE TABLE dbo.UserProfiles (
+                                          UserID    INT NOT NULL,
+                                          ProfileID INT NOT NULL,
+                                          PRIMARY KEY (UserID, ProfileID),
+                                          FOREIGN KEY (UserID)    REFERENCES Users(ID),
+                                          FOREIGN KEY (ProfileID) REFERENCES Profiles(ID)
+        );
+        GO
 
-CREATE TABLE Profiles (
-    ID INT PRIMARY KEY IDENTITY(1,1),
-    Name VARCHAR(100) NOT NULL,
-    DefaultRotation INT NOT NULL DEFAULT 0
-    FOREIGN KEY (ClientID) REFERENCES Clients(ID)
-);
+-- Archives uses ID (not ArchiveID) from the start to match what the Java DAOs expect
+        CREATE TABLE dbo.Archives (
+                                      ID        int          IDENTITY PRIMARY KEY,
+                                      Name      varchar(150) NOT NULL,
+                                      ClientID  int          NOT NULL,
+                                      CreatedAt datetime2    NOT NULL CONSTRAINT DF_Archives_CreatedAt DEFAULT SYSDATETIME()
+        );
+        GO
 
-CREATE TABLE UserProfiles (
-    UserID INT NOT NULL,
-    ProfileID INT NOT NULL,
-    PRIMARY KEY (UserID, ProfileID),
-    FOREIGN KEY (UserID) REFERENCES Users(ID),
-    FOREIGN KEY (ProfileID) REFERENCES Profiles(ID)
-);
+        CREATE INDEX IX_Archives_ClientID ON dbo.Archives (ClientID);
+        GO
 
-create table dbo.Clients
-(
-    ID   int identity
-        constraint PK_Clients
-            primary key,
-    Name varchar(150) not null
-        constraint UQ_Clients_Name
-            unique
-)
-go
+        CREATE TABLE dbo.Boxes (
+                                   BoxID     varchar(50) NOT NULL CONSTRAINT PK_Boxes PRIMARY KEY,
+                                   ClientID  int         NOT NULL CONSTRAINT FK_Boxes_Clients  REFERENCES dbo.Clients,
+                                   ArchiveID int         NULL     CONSTRAINT FK_Boxes_Archives REFERENCES dbo.Archives(ID),
+                                   CreatedAt datetime2   NOT NULL CONSTRAINT DF_Boxes_CreatedAt DEFAULT SYSDATETIME()
+        );
+        GO
 
-create table dbo.Boxes
-(
-    BoxID     varchar(50)                                   not null
-        constraint PK_Boxes
-            primary key,
-    ClientID  int                                           not null
-        constraint FK_Boxes_Clients
-            references dbo.Clients,
-    CreatedAt datetime2
-        constraint DF_Boxes_CreatedAt default sysdatetime() not null
-)
-go
+        CREATE TABLE dbo.Documents (
+                                       ID             int        IDENTITY CONSTRAINT PK_Documents PRIMARY KEY,
+                                       BoxID          varchar(50) NOT NULL CONSTRAINT FK_Documents_Boxes REFERENCES dbo.Boxes ON DELETE CASCADE,
+                                       DocumentNumber int         NOT NULL CONSTRAINT CK_Documents_DocumentNumber_Positive CHECK ([DocumentNumber] > 0),
+                                       Status         varchar(30) NOT NULL CONSTRAINT DF_Documents_Status DEFAULT 'IN_PROGRESS',
+                                       RejectionNote  varchar(500) NULL,
+                                       CreatedAt      datetime2   NOT NULL CONSTRAINT DF_Documents_CreatedAt DEFAULT SYSDATETIME(),
+                                       CONSTRAINT UQ_Documents_Box_DocumentNumber UNIQUE (BoxID, DocumentNumber)
+        );
+        GO
 
-create table dbo.Documents
-(
-    ID             int identity
-        constraint PK_Documents
-            primary key,
-    BoxID          varchar(50)                                  not null
-        constraint FK_Documents_Boxes
-            references dbo.Boxes
-            on delete cascade,
-    DocumentNumber int                                          not null
-        constraint CK_Documents_DocumentNumber_Positive
-            check ([DocumentNumber] > 0),
-    Status         varchar(30)                                  not null
-        constraint DF_Documents_Status default 'IN_PROGRESS',
-    CreatedAt      datetime2
-        constraint DF_Documents_CreatedAt default sysdatetime() not null,
-    constraint UQ_Documents_Box_DocumentNumber
-        unique (BoxID, DocumentNumber)
-)
-go
+        CREATE INDEX IX_Documents_BoxID ON dbo.Documents (BoxID);
+        GO
 
-create index IX_Documents_BoxID
-    on dbo.Documents (BoxID)
-go
+        CREATE TABLE dbo.Files (
+                                   ID              int           IDENTITY CONSTRAINT PK_Files PRIMARY KEY,
+                                   BoxID           varchar(50)   NOT NULL CONSTRAINT FK_Files_Boxes      REFERENCES dbo.Boxes      ON DELETE CASCADE,
+                                   DocumentID      int           NULL     CONSTRAINT FK_Files_Documents  REFERENCES dbo.Documents,
+                                   PageNumber      int           NOT NULL,
+                                   IsBarcode       bit           NOT NULL,
+                                   RotationDegrees int           NOT NULL,
+                                   ImageData       varbinary(max) NOT NULL,
+                                   CreatedAt       datetime2     NOT NULL CONSTRAINT DF_Files_CreatedAt DEFAULT SYSDATETIME()
+        );
+        GO
 
-create table dbo.Files
-(
-    ID              int identity
-        constraint PK_Files
-            primary key,
-    BoxID           varchar(50)                             not null
-        constraint FK_Files_Boxes
-            references dbo.Boxes
-            on delete cascade,
-    DocumentID      int
-        constraint FK_Files_Documents
-            references dbo.Documents,
-    PageNumber      int                                     not null,
-    IsBarcode       bit                                     not null,
-    RotationDegrees int                                     not null,
-    ImageData       varbinary(max)                          not null,
-    CreatedAt       datetime2
-        constraint DF_Files_CreatedAt default sysdatetime() not null
-)
-go
+        CREATE INDEX IX_Files_BoxID      ON dbo.Files (BoxID);
+        CREATE INDEX IX_Files_DocumentID ON dbo.Files (DocumentID);
+        GO
 
-create index IX_Files_BoxID
-    on dbo.Files (BoxID)
-go
+        CREATE TABLE dbo.MetadataFields (
+                                            ID        INT          PRIMARY KEY IDENTITY(1,1),
+                                            Name      VARCHAR(150) NOT NULL,
+                                            FieldType VARCHAR(20)  NOT NULL DEFAULT 'TEXT'
+        );
+        GO
 
-create index IX_Files_DocumentID
-    on dbo.Files (DocumentID)
-go
+        CREATE TABLE dbo.BoxMetadata (
+                                         ID      INT         PRIMARY KEY IDENTITY(1,1),
+                                         BoxID   VARCHAR(50) NOT NULL,
+                                         FieldID INT         NOT NULL,
+                                         Value   VARCHAR(500) NULL,
+                                         CONSTRAINT FK_BoxMetadata_Boxes  FOREIGN KEY (BoxID)    REFERENCES dbo.Boxes(BoxID)          ON DELETE CASCADE,
+                                         CONSTRAINT FK_BoxMetadata_Fields FOREIGN KEY (FieldID)  REFERENCES dbo.MetadataFields(ID)    ON DELETE CASCADE,
+                                         CONSTRAINT UQ_BoxMetadata        UNIQUE (BoxID, FieldID)
+        );
+        GO
 
-CREATE TABLE dbo.MetadataFields
-(
-    ID        INT          PRIMARY KEY IDENTITY(1,1),
-    Name      VARCHAR(150) NOT NULL,
-    FieldType VARCHAR(20)  NOT NULL DEFAULT 'TEXT'
-);
-go
-
-CREATE TABLE dbo.BoxMetadata
-(
-    ID      INT          PRIMARY KEY IDENTITY(1,1),
-    BoxID   VARCHAR(50)  NOT NULL,
-    FieldID INT          NOT NULL,
-    Value   VARCHAR(500) NULL,
-    CONSTRAINT FK_BoxMetadata_Boxes   FOREIGN KEY (BoxID)   REFERENCES dbo.Boxes(BoxID)           ON DELETE CASCADE,
-    CONSTRAINT FK_BoxMetadata_Fields  FOREIGN KEY (FieldID) REFERENCES dbo.MetadataFields(ID)     ON DELETE CASCADE,
-    CONSTRAINT UQ_BoxMetadata         UNIQUE (BoxID, FieldID)
-);
-go
-
-create index IX_BoxMetadata_BoxID
-    on dbo.BoxMetadata (BoxID)
-go
+        CREATE INDEX IX_BoxMetadata_BoxID ON dbo.BoxMetadata (BoxID);
+        GO
