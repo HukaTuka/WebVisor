@@ -96,7 +96,7 @@ public class UiManager {
             dialog.setScene(new Scene(root));
             dialog.showAndWait();
         } catch (IOException e) {
-            showError("Could not open metadata dialog: " + e.getMessage());
+            showError("Could not open metadata dialog");
         }
     }
 
@@ -133,13 +133,13 @@ public class UiManager {
                     }
                     catch (IOException e)
                     {
-                        showError("Could not open slide view: " + e.getMessage());
+                        showError("Could not open slide view");
                     }
                 });
             }
             catch (SQLException e)
             {
-                Platform.runLater(() -> showError("Could not load images: " + e.getMessage()));
+                Platform.runLater(() -> showError("Could not load images"));
             }
         });
 
@@ -158,7 +158,7 @@ public class UiManager {
             dialog.setScene(new Scene(root));
             dialog.showAndWait();
         } catch (IOException e) {
-            showError("Could not open shortcut settings: " + e.getMessage());
+            showError("Could not open shortcut settings");
         }
     }
 

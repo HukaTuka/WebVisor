@@ -275,7 +275,7 @@ public class QAController implements AuditAware
         }
         catch (SQLException e)
         {
-            showStatus("Could not save rejection note: " + e.getMessage(), "status-error");
+            showStatus("Could not save rejection note", "status-error");
         }
     }
 
@@ -316,7 +316,7 @@ public class QAController implements AuditAware
         }
         catch (SQLException e)
         {
-            showStatus("Could not update document status: " + e.getMessage(), "status-error");
+            showStatus("Could not update document status", "status-error");
         }
     }
 

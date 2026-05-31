@@ -482,7 +482,7 @@ public class ScanningController implements AuditAware
         }
         catch (SQLException e)
         {
-            uiManager.error("Could not update document status: " + e.getMessage());
+            uiManager.error("Could not update document status");
         }
     }
 
@@ -572,7 +572,7 @@ public class ScanningController implements AuditAware
             }
             catch (SQLException e)
             {
-                uiManager.error("Could not update page order: " + e.getMessage());
+                uiManager.error("Could not update page order");
             }
             explorerTreeManager.expandBox(sessionManager.getSelectedBox());
             if (sessionManager.getSelectedDocument() != null)
@@ -667,7 +667,7 @@ public class ScanningController implements AuditAware
         }
         catch (Exception e)
         {
-            uiManager.error("Could not create box: " + e.getMessage());
+            uiManager.error("Could not create box");
         }
     }
 }

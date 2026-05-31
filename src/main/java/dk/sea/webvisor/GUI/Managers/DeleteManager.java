@@ -58,7 +58,7 @@ public class DeleteManager {
         } catch (IllegalArgumentException e) {
             uiManager.error(e.getMessage());
         } catch (SQLException e) {
-            uiManager.error("Database error while deleting: " + e.getMessage());
+            uiManager.error("Database error while deleting");
         }
     }
 

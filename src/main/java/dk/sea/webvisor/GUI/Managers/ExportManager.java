@@ -41,7 +41,7 @@ public class ExportManager {
                 audit.log("Exported as single page", "Exported " + count + " pages from box: " + box.getBoxId());
 
             } catch (IOException | SQLException e) {
-                uiManager.error("Export failed: " + e.getMessage());
+                uiManager.error("Export failed");
             }
         });
 
@@ -61,7 +61,7 @@ public class ExportManager {
                 audit.log("Exported as multi page", "Exported " + count + " documents from box: " + box.getBoxId());
 
             } catch (IOException | SQLException e) {
-                uiManager.error("Export failed: " + e.getMessage());
+                uiManager.error("Export failed");
             }
         });
 

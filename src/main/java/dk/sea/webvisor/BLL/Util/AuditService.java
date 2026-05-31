@@ -22,7 +22,7 @@ public class AuditService
         try {
             auditDAO = new AuditDAO();
         } catch (IOException e) {
-            System.err.println("AuditService Could not initialise AuditDAO: " + e.getMessage());
+            System.err.println("AuditService Could not initialise AuditDAO");
         }
     }
 

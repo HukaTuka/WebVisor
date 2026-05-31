@@ -35,7 +35,7 @@ public class PageViewerManager {
                 view.setImage(SwingFXUtils.toFXImage(toDisplay, null));
             }
         } catch (SQLException e) {
-            uiManager.error("Could not load image: " + e.getMessage());
+            uiManager.error("Could not load image");
         }
     }
 

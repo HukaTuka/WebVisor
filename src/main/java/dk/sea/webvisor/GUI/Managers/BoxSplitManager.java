@@ -63,7 +63,7 @@ public class BoxSplitManager {
         int pageIndex = findPageIndex(pages, page);
         int docIndex  = findDocumentIndex(box.getDocuments(), targetDoc);
 
-        if (pageIndex < 0) { uiManager.error("Could not find page.");             return; }
+        if (pageIndex < 0) { uiManager.error("Could not find page."); return; }
         if (docIndex  < 0) { uiManager.error("Could not find target document."); return; }
 
         try
@@ -87,7 +87,7 @@ public class BoxSplitManager {
         }
         catch (SQLException e)
         {
-            uiManager.error("Could not move page: " + e.getMessage());
+            uiManager.error("Could not move page");
         }
     }
 

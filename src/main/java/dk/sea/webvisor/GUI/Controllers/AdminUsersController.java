@@ -165,7 +165,7 @@ public class AdminUsersController
         }
         catch (SQLException e)
         {
-            showStatus("Could not load profiles" + e.getMessage(), "status error");
+            showStatus("Could not load profiles", "status error");
         }
     }
 

@@ -73,7 +73,7 @@ public class MetadataDialogController
         }
         catch (SQLException e)
         {
-            showStatus("Could not load metadata: " + e.getMessage(), "status-error");
+            showStatus("Could not load metadata", "status-error");
         }
     }
 
