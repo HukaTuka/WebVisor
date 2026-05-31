@@ -55,6 +55,7 @@ public class ArchivesDAO implements ArchivesInterface
         FROM dbo.Archives a
         INNER JOIN dbo.Clients c ON c.ID = a.ClientID
         WHERE c.IsDeleted = 0
+          AND a.ClientID = ?
         ORDER BY c.Name, a.Name
         """;
 
@@ -82,6 +83,8 @@ public class ArchivesDAO implements ArchivesInterface
         FROM dbo.Archives a
         INNER JOIN dbo.Clients c ON c.ID = a.ClientID
         WHERE c.IsDeleted = 0
+          AND a.ClientID = ?
+          AND a.Name = ?
         ORDER BY c.Name, a.Name
         """;
 
